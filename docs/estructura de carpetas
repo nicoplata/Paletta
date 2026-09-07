@@ -1,0 +1,63 @@
+
+paletta-backend/
+│
+├── 📁 src/
+│   ├── 📁 config/               # Configuraciones generales (DB, entorno, etc.)
+│   │   ├── db.js               # Conexión a la base de datos
+│   │   ├── env.js              # Variables de entorno
+│   │   └── roles.js            # Definición de roles y permisos
+│   │
+│   ├── 📁 controllers/         # Lógica de negocio
+│   │   ├── auth.controller.js
+│   │   ├── user.controller.js
+│   │   ├── product.controller.js
+│   │   ├── category.controller.js
+│   │   ├── school.controller.js
+│   │   ├── order.controller.js
+│   │   └── report.controller.js
+│   │
+│   ├── 📁 routes/              # Rutas de la API
+│   │   ├── auth.routes.js
+│   │   ├── user.routes.js
+│   │   ├── product.routes.js
+│   │   ├── category.routes.js
+│   │   ├── school.routes.js
+│   │   ├── order.routes.js
+│   │   └── report.routes.js
+│   │
+│   ├── 📁 models/              # Modelos de datos (MongoDB o Sequelize)
+│   │   ├── user.model.js
+│   │   ├── product.model.js
+│   │   ├── category.model.js
+│   │   ├── school.model.js
+│   │   ├── order.model.js
+│   │   └── report.model.js
+│   │
+│   ├── 📁 middlewares/         # Middlewares (auth, validaciones, etc.)
+│   │   ├── auth.middleware.js
+│   │   ├── role.middleware.js
+│   │   └── error.middleware.js
+│   │
+│   ├── 📁 services/            # Lógica reutilizable (mailing, reportes, etc.)
+│   │   ├── mail.service.js
+│   │   ├── report.service.js
+│   │   └── barcode.service.js
+│   │
+│   ├── 📁 utils/               # Utilidades generales
+│   │   ├── validators.js
+│   │   └── helpers.js
+│   │
+│   └── app.js                 # Configuración principal de Express
+│
+├── 📁 public/                 # Archivos públicos (imágenes, PDFs, etc.)
+│
+├── 📁 uploads/                # Archivos subidos (productos, reportes, etc.)
+│
+├── 📁 tests/                  # Tests unitarios y de integración
+│
+├── 📁 scripts/                # Scripts para migraciones, seeders, etc.
+│
+├── .env                      # Variables de entorno
+├── .gitignore
+├── package.json
+└── README.md
