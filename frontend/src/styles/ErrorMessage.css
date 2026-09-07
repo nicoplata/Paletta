@@ -1,0 +1,35 @@
+.error-message {
+  text-align: center;
+  padding: 2rem;
+  margin: 2rem auto;
+  max-width: 400px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+
+.error-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.error-message p {
+  color: #666;
+  margin-bottom: 1.5rem;
+  font-family: opensans, Arial, sans-serif;
+}
+
+.error-message button {
+  background: #9c1f23;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.error-message button:hover {
+  background: #7a1a1d;
+}

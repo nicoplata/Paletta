@@ -1,0 +1,95 @@
+
+.selector-colegios-home {
+  position: relative;
+  width: 100%;
+  padding: 20px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.selector-colegios-home .contenedor-scroll {
+  width: 100%;
+  overflow-x: auto;
+  pointer-events: auto;
+}
+
+.selector-colegios-home .grid-colegios {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 10px 20px;
+  scrollbar-width: none;
+  z-index: 1;
+  position: relative;
+}
+
+.selector-colegios-home .grid-colegios::-webkit-scrollbar {
+  display: none;
+}
+
+.selector-colegios-home .tarjeta-colegio {
+  flex: 0 0 auto;
+  width: 75px;
+  height: 75px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.selector-colegios-home .imagen-colegio {
+  width: 75px;
+  height: 75px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.selector-colegios-home .flecha {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(255,255,255,0.8);
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 10;
+  padding: 10px;
+  border-radius: 50%;
+  pointer-events: auto;
+}
+
+.selector-colegios-home .flecha.izquierda {
+  left: 10px;
+}
+
+.selector-colegios-home .flecha.derecha {
+  right: 10px;
+}
+
+@media (max-width: 1220px) {
+  .selector-colegios-home {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .selector-colegios-home .tarjeta-colegio {
+    width: 60px;
+    height: 60px;
+  }
+
+  .selector-colegios-home .imagen-colegio {
+    width: 60px;
+    height: 60px;
+  }
+
+  .selector-colegios-home .flecha {
+    font-size: 20px;
+    padding: 8px;
+  }
+}

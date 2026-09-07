@@ -1,0 +1,8 @@
+
+.layout-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 120px 20px 40px; /* ← compensamos altura del header */
+  min-height: calc(100vh - 160px); /* ajustado para altura real */
+  box-sizing: border-box;
+}

@@ -1,0 +1,18 @@
+import { createGlobalStyle } from 'styled-components';
+
+export const AdminGlobalStyles = createGlobalStyle`
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+  body {
+    font-family: 'Poppins', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+  }
+
+  button, input, textarea, select {
+    font-family: 'Poppins', sans-serif;
+  }
+`;

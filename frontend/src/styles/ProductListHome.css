@@ -1,0 +1,62 @@
+.homeWrapper {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.productosLayout {
+  display: flex;
+  gap: 2rem;
+  max-width: 1200px;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.filtrosContainer.home {
+  flex-shrink: 0;
+  width: 250px;
+}
+
+.productContainer.home {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.verMasContainer {
+  grid-column: 1 / -1;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.verMasBtn {
+  background-color: #800000;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.verMasBtn:hover {
+  background-color: #a00000;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .productosLayout {
+    flex-direction: column;
+  }
+
+  .filtrosContainer.home {
+    width: 100%;
+    order: 2;
+  }
+
+  .productContainer.home {
+    order: 1;
+  }
+}

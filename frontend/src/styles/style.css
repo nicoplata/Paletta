@@ -1,0 +1,176 @@
+
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: "opensans", Arial, sans-serif;
+}
+
+/* Layout wrapper for flex behavior */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Main content area */
+main {
+  flex: 1;
+}
+
+/* Font face */
+@font-face {
+  font-family: "opensans";
+  src: url("../assets/fonts/OpenSans-VariableFont.ttf") format("truetype");
+}
+
+/* Header styles */
+.header {
+  width: 100%;
+  height: 125px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 500ms;
+  background-color: white;
+}
+
+.header .logoContainer {
+  width: 100px;
+  height: 100%;
+  display: inherit;
+  justify-content: center;
+  align-items: center;
+  margin-left: 2rem;
+}
+
+.header .logoContainer img {
+  max-height: 60px;
+}
+
+.header .openMenu {
+  width: 40px;
+  height: 40px;
+  margin-right: 2rem;
+  cursor: pointer;
+  transition: all 300ms;
+}
+
+.header .openMenu span {
+  display: block;
+  width: 100%;
+  height: 4px;
+  background: #FFFFFF;
+  border-radius: 5px;
+  margin-top: 6px;
+  transform-origin: 0px 100%;
+  transition: all 300ms;
+}
+
+.header .openMenu .activeline1 {
+  transform: rotate(45deg) translate(2px, -5px);
+}
+
+.header .openMenu .activeline2 {
+  opacity: 0;
+  margin-left: 30px;
+}
+
+.header .openMenu .activeline3 {
+  transform: rotate(-45deg) translate(2px, 9px);
+}
+
+.header #darkenBackground {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100vh;
+  margin-top: 125px;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  transition: all 300ms;
+}
+
+.header .navContainer {
+  position: fixed;
+  display: flex;
+  flex-flow: column nowrap;
+  width: 300px;
+  height: 100vh;
+  top: 0;
+  right: -300px;
+  background-color: #FFFFFF;
+  margin-top: 124px;
+  z-index: 1;
+  transition: all 300ms;
+}
+
+.header .navContainer .navDesktop ul {
+  display: flex;
+  flex-flow: column nowrap;
+  list-style: none;
+  margin: 2rem 4rem;
+  gap: 2rem;
+}
+
+/* Desktop styles */
+@media (min-width: 1024px) {
+  .header .logoContainer {
+    width: 100px;
+    height: 100%;
+    display: inherit;
+    justify-content: center;
+    align-items: center;
+    margin-left: 10rem;
+  }
+
+  .header .logoContainer img {
+    max-height: 80px;
+  }
+
+  .header .openMenu {
+    display: none;
+  }
+
+  .header #darkenBackground {
+    display: none;
+  }
+
+  .header .navContainer {
+    position: unset;
+    height: 100%;
+    display: inherit;
+    margin-top: 0;
+    justify-content: center;
+    align-items: center;
+    margin-right: 10rem;
+    transition: none;
+    background-color: transparent;
+  }
+
+  .header .navContainer .navDesktop ul {
+    flex-flow: row nowrap;
+    gap: 3rem;
+    margin: 0;
+    align-items: center;
+  }
+}
+
+/* Carousel styles */
+.carouselContainer .carousel {
+  background: radial-gradient(rgba(0, 0, 0, 0.1), rgb(0, 0, 0)), url("../assets/img/paletta_2.jpg") no-repeat;
+  background-size: cover;
+  height: 100vh;
+  background-position: center;
+}

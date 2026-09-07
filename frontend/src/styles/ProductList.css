@@ -1,0 +1,68 @@
+.productContainer {
+  width: 100%;
+  min-height: 300px;
+  background: #fff;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 0;
+  justify-content: center;
+}
+
+/* Product card styles */
+.productCard {
+  border: 1px solid #e0e0e0;
+  border-radius: 14px;
+  width: 240px;
+  background: #fafbfc;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 1.2rem 1rem 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: box-shadow 0.2s;
+}
+
+.productCard:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  border-color: #bdbdbd;
+}
+
+.productCard img {
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  background: #f0f0f0;
+}
+
+.productCard h3 {
+  font-size: 1.1rem;
+  margin: 0 0 0.4rem 0;
+  text-align: center;
+  font-weight: 600;
+  color: #222;
+}
+
+.productCard .colegio {
+  color: #800000;
+  font-weight: bold;
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+  text-align: center;
+}
+
+.productCard .category {
+  color: #888;
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+  text-align: center;
+}
+
+.productCard .description {
+  font-size: 0.88rem;
+  color: #555;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}

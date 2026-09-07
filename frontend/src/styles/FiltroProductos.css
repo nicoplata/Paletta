@@ -1,0 +1,59 @@
+.filtrosContainer {
+  font-family: 'Poppins', sans-serif;
+  background-color: #ffffff;
+  padding: 1rem;
+  width: 250px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  margin-bottom: 2rem;
+}
+
+.filtrosContainer h3 {
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.filtroGrupo {
+  margin-bottom: 1.25rem;
+}
+
+.toggleBtn {
+  background-color: transparent;
+  border: none;
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: #800000; 
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.4rem 0;
+  transition: color 0.2s ease;
+}
+
+.filtroOpciones {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 0.5rem;
+}
+
+.filtroOpciones li {
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.2rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #444;
+  transition: background-color 0.2s ease;
+}
+
+.filtroOpciones li:hover {
+  background-color: #f9f9f9;
+}
+
+.filtroOpciones li.selected {
+  font-weight: 600;
+  color: #800000; /* tono bordó */
+  background-color: transparent;
+}

@@ -1,0 +1,78 @@
+
+.productosLayout {
+  display: flex;
+  gap: 2rem;
+  max-width: 1300px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 0;
+  align-items: flex-start;
+}
+
+.filtrosContainer.productos {
+  flex-shrink: 0;
+  width: 250px;
+}
+
+.productContainer.productos {
+  flex: 1;
+}
+
+/* New wrapper to apply grid layout to ProductList content */
+.productGridWrapper {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.paginacion {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.paginacion button {
+  background-color: #eee;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease;
+}
+
+.paginacion button:hover {
+  background-color: #ddd;
+}
+
+.paginacion button.activo {
+  background-color: #800000;
+  color: white;
+  font-weight: bold;
+}
+
+.paginacion button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.oculto {
+  display: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .productosLayout {
+    flex-direction: column;
+  }
+
+  .filtrosContainer.productos {
+    width: 100%;
+    order: 2;
+  }
+
+  .productContainer.productos {
+    order: 1;
+  }
+}
