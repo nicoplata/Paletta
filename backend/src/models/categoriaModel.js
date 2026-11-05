@@ -1,4 +1,3 @@
-// models/categoriaModel.js
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
@@ -9,12 +8,14 @@ module.exports = (sequelize) => {
     },
     descripcion: {
       type: DataTypes.TEXT,
-      allowNull: true,
     },
   }, {
-    timestamps: true, // Agrega createdAt y updatedAt
-    tableName: 'Categorias', // Opcional: para mantener consistencia en nombres
+    tableName: 'Categorias',
   });
+
+  Categoria.associate = (models) => {
+    Categoria.hasMany(models.Producto, { foreignKey: 'categoriaId', as: 'productos' });
+  };
 
   return Categoria;
 };

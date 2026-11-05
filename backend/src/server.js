@@ -1,0 +1,34 @@
+const app = require('./app');
+const ENV = require('./config/env');
+const { sequelize } = require('./models');
+const { migrator } = require('./db/migrator');
+
+async function iniciar() {
+  try {
+    await sequelize.authenticate();
+    const pendientes = await migrator.pending();
+    if (pendientes.length > 0) {
+      console.warn(`⚠️  Hay ${pendientes.length} migración(es) pendiente(s). Ejecutá "npm run db:migrate".`);
+    }
+  } catch (error) {
+    console.error('No se pudo conectar a la base de datos:', error.message);
+    process.exit(1);
+  }
+
+  const server = app.listen(ENV.PORT, () => {
+    console.log(`Paletta API escuchando en el puerto ${ENV.PORT} (${ENV.NODE_ENV})`);
+  });
+
+  const cerrar = (senal) => {
+    console.log(`${senal} recibido, cerrando...`);
+    server.close(async () => {
+      await sequelize.close();
+      process.exit(0);
+    });
+    setTimeout(() => process.exit(1), 10000).unref();
+  };
+  process.on('SIGTERM', () => cerrar('SIGTERM'));
+  process.on('SIGINT', () => cerrar('SIGINT'));
+}
+
+iniciar();

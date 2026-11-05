@@ -20,22 +20,23 @@ module.exports = (sequelize) => {
     },
     activo: {
       type: DataTypes.BOOLEAN,
+      allowNull: false,
       defaultValue: true,
     },
     grupoInstitucional: {
       type: DataTypes.STRING,
     },
+  }, {
+    tableName: 'Colegios',
   });
 
-  // ✅ Asociación con el modelo Imagen
   Colegio.associate = (models) => {
+    Colegio.hasMany(models.Producto, { foreignKey: 'colegioId', as: 'productos' });
     Colegio.hasMany(models.Imagen, {
       foreignKey: 'entidadId',
       constraints: false,
-      scope: {
-        tipoEntidad: 'colegio'
-      },
-      as: 'imagenes'
+      scope: { tipoEntidad: 'colegio' },
+      as: 'imagenes',
     });
   };
 

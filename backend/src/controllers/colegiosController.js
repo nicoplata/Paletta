@@ -1,114 +1,81 @@
-const { Colegio, Producto, Imagen } = require('../models');
+const fs = require('fs/promises');
+const path = require('path');
+const { Colegio, Producto, Imagen, Categoria, sequelize } = require('../models');
+const { AppError } = require('../utils/errorHandler');
+const { UPLOADS_DIR } = require('../middleware/upload');
 
-// Obtener todos los colegios con sus productos e imágenes asociadas
-exports.getColegios = async (req, res) => {
-  try {
-    const colegios = await Colegio.findAll({
-      include: [
-        { model: Producto },
-        {
-          model: Imagen,
-          as: 'imagenes', // 👈 alias obligatorio
-          where: { tipoEntidad: 'colegio' },
-          required: false // permite que se incluyan colegios sin imagen
-        }
-      ]
-    });
-    res.json(colegios);
-  } catch (error) {
-    console.error('Error al obtener colegios:', error);
-    res.status(500).json({ error: 'Error al obtener colegios' });
-  }
+const includeImagenes = { model: Imagen, as: 'imagenes', attributes: ['id', 'url', 'descripcion'] };
+const orden = [['nombre', 'ASC'], [{ model: Imagen, as: 'imagenes' }, 'id', 'ASC']];
+
+// 🔓 Público: colegios activos
+exports.getColegiosPublicos = async (req, res) => {
+  const colegios = await Colegio.findAll({ where: { activo: true }, include: [includeImagenes], order: orden });
+  res.json(colegios);
 };
 
-// Obtener un colegio por ID
-exports.getColegioById = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const colegio = await Colegio.findByPk(id, {
-      include: [
-        { model: Producto },
-        {
-          model: Imagen,
-          as: 'imagenes', // 👈 alias obligatorio
-          where: { tipoEntidad: 'colegio' },
-          required: false
-        }
-      ]
-    });
-    if (!colegio) {
-      return res.status(404).json({ error: 'Colegio no encontrado' });
-    }
-    res.json(colegio);
-  } catch (error) {
-    console.error('Error al obtener el colegio:', error);
-    res.status(500).json({ error: 'Error al obtener el colegio' });
-  }
+exports.getColegioPublicoById = async (req, res) => {
+  const colegio = await Colegio.findOne({
+    where: { id: req.params.id, activo: true },
+    include: [includeImagenes],
+    order: orden,
+  });
+  if (!colegio) throw new AppError('Colegio no encontrado', 404);
+  res.json(colegio);
 };
 
-// Crear un nuevo colegio
-exports.createColegio = async (req, res) => {
-  const { nombre, ciudad } = req.body;
-  try {
-    const nuevoColegio = await Colegio.create({ nombre, ciudad });
-    res.status(201).json(nuevoColegio);
-  } catch (error) {
-    console.error('Error al crear el colegio:', error);
-    res.status(500).json({ error: 'Error al crear el colegio' });
-  }
-};
-
-// Actualizar un colegio existente
-exports.updateColegio = async (req, res) => {
-  const { id } = req.params;
-  const { nombre, ciudad } = req.body;
-  try {
-    const colegio = await Colegio.findByPk(id);
-    if (!colegio) {
-      return res.status(404).json({ error: 'Colegio no encontrado' });
-    }
-    colegio.nombre = nombre;
-    colegio.ciudad = ciudad;
-    await colegio.save();
-    res.json(colegio);
-  } catch (error) {
-    console.error('Error al actualizar el colegio:', error);
-    res.status(500).json({ error: 'Error al actualizar el colegio' });
-  }
-};
-
-// Eliminar un colegio
-exports.deleteColegio = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const colegio = await Colegio.findByPk(id);
-    if (!colegio) {
-      return res.status(404).json({ error: 'Colegio no encontrado' });
-    }
-    await colegio.destroy();
-    res.json({ mensaje: 'Colegio eliminado' });
-  } catch (error) {
-    console.error('Error al eliminar el colegio:', error);
-    res.status(500).json({ error: 'Error al eliminar el colegio' });
-  }
-};
-
-// Obtener productos asociados a un colegio específico
 exports.getProductosPorColegio = async (req, res) => {
-  const { id } = req.params;
+  const colegio = await Colegio.findOne({ where: { id: req.params.id, activo: true } });
+  if (!colegio) throw new AppError('Colegio no encontrado', 404);
+  const productos = await Producto.findAll({
+    where: { colegioId: colegio.id, activo: true },
+    include: [
+      { model: Categoria, as: 'categoria', attributes: ['id', 'nombre'] },
+      { model: Colegio, as: 'colegio', attributes: ['id', 'nombre', 'ciudad'] },
+      { model: Imagen, as: 'imagenes', attributes: ['id', 'url', 'descripcion'] },
+    ],
+    order: orden,
+  });
+  res.json(productos);
+};
 
-  try {
-    const colegio = await Colegio.findByPk(id, {
-      include: [{ model: Producto }]
-    });
+// 🔐 Admin: todos (incluye inactivos)
+exports.getColegios = async (req, res) => {
+  const colegios = await Colegio.findAll({ include: [includeImagenes], order: orden });
+  res.json(colegios);
+};
 
-    if (!colegio) {
-      return res.status(404).json({ error: 'Colegio no encontrado' });
-    }
+exports.getColegioById = async (req, res) => {
+  const colegio = await Colegio.findByPk(req.params.id, { include: [includeImagenes], order: orden });
+  if (!colegio) throw new AppError('Colegio no encontrado', 404);
+  res.json(colegio);
+};
 
-    res.json(colegio.Productos);
-  } catch (error) {
-    console.error('Error al obtener productos por colegio:', error);
-    res.status(500).json({ error: 'Error al obtener productos por colegio' });
+exports.createColegio = async (req, res) => {
+  const colegio = await Colegio.create(req.body);
+  res.status(201).json(colegio);
+};
+
+exports.updateColegio = async (req, res) => {
+  const colegio = await Colegio.findByPk(req.params.id);
+  if (!colegio) throw new AppError('Colegio no encontrado', 404);
+  await colegio.update(req.body);
+  res.json(colegio);
+};
+
+exports.deleteColegio = async (req, res) => {
+  const colegio = await Colegio.findByPk(req.params.id);
+  if (!colegio) throw new AppError('Colegio no encontrado', 404);
+  const enUso = await Producto.count({ where: { colegioId: colegio.id } });
+  if (enUso > 0) {
+    throw new AppError(`No se puede eliminar: el colegio tiene ${enUso} producto(s). Podés desactivarlo.`, 409);
   }
+  const imagenes = await Imagen.findAll({ where: { tipoEntidad: 'colegio', entidadId: colegio.id } });
+  await sequelize.transaction(async (transaction) => {
+    await Imagen.destroy({ where: { tipoEntidad: 'colegio', entidadId: colegio.id }, transaction });
+    await colegio.destroy({ transaction });
+  });
+  await Promise.all(
+    imagenes.map((img) => fs.unlink(path.join(UPLOADS_DIR, path.basename(img.url))).catch(() => {}))
+  );
+  res.json({ mensaje: 'Colegio eliminado' });
 };

@@ -1,75 +1,45 @@
-const { Imagen } = require('../models');
+const fs = require('fs/promises');
 const path = require('path');
-const fs = require('fs');
+const { Imagen, Producto, Colegio } = require('../models');
+const { AppError } = require('../utils/errorHandler');
+const { UPLOADS_DIR } = require('../middleware/upload');
+
+const MODELOS = { producto: Producto, colegio: Colegio };
+
+const borrarArchivo = (nombre) => fs.unlink(path.join(UPLOADS_DIR, path.basename(nombre))).catch(() => {});
 
 exports.subirImagen = async (req, res) => {
+  if (!req.file) throw new AppError('No se recibió ninguna imagen', 400);
+
   const { tipoEntidad, entidadId, descripcion } = req.body;
-
-  if (!req.file) {
-    return res.status(400).json({ error: 'No se subió ninguna imagen' });
+  const entidad = await MODELOS[tipoEntidad].findByPk(entidadId);
+  if (!entidad) {
+    await borrarArchivo(req.file.filename);
+    throw new AppError(`El ${tipoEntidad} no existe`, 400);
   }
 
-  try {
-    const nuevaImagen = await Imagen.create({
-      url: `/uploads/${req.file.filename}`,
-      descripcion,
-      tipoEntidad,
-      entidadId,
-    });
-
-    res.status(201).json(nuevaImagen);
-  } catch (error) {
-    console.error('Error al subir imagen:', error);
-    res.status(500).json({ error: 'Error al subir imagen' });
-  }
+  const imagen = await Imagen.create({
+    url: `/uploads/${req.file.filename}`,
+    descripcion,
+    tipoEntidad,
+    entidadId,
+  });
+  res.status(201).json(imagen);
 };
 
-exports.getImagenesPorProducto = async (req, res) => {
-  const { productoId } = req.params;
-
-  try {
-    const imagenes = await Imagen.findAll({ where: { entidadId: productoId, tipoEntidad: 'producto' } });
-    res.json(imagenes);
-  } catch (error) {
-    console.error('Error al obtener imágenes:', error);
-    res.status(500).json({ error: 'Error al obtener imágenes' });
-  }
+exports.getImagenes = async (req, res) => {
+  const { tipoEntidad, entidadId } = req.query;
+  if (!MODELOS[tipoEntidad]) throw new AppError('tipoEntidad inválido', 400);
+  const where = { tipoEntidad };
+  if (entidadId) where.entidadId = Number(entidadId);
+  const imagenes = await Imagen.findAll({ where, order: [['id', 'ASC']] });
+  res.json(imagenes);
 };
 
 exports.eliminarImagen = async (req, res) => {
-  const { imagenId } = req.params;
-  
-  try {
-    const imagen = await Imagen.findByPk(imagenId);
-    
-    if (!imagen) {
-      return res.status(404).json({
-        success: false,
-        error: 'Imagen no encontrada'
-      });
-    }
-
-    const filePath = path.join(__dirname, '../../public', imagen.url);
-    
-    try {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    } catch (fileError) {
-      console.error('Error al eliminar archivo:', fileError);
-    }
-
-    await imagen.destroy();
-
-    return res.json({
-      success: true,
-      message: 'Imagen eliminada correctamente'
-    });
-  } catch (error) {
-    console.error('Error al eliminar imagen:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Error al eliminar la imagen'
-    });
-  }
+  const imagen = await Imagen.findByPk(req.params.id);
+  if (!imagen) throw new AppError('Imagen no encontrada', 404);
+  await imagen.destroy();
+  await borrarArchivo(imagen.url);
+  res.json({ success: true, mensaje: 'Imagen eliminada' });
 };

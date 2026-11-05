@@ -1,14 +1,17 @@
 const { AppError } = require('../utils/errorHandler');
 
-const validateRequest = (schema) => {
-  return (req, res, next) => {
-    const { error } = schema.validate(req.body);
-    if (error) {
-      const message = error.details.map(detail => detail.message).join(', ');
-      throw new AppError(message, 400);
-    }
-    next();
-  };
+// Valida y normaliza req[origen] con un esquema Joi. Descarta campos no declarados.
+const validar = (schema, origen = 'body') => (req, res, next) => {
+  const { error, value } = schema.validate(req[origen], {
+    abortEarly: false,
+    stripUnknown: true,
+    convert: true,
+  });
+  if (error) {
+    return next(new AppError('Datos inválidos', 400, error.details.map((d) => d.message)));
+  }
+  req[origen] = value;
+  next();
 };
 
-module.exports = validateRequest;
+module.exports = validar;

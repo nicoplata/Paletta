@@ -1,142 +1,93 @@
-const { Producto, Categoria, Imagen, Colegio } = require('../models');
+const fs = require('fs/promises');
+const path = require('path');
+const { Producto, Categoria, Imagen, Colegio, sequelize } = require('../models');
+const { AppError } = require('../utils/errorHandler');
+const { UPLOADS_DIR } = require('../middleware/upload');
 
-// 🔓 Ruta pública para obtener todos los productos con imágenes, categoría y colegio
+const includeCompleto = [
+  { model: Categoria, as: 'categoria', attributes: ['id', 'nombre'] },
+  { model: Colegio, as: 'colegio', attributes: ['id', 'nombre', 'ciudad'] },
+  { model: Imagen, as: 'imagenes', attributes: ['id', 'url', 'descripcion'] },
+];
+const orden = [['nombre', 'ASC'], [{ model: Imagen, as: 'imagenes' }, 'id', 'ASC']];
+
+const filtrosDesdeQuery = (query) => {
+  const where = {};
+  if (query.colegioId) where.colegioId = Number(query.colegioId);
+  if (query.categoriaId) where.categoriaId = Number(query.categoriaId);
+  return where;
+};
+
+async function validarRelaciones({ categoriaId, colegioId }) {
+  const [categoria, colegio] = await Promise.all([
+    Categoria.findByPk(categoriaId),
+    Colegio.findByPk(colegioId),
+  ]);
+  if (!categoria) throw new AppError('La categoría no existe', 400);
+  if (!colegio) throw new AppError('El colegio no existe', 400);
+}
+
+// 🔓 Catálogo público: solo productos activos
 exports.getProductosPublicos = async (req, res) => {
-  try {
-    const productos = await Producto.findAll({
-      include: [
-        { model: Categoria },
-        { model: Colegio },
-        {
-          model: Imagen,
-          as: 'imagenes',
-        },
-      ],
-    });
-    res.json(productos);
-  } catch (error) {
-    console.error('Error al obtener productos públicos:', error);
-    res.status(500).json({ error: 'Error al obtener productos públicos' });
-  }
+  const productos = await Producto.findAll({
+    where: { ...filtrosDesdeQuery(req.query), activo: true },
+    include: includeCompleto,
+    order: orden,
+  });
+  res.json(productos);
 };
 
-// 🔓 Ruta pública para obtener un producto por ID con imágenes, categoría y colegio
 exports.getProductoPublicoById = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const producto = await Producto.findByPk(id, {
-      include: [
-        { model: Categoria },
-        { model: Colegio },
-        {
-          model: Imagen,
-          as: 'imagenes',
-        },
-      ],
-    });
-
-    if (!producto) {
-      return res.status(404).json({ error: 'Producto no encontrado' });
-    }
-
-    res.json(producto);
-  } catch (error) {
-    console.error('Error al obtener producto público por ID:', error);
-    res.status(500).json({ error: 'Error al obtener el producto' });
-  }
+  const producto = await Producto.findOne({
+    where: { id: req.params.id, activo: true },
+    include: includeCompleto,
+    order: orden,
+  });
+  if (!producto) throw new AppError('Producto no encontrado', 404);
+  res.json(producto);
 };
 
-// 🔐 Obtener todos los productos con su categoría y colegio (usuarios y administradores)
+// 🔐 Admin
 exports.getProductos = async (req, res) => {
-  try {
-    const productos = await Producto.findAll({
-      include: [
-        { model: Categoria },
-        { model: Colegio },
-      ],
-    });
-    res.json(productos);
-  } catch (error) {
-    console.error('Error al obtener productos:', error);
-    res.status(500).json({ error: 'Error al obtener productos' });
-  }
+  const productos = await Producto.findAll({
+    where: filtrosDesdeQuery(req.query),
+    include: includeCompleto,
+    order: orden,
+  });
+  res.json(productos);
 };
 
-// 🔐 Obtener un producto por ID (usuarios y administradores)
 exports.getProductoById = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const producto = await Producto.findByPk(id, {
-      include: [
-        { model: Categoria },
-        { model: Colegio },
-        { model: Imagen, as: 'imagenes' },
-      ],
-    });
-    if (!producto) {
-      return res.status(404).json({ error: 'Producto no encontrado' });
-    }
-    res.json(producto);
-  } catch (error) {
-    console.error('Error al obtener el producto:', error);
-    res.status(500).json({ error: 'Error al obtener el producto' });
-  }
+  const producto = await Producto.findByPk(req.params.id, { include: includeCompleto, order: orden });
+  if (!producto) throw new AppError('Producto no encontrado', 404);
+  res.json(producto);
 };
 
-// Crear un nuevo producto
 exports.createProducto = async (req, res) => {
-  const { nombre, descripcion, precio, stock, categoriaId, colegioId } = req.body;
-  try {
-    const nuevoProducto = await Producto.create({
-      nombre,
-      descripcion,
-      precio,
-      stock,
-      categoriaId,
-      colegioId,
-    });
-    res.status(201).json(nuevoProducto);
-  } catch (error) {
-    console.error('Error al crear el producto:', error);
-    res.status(500).json({ error: 'Error al crear el producto' });
-  }
+  await validarRelaciones(req.body);
+  const producto = await Producto.create(req.body);
+  res.status(201).json(producto);
 };
 
-// Actualizar un producto existente
 exports.updateProducto = async (req, res) => {
-  const { id } = req.params;
-  const { nombre, descripcion, precio, stock, categoriaId, colegioId } = req.body;
-  try {
-    const producto = await Producto.findByPk(id);
-    if (!producto) {
-      return res.status(404).json({ error: 'Producto no encontrado' });
-    }
-    producto.nombre = nombre;
-    producto.descripcion = descripcion;
-    producto.precio = precio;
-    producto.stock = stock;
-    producto.categoriaId = categoriaId;
-    producto.colegioId = colegioId;
-    await producto.save();
-    res.json(producto);
-  } catch (error) {
-    console.error('Error al actualizar el producto:', error);
-    res.status(500).json({ error: 'Error al actualizar el producto' });
-  }
+  const producto = await Producto.findByPk(req.params.id);
+  if (!producto) throw new AppError('Producto no encontrado', 404);
+  await validarRelaciones(req.body);
+  await producto.update(req.body);
+  res.json(producto);
 };
 
-// Eliminar un producto
 exports.deleteProducto = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const producto = await Producto.findByPk(id);
-    if (!producto) {
-      return res.status(404).json({ error: 'Producto no encontrado' });
-    }
-    await producto.destroy();
-    res.json({ mensaje: 'Producto eliminado' });
-  } catch (error) {
-    console.error('Error al eliminar el producto:', error);
-    res.status(500).json({ error: 'Error al eliminar el producto' });
-  }
+  const producto = await Producto.findByPk(req.params.id);
+  if (!producto) throw new AppError('Producto no encontrado', 404);
+
+  const imagenes = await Imagen.findAll({ where: { tipoEntidad: 'producto', entidadId: producto.id } });
+  await sequelize.transaction(async (transaction) => {
+    await Imagen.destroy({ where: { tipoEntidad: 'producto', entidadId: producto.id }, transaction });
+    await producto.destroy({ transaction });
+  });
+  await Promise.all(
+    imagenes.map((img) => fs.unlink(path.join(UPLOADS_DIR, path.basename(img.url))).catch(() => {}))
+  );
+  res.json({ mensaje: 'Producto eliminado' });
 };

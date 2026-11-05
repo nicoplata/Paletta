@@ -1,82 +1,36 @@
-// controllers/categoriasController.js
 const { Categoria, Producto } = require('../models');
+const { AppError } = require('../utils/errorHandler');
 
-// Obtener todas las categorías con sus productos asociados
 exports.getCategorias = async (req, res) => {
-  try {
-    const categorias = await Categoria.findAll({
-      include: [{ model: Producto }],
-    });
-    res.json(categorias);
-  } catch (error) {
-    console.error('Error al obtener categorías:', error);
-    res.status(500).json({ error: 'Error al obtener categorías' });
-  }
+  const categorias = await Categoria.findAll({ order: [['nombre', 'ASC']] });
+  res.json(categorias);
 };
 
-// Obtener una categoría por ID
 exports.getCategoriaById = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const categoria = await Categoria.findByPk(id, {
-      include: [{ model: Producto }],
-    });
-    if (!categoria) {
-      return res.status(404).json({ error: 'Categoría no encontrada' });
-    }
-    res.json(categoria);
-  } catch (error) {
-    console.error('Error al obtener la categoría:', error);
-    res.status(500).json({ error: 'Error al obtener la categoría' });
-  }
+  const categoria = await Categoria.findByPk(req.params.id);
+  if (!categoria) throw new AppError('Categoría no encontrada', 404);
+  res.json(categoria);
 };
 
-// Crear una nueva categoría
 exports.createCategoria = async (req, res) => {
-  const { nombre, descripcion } = req.body;
-  if (!nombre || nombre.trim() === '') {
-    return res.status(400).json({ error: 'El nombre es obligatorio' });
-  }
-  try {
-    const nuevaCategoria = await Categoria.create({ nombre, descripcion });
-    res.status(201).json(nuevaCategoria);
-  } catch (error) {
-    console.error('Error al crear la categoría:', error);
-    res.status(500).json({ error: 'Error al crear la categoría' });
-  }
+  const categoria = await Categoria.create(req.body);
+  res.status(201).json(categoria);
 };
 
-// Actualizar una categoría existente
 exports.updateCategoria = async (req, res) => {
-  const { id } = req.params;
-  const { nombre, descripcion } = req.body;
-  try {
-    const categoria = await Categoria.findByPk(id);
-    if (!categoria) {
-      return res.status(404).json({ error: 'Categoría no encontrada' });
-    }
-    if (nombre) categoria.nombre = nombre;
-    if (descripcion !== undefined) categoria.descripcion = descripcion;
-    await categoria.save();
-    res.json(categoria);
-  } catch (error) {
-    console.error('Error al actualizar la categoría:', error);
-    res.status(500).json({ error: 'Error al actualizar la categoría' });
-  }
+  const categoria = await Categoria.findByPk(req.params.id);
+  if (!categoria) throw new AppError('Categoría no encontrada', 404);
+  await categoria.update(req.body);
+  res.json(categoria);
 };
 
-// Eliminar una categoría
 exports.deleteCategoria = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const categoria = await Categoria.findByPk(id);
-    if (!categoria) {
-      return res.status(404).json({ error: 'Categoría no encontrada' });
-    }
-    await categoria.destroy();
-    res.json({ mensaje: 'Categoría eliminada' });
-  } catch (error) {
-    console.error('Error al eliminar la categoría:', error);
-    res.status(500).json({ error: 'Error al eliminar la categoría' });
+  const categoria = await Categoria.findByPk(req.params.id);
+  if (!categoria) throw new AppError('Categoría no encontrada', 404);
+  const enUso = await Producto.count({ where: { categoriaId: categoria.id } });
+  if (enUso > 0) {
+    throw new AppError(`No se puede eliminar: hay ${enUso} producto(s) en esta categoría`, 409);
   }
+  await categoria.destroy();
+  res.json({ mensaje: 'Categoría eliminada' });
 };

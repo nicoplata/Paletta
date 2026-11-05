@@ -1,57 +1,18 @@
 const express = require('express');
+const c = require('../controllers/usuariosController');
+const { soloAdmin } = require('../middleware/auth');
+const validar = require('../middleware/validator');
+const schemas = require('../validators/schemas');
+
 const router = express.Router();
-const usuariosController = require('../controllers/usuariosController');
-const { verificarToken, verificarRolesPermitidos } = require('../middleware/auth');
+const conId = validar(schemas.idParam, 'params');
 
-// Add error logging middleware
-router.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
-  next();
-});
+router.use(soloAdmin);
 
-// Obtener todos los usuarios
-router.get('/',
-  verificarToken,
-  verificarRolesPermitidos(['administrador']),
-  (req, res, next) => {
-    console.log('Verificando acceso a usuarios...');
-    next();
-  },
-  usuariosController.obtenerUsuarios
-);
-
-// Obtener un usuario por ID
-router.get('/:id',
-  verificarToken,
-  verificarRolesPermitidos(['administrador']),
-  usuariosController.obtenerUsuarioPorId
-);
-
-// Crear usuario
-router.post('/',
-  verificarToken,
-  verificarRolesPermitidos(['administrador']),
-  usuariosController.crearUsuario
-);
-
-// Actualizar usuario
-router.put('/:id',
-  verificarToken,
-  verificarRolesPermitidos(['administrador']),
-  usuariosController.actualizarUsuario
-);
-
-// Eliminar usuario
-router.delete('/:id',
-  verificarToken,
-  verificarRolesPermitidos(['administrador']),
-  usuariosController.eliminarUsuario
-);
-
-// Error handling middleware
-router.use((err, req, res, next) => {
-  console.error('Error en rutas de usuarios:', err);
-  res.status(500).json({ error: err.message });
-});
+router.get('/', c.obtenerUsuarios);
+router.get('/:id', conId, c.obtenerUsuarioPorId);
+router.post('/', validar(schemas.usuarioCrear), c.crearUsuario);
+router.put('/:id', conId, validar(schemas.usuarioActualizar), c.actualizarUsuario);
+router.delete('/:id', conId, c.eliminarUsuario);
 
 module.exports = router;

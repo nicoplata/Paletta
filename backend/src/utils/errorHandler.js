@@ -1,29 +1,15 @@
 class AppError extends Error {
-  constructor(message, statusCode) {
+  constructor(message, statusCode = 500, detalles) {
     super(message);
     this.statusCode = statusCode;
-    this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
+    this.detalles = detalles;
     this.isOperational = true;
-
-    Error.captureStackTrace(this, this.constructor);
   }
 }
 
-const handleError = (err, res) => {
-  const { statusCode = 500, message } = err;
-  
-  res.status(statusCode).json({
-    status: err.status || 'error',
-    message: statusCode === 500 ? 'Error interno del servidor' : message
-  });
-};
-
+// Envuelve controladores async para que los errores lleguen al middleware de errores.
 const asyncHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };
 
-module.exports = {
-  AppError,
-  handleError,
-  asyncHandler
-};
+module.exports = { AppError, asyncHandler };
