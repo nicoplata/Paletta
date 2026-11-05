@@ -4,11 +4,11 @@ import Toast from '../components/common/Toast';
 
 describe('Toast', () => {
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('renders with correct message and type', () => {
@@ -25,7 +25,7 @@ describe('Toast', () => {
   });
 
   it('closes automatically after duration', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <Toast
         message="Test message"
@@ -37,13 +37,13 @@ describe('Toast', () => {
 
     expect(screen.getByText('Test message')).toBeInTheDocument();
     
-    jest.advanceTimersByTime(3000);
+    vi.advanceTimersByTime(3000);
     
     expect(onClose).toHaveBeenCalled();
   });
 
   it('closes on close button click', () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(
       <Toast
         message="Test message"

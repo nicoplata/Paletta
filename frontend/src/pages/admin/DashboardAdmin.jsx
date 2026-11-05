@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaBars, FaTimes, FaBox, FaTags, FaSchool, FaUsers, FaSignOutAlt } from 'react-icons/fa';
+import { FaBars, FaTimes, FaBox, FaTags, FaSchool, FaUsers, FaSignOutAlt, FaEnvelope, FaExternalLinkAlt } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
 import { AdminGlobalStyles } from '../../styles/AdminStyles';
 
 const DashboardContainer = styled.div`
@@ -119,11 +120,11 @@ const LogoutButton = styled(StyledNavLink)`
 const DashboardAdmin = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('rol');
-    navigate('/admin');
+    logout();
+    navigate('/admin', { replace: true });
   };
 
   return (
@@ -133,7 +134,7 @@ const DashboardAdmin = () => {
         <Sidebar $isCollapsed={isCollapsed}>
           <SidebarHeader $isCollapsed={isCollapsed}>
             <Title $isCollapsed={isCollapsed}>Panel Admin</Title>
-            <ToggleButton onClick={() => setIsCollapsed(!isCollapsed)}>
+            <ToggleButton onClick={() => setIsCollapsed(!isCollapsed)} aria-label={isCollapsed ? 'Expandir menú' : 'Colapsar menú'}>
               {isCollapsed ? <FaBars /> : <FaTimes />}
             </ToggleButton>
           </SidebarHeader>
@@ -154,6 +155,14 @@ const DashboardAdmin = () => {
             <StyledNavLink to="/admin/dashboard/usuarios" $isCollapsed={isCollapsed}>
               <FaUsers />
               <span>Usuarios</span>
+            </StyledNavLink>
+            <StyledNavLink to="/admin/dashboard/mensajes" $isCollapsed={isCollapsed}>
+              <FaEnvelope />
+              <span>Mensajes</span>
+            </StyledNavLink>
+            <StyledNavLink as="a" href="/" target="_blank" rel="noopener noreferrer" $isCollapsed={isCollapsed}>
+              <FaExternalLinkAlt />
+              <span>Ver sitio</span>
             </StyledNavLink>
             
             <LogoutButton as="button" onClick={handleLogout} $isCollapsed={isCollapsed}>

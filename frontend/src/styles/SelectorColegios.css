@@ -59,3 +59,10 @@
   margin: 4px 0;
   color: #555;
 }
+/* Las tarjetas son <button> por accesibilidad: reseteamos estilos nativos */
+button.tarjeta-colegio {
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+}

@@ -1,42 +1,28 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import ProductList from '../components/ProductList';
+import { useColegio, useProductosDeColegio } from '../hooks/useCatalogo';
+import '../styles/ProductListPage.css';
 
 const ProductosPorColegio = () => {
-  const { id } = useParams(); // ID del colegio desde la URL
-  const [productos, setProductos] = useState([]);
-  const [colegio, setColegio] = useState(null);
+  const { id } = useParams();
+  const { data: colegio, loading: cargandoColegio, errorMensaje: errorColegio } = useColegio(id);
+  const { data: productos, loading, errorMensaje } = useProductosDeColegio(id);
 
-  useEffect(() => {
-    // Obtener datos del colegio
-    fetch(`http://localhost:3000/api/colegios/${id}`)
-      .then((res) => res.json())
-      .then((data) => setColegio(data))
-      .catch((err) => console.error('Error al cargar colegio:', err));
-
-    // Obtener productos relacionados al colegio
-    fetch(`http://localhost:3000/api/colegios/${id}/productos`)
-      .then((res) => res.json())
-      .then((data) => setProductos(data))
-      .catch((err) => console.error('Error al cargar productos:', err));
-  }, [id]);
+  if (!cargandoColegio && errorColegio) {
+    return <p style={{ marginTop: 125, padding: '2rem', textAlign: 'center' }}>Colegio no encontrado.</p>;
+  }
 
   return (
-    <div className="productos-por-colegio">
-      <h2>Productos para {colegio?.nombre}</h2>
-      <div className="grid-productos">
-        {productos.map((producto) => (
-          <div key={producto.id} className="tarjeta-producto">
-            <img src={producto.imagen} alt={producto.nombre} />
-            <h3>{producto.nombre}</h3>
-            <p>{producto.descripcion}</p>
-            <p><strong>${producto.precio}</strong></p>
-            <button>Agregar al carrito</button>
-          </div>
-        ))}
+    <div style={{ marginTop: 125, padding: '0 1rem' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <Link to="/colegios" style={{ color: '#9c1f23' }}>← Ver todos los colegios</Link>
+        <h1 style={{ color: '#9c1f23', margin: '1rem 0 1.5rem' }}>
+          {colegio ? `Productos de ${colegio.nombre}` : 'Productos'}
+        </h1>
+        <ProductList productos={productos} loading={loading} error={errorMensaje} mostrarColegio={false} />
       </div>
     </div>
   );
 };
 
 export default ProductosPorColegio;
-

@@ -1,0 +1,134 @@
+# Instalación en la VPS (Ubuntu) — www.paletta.com.ar
+
+Guía para la primera puesta en producción. Supone Ubuntu con Node 20+, PostgreSQL, nginx y git ya instalados.
+Los comandos con `sudo` se corren con tu usuario administrador; el resto, con el usuario que va a correr la app
+(en esta guía, `paletta`).
+
+## 0. DNS
+
+En el proveedor del dominio, dos registros `A` apuntando a la IP de la VPS:
+
+| Nombre | Tipo | Valor |
+|---|---|---|
+| `paletta.com.ar` (o `@`) | A | IP de la VPS |
+| `www` | A | IP de la VPS |
+
+Verificá con `dig +short www.paletta.com.ar` antes del paso 6 (certbot lo necesita).
+
+## 1. Usuario, pm2 y firewall
+
+```bash
+sudo adduser --disabled-password --gecos "" paletta
+sudo npm install -g pm2
+sudo ufw allow OpenSSH && sudo ufw allow 'Nginx Full' && sudo ufw enable
+```
+
+El puerto 3000 de la API **no** se abre: solo lo usa nginx desde localhost.
+
+## 2. Base de datos (desde cero)
+
+Como la base actual se puede descartar, se borra y se crea limpia con su propio usuario:
+
+```bash
+sudo -u postgres psql -c "DROP DATABASE IF EXISTS paletta;"
+sudo -u postgres psql -c "DROP ROLE IF EXISTS paletta;"
+sudo -u postgres psql -c "CREATE ROLE paletta LOGIN PASSWORD 'CAMBIAR_POR_UNA_CLAVE_LARGA';"
+sudo -u postgres psql -c "CREATE DATABASE paletta OWNER paletta;"
+```
+
+> Si la base actual tiene otro nombre, ajustá el `DROP DATABASE`.
+
+## 3. Código
+
+```bash
+sudo mkdir -p /var/www/paletta && sudo chown paletta:paletta /var/www/paletta
+sudo -iu paletta
+git clone https://github.com/nicoplata/Paletta.git /var/www/paletta
+cd /var/www/paletta
+```
+
+## 4. Backend
+
+```bash
+cd /var/www/paletta/backend
+cp .env.example .env
+nano .env
+```
+
+Valores a completar en `.env`:
+
+- `NODE_ENV=production`
+- `DB_PASSWORD=` la clave del paso 2
+- `JWT_SECRET=` generalo con `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
+- `CORS_ORIGINS=https://www.paletta.com.ar,https://paletta.com.ar` (ya viene así)
+- `MAIL_*` y `CONTACT_TO` si querés recibir por mail los mensajes de contacto (opcional: igual quedan en el panel)
+
+```bash
+chmod 600 .env
+npm ci --omit=dev
+npm run db:migrate
+ADMIN_EMAIL=tu-email@paletta.com.ar ADMIN_PASSWORD='una-clave-de-al-menos-10' npm run seed
+
+cd /var/www/paletta
+pm2 start deploy/ecosystem.config.cjs
+pm2 save
+curl http://127.0.0.1:3000/api/health      # -> {"ok":true}
+```
+
+Para que pm2 arranque solo al reiniciar la VPS, corré `pm2 startup` y ejecutá (como admin) el comando `sudo ...` que te muestra.
+Logs: `pm2 logs paletta-api`. Para que no crezcan sin límite: `pm2 install pm2-logrotate`.
+
+## 5. Frontend
+
+```bash
+cd /var/www/paletta/frontend
+cp .env.example .env      # VITE_API_URL vacío; VITE_MOSTRAR_PRECIOS=false (catálogo) o true
+npm ci && npm run build   # genera frontend/dist, que sirve nginx
+```
+
+## 6. nginx + HTTPS
+
+```bash
+sudo cp /var/www/paletta/deploy/nginx.conf /etc/nginx/sites-available/paletta
+sudo ln -s /etc/nginx/sites-available/paletta /etc/nginx/sites-enabled/paletta
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl reload nginx
+
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d www.paletta.com.ar -d paletta.com.ar --redirect
+```
+
+Certbot renueva el certificado solo (`systemctl list-timers | grep certbot` para verificarlo).
+
+nginx lee `frontend/dist` y `backend/public/uploads` con su usuario (`www-data`), así que necesita permiso de lectura:
+
+```bash
+sudo chmod 755 /var/www/paletta /var/www/paletta/frontend /var/www/paletta/backend /var/www/paletta/backend/public
+```
+
+## 7. Backups
+
+```bash
+sudo mkdir -p /var/backups/paletta && sudo chown paletta:paletta /var/backups/paletta
+sudo touch /var/log/paletta-backup.log && sudo chown paletta:paletta /var/log/paletta-backup.log
+/var/www/paletta/deploy/backup.sh        # probarlo una vez
+crontab -e                               # como usuario paletta, agregar:
+# 15 3 * * * /var/www/paletta/deploy/backup.sh >> /var/log/paletta-backup.log 2>&1
+```
+
+Importante: copiá `/var/backups/paletta` fuera de la VPS (rclone a Google Drive/S3, o un `scp` periódico).
+
+## 8. Verificación final
+
+- https://www.paletta.com.ar carga, y https://paletta.com.ar redirige a www.
+- https://www.paletta.com.ar/admin: entrar con el admin del paso 4, crear un colegio con logo y un producto con imagen.
+- Verlos en el sitio público y enviar un mensaje de contacto (tiene que aparecer en *Mensajes*).
+
+## Actualizaciones
+
+```bash
+sudo -iu paletta
+cd /var/www/paletta && ./deploy/deploy.sh main
+```
+
+El script baja el código, instala dependencias, aplica migraciones, rearma el frontend y recarga la API sin cortes.

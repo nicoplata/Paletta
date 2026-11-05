@@ -1,138 +1,78 @@
-# Paletta - Documentación
+# Paletta
 
-## Estructura del Proyecto
+Sitio de Paletta (uniformes escolares e indumentaria de egresados): catálogo público por colegio y panel de administración.
 
-El proyecto está dividido en dos partes principales:
+- **frontend/**: React 18 + Vite. Sitio público y panel `/admin`.
+- **backend/**: Node 20+ con Express 5, Sequelize y PostgreSQL. API REST en `/api`.
+- **deploy/**: configuración de ejemplo para la VPS (nginx y pm2).
 
-### Frontend (React + Vite)
+## Desarrollo local
 
-```
-frontend/
-├── src/
-│   ├── components/        # Componentes reutilizables
-│   │   ├── common/       # Componentes base (Button, Input, etc.)
-│   │   └── layout/       # Componentes de estructura
-│   ├── context/          # Contextos de React (Auth, Cart, etc.)
-│   ├── hooks/            # Hooks personalizados
-│   ├── pages/           # Componentes de página
-│   ├── styles/          # Estilos CSS
-│   └── utils/           # Funciones utilitarias
-└── tests/               # Tests unitarios y de integración
+Requisitos: Node 20+ y PostgreSQL 14+.
 
-### Backend (Node.js + Express)
-
-```
-backend/
-├── src/
-│   ├── controllers/     # Controladores de rutas
-│   ├── models/         # Modelos de datos
-│   ├── middleware/     # Middleware personalizado
-│   ├── routes/         # Definiciones de rutas
-│   ├── services/       # Lógica de negocio
-│   └── utils/          # Funciones utilitarias
-└── tests/             # Tests del backend
-```
-
-## Configuración del Proyecto
-
-1. Instalar dependencias:
 ```bash
-# Frontend
+# 1. Base de datos
+createdb paletta
+
+# 2. Backend
+cd backend
+cp .env.example .env        # completar DB_* (en desarrollo JWT_SECRET puede quedar vacío)
+npm install
+npm run db:migrate          # crea o actualiza las tablas
+ADMIN_EMAIL=admin@paletta.com.ar ADMIN_PASSWORD='una-clave-larga' npm run seed
+npm run dev                 # http://localhost:3000
+
+# 3. Frontend (en otra terminal)
 cd frontend
 npm install
-
-# Backend
-cd backend
-npm install
+npm run dev                 # http://localhost:5173 (redirige /api y /uploads al backend)
 ```
 
-2. Variables de entorno:
-- Crear archivo `.env` en la raíz del backend:
-```
-NODE_ENV=development
-PORT=3000
-DB_HOST=localhost
-DB_USER=usuario
-DB_PASS=contraseña
-DB_NAME=paletta
-JWT_SECRET=tu_secreto
-```
+Panel de administración: `http://localhost:5173/admin`.
 
-3. Base de datos:
-```bash
-# Crear base de datos
-npx prisma migrate dev
-```
+### Scripts útiles
 
-## Características Principales
+| Dónde | Comando | Qué hace |
+|---|---|---|
+| backend | `npm run db:migrate` | Aplica migraciones pendientes (`-- status` / `-- down`) |
+| backend | `npm run seed` | Crea/actualiza el admin (`ADMIN_EMAIL`, `ADMIN_PASSWORD`) y categorías base |
+| frontend | `npm run lint` | ESLint |
+| backend | `npm test` / `npm run lint` | Tests de integración (node:test + supertest) / ESLint |
+| frontend | `npm test` | Tests (Vitest + Testing Library) |
+| frontend | `npm run build` | Build de producción en `frontend/dist` |
 
-### Frontend
-- Autenticación y autorización
-- Carrito de compras
-- Gestión de productos
-- Panel de administración
-- Sistema de notificaciones
-- Búsqueda y filtrado
-- Paginación
-- Optimización de rendimiento
-- Accesibilidad
+### Variables de entorno
 
-### Backend
-- API RESTful
-- Autenticación JWT
-- Validación de datos
-- Manejo de archivos
-- Rate limiting
-- Logging
-- Caché
-- Tests
+- `backend/.env.example`: base de datos, `JWT_SECRET` (obligatorio en producción), CORS, SMTP opcional para el formulario de contacto.
+- `frontend/.env.example`: `VITE_API_URL` (vacío si front y API comparten dominio) y `VITE_MOSTRAR_PRECIOS` (`false` = modo catálogo, `true` = muestra precios y stock).
 
-## Testing
+## Tests y CI
 
 ```bash
-# Ejecutar tests del frontend
-cd frontend
-npm test
+# Backend: tests de integración contra un Postgres real (base "paletta_test", se recrea en cada corrida)
+createdb paletta_test
+cd backend && npm run lint && npm test
 
-# Ejecutar tests del backend
-cd backend
-npm test
+# Frontend: Vitest + Testing Library
+cd frontend && npm run lint && npm test
 ```
+
+El backend toma la conexión de las variables `DB_*` (o del `.env`), y el nombre de la base de tests de `TEST_DB_NAME`.
+GitHub Actions (`.github/workflows/ci.yml`) corre lint, tests, build y `npm audit` en cada push a `main` y en cada PR.
 
 ## Despliegue
 
-1. Frontend:
-```bash
-cd frontend
-npm run build
-```
+Producción: VPS Ubuntu con nginx y pm2, en **www.paletta.com.ar**. La guía paso a paso está en [`deploy/VPS.md`](deploy/VPS.md).
 
-2. Backend:
-```bash
-cd backend
-npm run build
-```
+- `deploy/nginx.conf`: sirve el frontend y las imágenes, hace proxy de `/api`, redirige `paletta.com.ar` a `www` y agrega cabeceras de seguridad.
+- `deploy/ecosystem.config.cjs`: configuración de pm2 para la API.
+- `deploy/deploy.sh`: actualización (pull, dependencias, migraciones, build y reload).
+- `deploy/backup.sh`: backup diario de la base y de las imágenes (`backend/public/uploads`, que no está en git).
 
-## Mantenimiento
+Healthcheck para monitoreo: `GET /api/health`.
 
-- Logs: Los logs se encuentran en `/var/log/paletta/`
-- Monitoreo: Integrado con Sentry
-- Backups: Programados diariamente
-- Actualizaciones: Usar `npm audit` regularmente
+## API (resumen)
 
-## API Documentation
+Públicos: `GET /api/productos/public[/:id]`, `GET /api/colegios[/:id][/productos]`, `GET /api/categorias`, `POST /api/contacto`, `POST /api/auth/login`.
 
-La documentación completa de la API está disponible en:
-`http://localhost:3000/api-docs`
-
-## Contribución
-
-1. Fork el repositorio
-2. Crear rama (`git checkout -b feature/AmazingFeature`)
-3. Commit cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abrir Pull Request
-
-## Licencia
-
-Distribuido bajo la licencia MIT. Ver `LICENSE` para más información.
+Solo administradores (`Authorization: Bearer <token>`): CRUD de `/api/productos`, `/api/categorias`, `/api/colegios` (`/api/colegios/admin` lista también los inactivos), `/api/usuarios`, `/api/imagenes`, y la bandeja de `/api/contacto`.

@@ -1,55 +1,23 @@
 const express = require('express');
-const router = express.Router();
-const imagenesController = require('../controllers/imagenesController');
-const { verificarToken, verificarRolesPermitidos } = require('../middleware/auth');
+const c = require('../controllers/imagenesController');
+const { soloAdmin } = require('../middleware/auth');
 const upload = require('../middleware/upload');
-const { Imagen } = require('../models');
+const validar = require('../middleware/validator');
+const schemas = require('../validators/schemas');
 
-// Logging middleware específico para rutas de imágenes
-router.use((req, res, next) => {
-  console.log(`Imagen route: ${req.method} ${req.originalUrl}`);
-  next();
-});
+const fs = require('fs');
 
-// DELETE debe ir antes que las rutas con parámetros genéricos
-router.delete(
-  '/:imagenId',
-  verificarToken,
-  verificarRolesPermitidos(['administrador']),
-  (req, res, next) => {
-    console.log('Procesando DELETE imagen:', req.params.imagenId);
-    next();
-  },
-  imagenesController.eliminarImagen
-);
+const router = express.Router();
 
-router.post(
-  '/',
-  verificarToken,
-  verificarRolesPermitidos(['administrador', 'usuario']),
-  upload.single('imagen'),
-  imagenesController.subirImagen // 👈 nuevo nombre para claridad
-);
+// Si la validación falla después de que multer guardó el archivo, se borra para no dejar huérfanos.
+const validarImagen = (req, res, next) =>
+  validar(schemas.imagen)(req, res, (err) => {
+    if (err && req.file) fs.unlink(req.file.path, () => {});
+    next(err);
+  });
 
-router.get('/:productoId', imagenesController.getImagenesPorProducto);
-
-router.get('/', async (req, res) => {
-  const { tipoEntidad } = req.query;
-
-  try {
-    if (!tipoEntidad) {
-      return res.status(400).json({ error: 'Falta el parámetro tipoEntidad' });
-    }
-
-    const imagenes = await Imagen.findAll({
-      where: { tipoEntidad },
-    });
-
-    res.json(imagenes);
-  } catch (error) {
-    console.error('Error al obtener imágenes por tipoEntidad:', error);
-    res.status(500).json({ error: 'Error al obtener imágenes' });
-  }
-});
+router.get('/', c.getImagenes);
+router.post('/', soloAdmin, upload.single('imagen'), validarImagen, c.subirImagen);
+router.delete('/:id', soloAdmin, validar(schemas.idParam, 'params'), c.eliminarImagen);
 
 module.exports = router;

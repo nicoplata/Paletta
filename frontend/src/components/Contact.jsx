@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import { useState } from 'react';
+import api, { mensajeError } from '../lib/api';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
-    mensaje: ''
+    mensaje: '',
+    sitio: '' // honeypot anti-spam (oculto para humanos)
   });
   const [status, setStatus] = useState({
     type: '',
@@ -26,16 +27,16 @@ const Contact = () => {
     setStatus({ type: '', message: '' });
 
     try {
-      await axios.post('http://localhost:3000/api/contacto', formData);
+      await api.post('/contacto', formData);
       setStatus({
         type: 'success',
         message: '¡Gracias por tu mensaje! Te contactaremos pronto.'
       });
-      setFormData({ nombre: '', email: '', mensaje: '' });
+      setFormData({ nombre: '', email: '', mensaje: '', sitio: '' });
     } catch (error) {
       setStatus({
         type: 'error',
-        message: error.response?.data?.message || 'Hubo un error al enviar el mensaje. Por favor, intenta nuevamente.'
+        message: mensajeError(error, 'Hubo un error al enviar el mensaje. Por favor, intentá nuevamente.')
       });
     } finally {
       setLoading(false);
@@ -73,8 +74,6 @@ const Contact = () => {
               required 
               minLength={2}
               maxLength={50}
-              pattern="[A-Za-zÁ-ÿ\s]+"
-              title="Solo se permiten letras y espacios"
               style={{ 
                 width: '100%', 
                 padding: 8, 
@@ -96,8 +95,6 @@ const Contact = () => {
               value={formData.email}
               onChange={handleChange}
               required 
-              pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
-              title="Por favor ingresa un email válido"
               style={{ 
                 width: '100%', 
                 padding: 8, 
@@ -120,7 +117,7 @@ const Contact = () => {
               rows={5} 
               required 
               minLength={10}
-              maxLength={500}
+              maxLength={2000}
               style={{ 
                 width: '100%', 
                 padding: 8, 
@@ -133,9 +130,20 @@ const Contact = () => {
                 background: '#fff' 
               }} />
           </div>
+          <input
+            type="text"
+            name="sitio"
+            value={formData.sitio}
+            onChange={handleChange}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
+          />
           {status.message && (
-            <div 
-              style={{ 
+            <div
+              role={status.type === 'error' ? 'alert' : 'status'}
+              style={{
                 padding: '0.75rem', 
                 marginBottom: '1rem', 
                 borderRadius: 6, 

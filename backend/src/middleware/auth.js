@@ -1,40 +1,42 @@
 const jwt = require('jsonwebtoken');
-const { JWT_SECRET } = require('../config/env');
+const ENV = require('../config/env');
+const { User } = require('../models');
 
-// Middleware para verificar que el token JWT sea válido
-function verificarToken(req, res, next) {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ mensaje: 'Token no proporcionado o formato incorrecto' });
+// Verifica el JWT y que el usuario siga existiendo (un usuario borrado no puede seguir operando).
+async function verificarToken(req, res, next) {
+  const authHeader = req.headers.authorization || '';
+  if (!authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'No autenticado' });
   }
 
-  const token = authHeader.split(' ')[1];
-
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.usuario = decoded; // { id, rol }
+    const decoded = jwt.verify(authHeader.slice(7), ENV.JWT_SECRET);
+    const usuario = await User.findByPk(decoded.id);
+    if (!usuario) {
+      return res.status(401).json({ error: 'Sesión inválida' });
+    }
+    req.usuario = { id: usuario.id, rol: usuario.rol, email: usuario.email, nombre: usuario.nombre };
     next();
-  } catch (error) {
-    console.error('Error al verificar token:', error);
-    return res.status(403).json({ mensaje: 'Token inválido o expirado' });
+  } catch {
+    return res.status(401).json({ error: 'Sesión inválida o expirada' });
   }
 }
 
-// Middleware para verificar que el usuario tenga alguno de los roles permitidos
 function verificarRolesPermitidos(rolesPermitidos = []) {
   return (req, res, next) => {
     if (!req.usuario || !rolesPermitidos.includes(req.usuario.rol)) {
-      return res.status(403).json({
-        mensaje: `Acceso denegado: se requiere uno de los siguientes roles: ${rolesPermitidos.join(', ')}`
-      });
+      return res.status(403).json({ error: 'No tenés permisos para esta acción' });
     }
     next();
   };
 }
 
-module.exports = {
-  verificarToken,
-  verificarRolesPermitidos
-};
+const soloAdmin = [verificarToken, verificarRolesPermitidos(['administrador'])];
 
+function firmarToken(usuario) {
+  return jwt.sign({ id: usuario.id, rol: usuario.rol }, ENV.JWT_SECRET, {
+    expiresIn: ENV.JWT_EXPIRES_IN,
+  });
+}
+
+module.exports = { verificarToken, verificarRolesPermitidos, soloAdmin, firmarToken };

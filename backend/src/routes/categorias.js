@@ -1,21 +1,19 @@
 const express = require('express');
+const c = require('../controllers/categoriasController');
+const { soloAdmin } = require('../middleware/auth');
+const validar = require('../middleware/validator');
+const schemas = require('../validators/schemas');
+
 const router = express.Router();
-const { verificarToken, verificarRolesPermitidos } = require('../middleware/auth');
-const categoriasController = require('../controllers/categoriasController');
+const conId = validar(schemas.idParam, 'params');
 
-// Obtener todas las categorías (usuarios y administradores)
-router.get('/', verificarToken, verificarRolesPermitidos(['usuario', 'administrador']), categoriasController.getCategorias);
+// 🔓 Lectura pública (se usa en los filtros del catálogo)
+router.get('/', c.getCategorias);
+router.get('/:id', conId, c.getCategoriaById);
 
-// Obtener una categoría por ID (usuarios y administradores)
-router.get('/:id', verificarToken, verificarRolesPermitidos(['usuario', 'administrador']), categoriasController.getCategoriaById);
-
-// Crear una nueva categoría (solo administradores)
-router.post('/', verificarToken, verificarRolesPermitidos(['administrador']), categoriasController.createCategoria);
-
-// Actualizar una categoría (solo administradores)
-router.put('/:id', verificarToken, verificarRolesPermitidos(['administrador']), categoriasController.updateCategoria);
-
-// Eliminar una categoría (solo administradores)
-router.delete('/:id', verificarToken, verificarRolesPermitidos(['administrador']), categoriasController.deleteCategoria);
+// 🔐 Administración
+router.post('/', soloAdmin, validar(schemas.categoria), c.createCategoria);
+router.put('/:id', soloAdmin, conId, validar(schemas.categoria), c.updateCategoria);
+router.delete('/:id', soloAdmin, conId, c.deleteCategoria);
 
 module.exports = router;

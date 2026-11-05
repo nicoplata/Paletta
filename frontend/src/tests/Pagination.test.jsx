@@ -6,7 +6,7 @@ describe('Pagination', () => {
   const defaultProps = {
     currentPage: 1,
     totalPages: 5,
-    onPageChange: jest.fn(),
+    onPageChange: vi.fn(),
   };
 
   it('renders correct number of page buttons', () => {
@@ -31,7 +31,7 @@ describe('Pagination', () => {
   });
 
   it('calls onPageChange with correct page number when clicking a page button', () => {
-    const onPageChange = jest.fn();
+    const onPageChange = vi.fn();
     render(<Pagination {...defaultProps} onPageChange={onPageChange} />);
     
     fireEvent.click(screen.getByText('3'));
@@ -51,7 +51,7 @@ describe('Pagination', () => {
     
     // Debería mostrar 1 ... 4 5 6 ... 10
     expect(screen.getByText('1')).toBeInTheDocument();
-    expect(screen.getByText('...')).toBeInTheDocument();
+    expect(screen.getAllByText('...')).toHaveLength(2);
     expect(screen.getByText('4')).toBeInTheDocument();
     expect(screen.getByText('5')).toBeInTheDocument();
     expect(screen.getByText('6')).toBeInTheDocument();

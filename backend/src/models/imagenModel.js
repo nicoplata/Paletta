@@ -1,5 +1,7 @@
 const { DataTypes } = require('sequelize');
 
+const TIPOS_ENTIDAD = ['producto', 'colegio'];
+
 module.exports = (sequelize) => {
   const Imagen = sequelize.define('Imagen', {
     url: {
@@ -10,8 +12,9 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
     },
     tipoEntidad: {
-      type: DataTypes.STRING, // 'producto' o 'colegio'
+      type: DataTypes.STRING,
       allowNull: false,
+      validate: { isIn: [TIPOS_ENTIDAD] },
     },
     entidadId: {
       type: DataTypes.INTEGER,
@@ -21,19 +24,6 @@ module.exports = (sequelize) => {
     tableName: 'Imagenes',
   });
 
-  Imagen.associate = (models) => {
-    Imagen.belongsTo(models.Producto, {
-      foreignKey: 'entidadId',
-      constraints: false,
-      as: 'producto',
-    });
-
-    Imagen.belongsTo(models.Colegio, {
-      foreignKey: 'entidadId',
-      constraints: false,
-      as: 'colegio',
-    });
-  };
-
+  Imagen.TIPOS_ENTIDAD = TIPOS_ENTIDAD;
   return Imagen;
 };

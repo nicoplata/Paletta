@@ -10,52 +10,43 @@ module.exports = (sequelize) => {
       type: DataTypes.TEXT,
     },
     precio: {
-      type: DataTypes.FLOAT,
+      // DECIMAL para dinero; Postgres lo devuelve como string, así que lo convertimos a número.
+      type: DataTypes.DECIMAL(12, 2),
       allowNull: false,
+      get() {
+        const valor = this.getDataValue('precio');
+        return valor === null || valor === undefined ? valor : Number(valor);
+      },
     },
     stock: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,
     },
+    activo: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
     categoriaId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'Categorias',
-        key: 'id',
-      },
     },
     colegioId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'Colegios',
-        key: 'id',
-      },
     },
   }, {
-    timestamps: true,
     tableName: 'Productos',
   });
 
   Producto.associate = (models) => {
-    Producto.belongsTo(models.Categoria, {
-      foreignKey: 'categoriaId',
-      as: 'categoria',
-    });
-
-    Producto.belongsTo(models.Colegio, {
-      foreignKey: 'colegioId',
-      as: 'colegio',
-    });
-
+    Producto.belongsTo(models.Categoria, { foreignKey: 'categoriaId', as: 'categoria' });
+    Producto.belongsTo(models.Colegio, { foreignKey: 'colegioId', as: 'colegio' });
     Producto.hasMany(models.Imagen, {
       foreignKey: 'entidadId',
       constraints: false,
-      scope: {
-        tipoEntidad: 'producto',
-      },
+      scope: { tipoEntidad: 'producto' },
       as: 'imagenes',
     });
   };

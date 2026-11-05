@@ -1,65 +1,56 @@
 import { useEffect, useState } from 'react';
+import { useCategorias, useColegios } from '../hooks/useCatalogo';
 import '../styles/FiltroProductos.css';
 
+const OpcionFiltro = ({ seleccionada, onClick, children }) => (
+  <li>
+    <button type="button" className={`filtroOpcion${seleccionada ? ' selected' : ''}`} onClick={onClick} aria-pressed={seleccionada}>
+      {children}
+    </button>
+  </li>
+);
+
 const FiltroProductos = ({ onChange, context = 'productos' }) => {
-  const [colegios, setColegios] = useState([]);
-  const [selectedColegio, setSelectedColegio] = useState('');
-  const [selectedCategoria, setSelectedCategoria] = useState('');
+  const { data: colegios } = useColegios();
+  const { data: categorias } = useCategorias();
+  const [colegio, setColegio] = useState('');
+  const [categoria, setCategoria] = useState('');
   const [showColegios, setShowColegios] = useState(true);
   const [showCategorias, setShowCategorias] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/colegios')
-      .then(res => res.json())
-      .then(data => setColegios(data))
-      .catch(err => console.error('Error al cargar colegios:', err));
-  }, []);
-
-  useEffect(() => {
-    onChange?.({ colegio: selectedColegio, categoria: selectedCategoria });
-  }, [selectedColegio, selectedCategoria]);
+    onChange?.({ colegio, categoria });
+  }, [colegio, categoria, onChange]);
 
   return (
     <div className={`filtrosContainer ${context}`}>
       <div className="filtroGrupo">
-        <button className="toggleBtn" onClick={() => setShowColegios(!showColegios)}>
+        <button type="button" className="toggleBtn" onClick={() => setShowColegios(!showColegios)} aria-expanded={showColegios}>
           Colegio {showColegios ? '▲' : '▼'}
         </button>
         {showColegios && (
           <ul className="filtroOpciones">
-            <li
-              className={!selectedColegio ? 'selected' : ''}
-              onClick={() => setSelectedColegio('')}
-            >
-              Todos
-            </li>
-            {colegios.map(c => (
-              <li
-                key={c.id}
-                className={selectedColegio === String(c.id) ? 'selected' : ''}
-                onClick={() => setSelectedColegio(String(c.id))}
-              >
+            <OpcionFiltro seleccionada={!colegio} onClick={() => setColegio('')}>Todos</OpcionFiltro>
+            {colegios.map((c) => (
+              <OpcionFiltro key={c.id} seleccionada={colegio === String(c.id)} onClick={() => setColegio(String(c.id))}>
                 {c.nombre}
-              </li>
+              </OpcionFiltro>
             ))}
           </ul>
         )}
       </div>
 
       <div className="filtroGrupo">
-        <button className="toggleBtn" onClick={() => setShowCategorias(!showCategorias)}>
+        <button type="button" className="toggleBtn" onClick={() => setShowCategorias(!showCategorias)} aria-expanded={showCategorias}>
           Prenda {showCategorias ? '▲' : '▼'}
         </button>
         {showCategorias && (
           <ul className="filtroOpciones">
-            {['', 'Campera', 'Buzo', 'Pantalón', 'Remera'].map(cat => (
-              <li
-                key={cat || 'todas'}
-                className={selectedCategoria === cat ? 'selected' : ''}
-                onClick={() => setSelectedCategoria(cat)}
-              >
-                {cat || 'Todas'}
-              </li>
+            <OpcionFiltro seleccionada={!categoria} onClick={() => setCategoria('')}>Todas</OpcionFiltro>
+            {categorias.map((c) => (
+              <OpcionFiltro key={c.id} seleccionada={categoria === String(c.id)} onClick={() => setCategoria(String(c.id))}>
+                {c.nombre}
+              </OpcionFiltro>
             ))}
           </ul>
         )}
