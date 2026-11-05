@@ -64,11 +64,11 @@ module.exports = {
   },
 
   async down(qi) {
-    await qi.dropTable('Imagenes');
-    await qi.dropTable('Productos');
-    await qi.dropTable('Colegios');
-    await qi.dropTable('Categorias');
-    await qi.dropTable('Users');
+    await qi.dropTable('Imagenes', {});
+    await qi.dropTable('Productos', {});
+    await qi.dropTable('Colegios', {});
+    await qi.dropTable('Categorias', {});
+    await qi.dropTable('Users', {});
     await qi.sequelize.query('DROP TYPE IF EXISTS "enum_Users_rol";');
   },
 };

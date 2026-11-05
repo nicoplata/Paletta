@@ -32,7 +32,7 @@ app.use(express.json({ limit: '100kb' }));
 
 // 📁 Archivos públicos
 const estaticos = { maxAge: ENV.isProd ? '7d' : 0, index: false };
-app.use('/uploads', express.static(path.join(__dirname, '..', 'public', 'uploads'), estaticos));
+app.use('/uploads', express.static(ENV.UPLOADS_DIR, estaticos));
 app.use('/imagenes', express.static(path.join(__dirname, '..', 'public', 'imagenes'), estaticos));
 
 // ❤️ Healthcheck (para monitoreo / balanceador)

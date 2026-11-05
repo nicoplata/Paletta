@@ -25,7 +25,7 @@ export default [
     },
   },
   {
-    files: ['src/tests/**', 'src/setupTests.js', '__mocks__/**', '*.config.js'],
-    languageOptions: { globals: { ...globals.jest, ...globals.node } },
+    files: ['src/**/*.test.{js,jsx}', 'src/tests/**', 'src/setupTests.js', '*.config.js'],
+    languageOptions: { globals: { ...globals.node, ...(globals.vitest || {}), vi: 'readonly', describe: 'readonly', it: 'readonly', test: 'readonly', expect: 'readonly', beforeEach: 'readonly', afterEach: 'readonly', beforeAll: 'readonly', afterAll: 'readonly' } },
   },
 ];

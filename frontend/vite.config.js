@@ -14,6 +14,12 @@ export default defineConfig(({ mode }) => {
         '/uploads': backend,
       },
     },
+    test: {
+      environment: 'jsdom',
+      globals: true,
+      setupFiles: ['./src/setupTests.js'],
+      css: false,
+    },
     build: {
       sourcemap: false,
       rollupOptions: {

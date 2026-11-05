@@ -1,11 +1,10 @@
 const fs = require('fs');
-const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
 const ENV = require('../config/env');
 const { AppError } = require('../utils/errorHandler');
 
-const UPLOADS_DIR = path.join(__dirname, '..', '..', 'public', 'uploads');
+const { UPLOADS_DIR } = ENV;
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 const TIPOS_PERMITIDOS = {

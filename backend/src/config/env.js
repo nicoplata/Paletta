@@ -1,5 +1,6 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env'), quiet: true });
 const crypto = require('crypto');
+const path = require('path');
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const isProd = NODE_ENV === 'production';
@@ -45,6 +46,7 @@ const ENV = {
   TRUST_PROXY: process.env.TRUST_PROXY || (isProd ? '1' : '0'),
 
   UPLOAD_MAX_MB: Number(process.env.UPLOAD_MAX_MB) || 5,
+  UPLOADS_DIR: path.resolve(process.env.UPLOADS_DIR || path.join(__dirname, '..', '..', 'public', 'uploads')),
 
   // Mail (opcional): si no se configura, los mensajes de contacto solo se guardan en la base.
   MAIL_HOST: process.env.MAIL_HOST,

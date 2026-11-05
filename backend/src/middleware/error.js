@@ -6,7 +6,7 @@ const notFound = (req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
 };
 
-// eslint-disable-next-line no-unused-vars
+ 
 const errorHandler = (err, req, res, next) => {
   let status = 500;
   let mensaje = 'Error interno del servidor';

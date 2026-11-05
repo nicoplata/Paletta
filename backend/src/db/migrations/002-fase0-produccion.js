@@ -47,7 +47,7 @@ module.exports = {
   },
 
   async down(qi, S) {
-    await qi.dropTable('MensajesContacto');
+    await qi.dropTable('MensajesContacto', {});
     await qi.removeColumn('Productos', 'activo');
     await qi.changeColumn('Productos', 'precio', { type: S.FLOAT, allowNull: false });
   },
