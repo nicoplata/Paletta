@@ -25,6 +25,9 @@ const db = {
   Producto: require('./productoModel')(sequelize),
   Imagen: require('./imagenModel')(sequelize),
   MensajeContacto: require('./mensajeContactoModel')(sequelize),
+  Variante: require('./varianteModel')(sequelize),
+  Pedido: require('./pedidoModel')(sequelize),
+  PedidoItem: require('./pedidoItemModel')(sequelize),
 };
 
 Object.values(db).forEach((model) => {

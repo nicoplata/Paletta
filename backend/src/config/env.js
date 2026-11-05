@@ -56,6 +56,30 @@ const ENV = {
   MAIL_PASS: process.env.MAIL_PASS,
   MAIL_FROM: process.env.MAIL_FROM || process.env.MAIL_USER,
   CONTACT_TO: process.env.CONTACT_TO,
+
+  // URL pública del sitio (para links en mails y redirecciones de Mercado Pago)
+  SITE_URL: (process.env.SITE_URL || 'http://localhost:5173').replace(/\/$/, ''),
+
+  // Tienda online
+  TIENDA_HABILITADA: process.env.TIENDA_HABILITADA === 'true',
+  ENVIO_COSTO: Number(process.env.ENVIO_COSTO) || 0,
+  ENVIO_HABILITADO: process.env.ENVIO_HABILITADO !== 'false',
+  RETIRO_DIRECCION: process.env.RETIRO_DIRECCION || 'Vélez Sarsfield 4270, Munro, Buenos Aires',
+  PEDIDO_VENCIMIENTO_MP_MIN: Number(process.env.PEDIDO_VENCIMIENTO_MP_MIN) || 60,
+  PEDIDO_VENCIMIENTO_TRANSFERENCIA_HS: Number(process.env.PEDIDO_VENCIMIENTO_TRANSFERENCIA_HS) || 48,
+  MAX_UNIDADES_POR_ITEM: Number(process.env.MAX_UNIDADES_POR_ITEM) || 50,
+  PEDIDOS_POR_HORA: Number(process.env.PEDIDOS_POR_HORA) || 20,
+
+  // Mercado Pago (Checkout Pro). Sin MP_ACCESS_TOKEN el método no se ofrece.
+  MP_ACCESS_TOKEN: process.env.MP_ACCESS_TOKEN,
+  MP_WEBHOOK_SECRET: process.env.MP_WEBHOOK_SECRET,
+  MP_API_URL: process.env.MP_API_URL || 'https://api.mercadopago.com',
+
+  // Transferencia bancaria. Sin TRANSFERENCIA_ALIAS ni TRANSFERENCIA_CBU el método no se ofrece.
+  TRANSFERENCIA_ALIAS: process.env.TRANSFERENCIA_ALIAS,
+  TRANSFERENCIA_CBU: process.env.TRANSFERENCIA_CBU,
+  TRANSFERENCIA_TITULAR: process.env.TRANSFERENCIA_TITULAR,
+  TRANSFERENCIA_BANCO: process.env.TRANSFERENCIA_BANCO,
 };
 
 module.exports = ENV;

@@ -15,6 +15,15 @@ async function iniciar() {
     process.exit(1);
   }
 
+  // Cada 5 minutos se cancelan los pedidos impagos vencidos y se libera su stock.
+  const { vencerPendientes } = require('./services/pedidos');
+  const tareaVencimientos = setInterval(() => {
+    vencerPendientes()
+      .then((n) => { if (n) console.log(`Pedidos vencidos cancelados: ${n}`); })
+      .catch((err) => console.error('Error al vencer pedidos:', err.message));
+  }, 5 * 60 * 1000);
+  tareaVencimientos.unref();
+
   const server = app.listen(ENV.PORT, () => {
     console.log(`Paletta API escuchando en el puerto ${ENV.PORT} (${ENV.NODE_ENV})`);
   });

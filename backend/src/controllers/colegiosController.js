@@ -1,8 +1,9 @@
 const fs = require('fs/promises');
 const path = require('path');
-const { Colegio, Producto, Imagen, Categoria, sequelize } = require('../models');
+const { Colegio, Producto, Imagen, sequelize } = require('../models');
 const { AppError } = require('../utils/errorHandler');
 const { UPLOADS_DIR } = require('../middleware/upload');
+const { includePublico, ordenProductos } = require('./productosController');
 
 const includeImagenes = { model: Imagen, as: 'imagenes', attributes: ['id', 'url', 'descripcion'] };
 const orden = [['nombre', 'ASC'], [{ model: Imagen, as: 'imagenes' }, 'id', 'ASC']];
@@ -28,12 +29,8 @@ exports.getProductosPorColegio = async (req, res) => {
   if (!colegio) throw new AppError('Colegio no encontrado', 404);
   const productos = await Producto.findAll({
     where: { colegioId: colegio.id, activo: true },
-    include: [
-      { model: Categoria, as: 'categoria', attributes: ['id', 'nombre'] },
-      { model: Colegio, as: 'colegio', attributes: ['id', 'nombre', 'ciudad'] },
-      { model: Imagen, as: 'imagenes', attributes: ['id', 'url', 'descripcion'] },
-    ],
-    order: orden,
+    include: includePublico,
+    order: ordenProductos,
   });
   res.json(productos);
 };
