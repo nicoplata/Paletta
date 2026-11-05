@@ -6,18 +6,9 @@ import { useTienda } from '../hooks/useTienda';
 import { useCarrito } from '../context/CarritoContext';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import '../styles/style.css';
+import useSeo, { SITE_URL } from '../hooks/useSeo';
 import '../styles/Tienda.css';
-
-const contenedor = {
-  padding: '2rem',
-  maxWidth: '900px',
-  margin: '125px auto 2rem',
-  background: '#fafbfc',
-  borderRadius: '14px',
-  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-  fontFamily: 'opensans, Arial, sans-serif',
-};
+import '../styles/Detalle.css';
 
 const SelectorCompra = ({ producto }) => {
   const { agregar, items } = useCarrito();
@@ -93,6 +84,32 @@ const SelectorCompra = ({ producto }) => {
   );
 };
 
+// Datos estructurados (schema.org/Product) para buscadores
+function jsonLdProducto(producto, conPrecio) {
+  if (!producto) return undefined;
+  const datos = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: producto.nombre,
+    description: producto.descripcion || undefined,
+    image: (producto.imagenes || []).map((i) => (i.url.startsWith('http') ? i.url : `${SITE_URL}${i.url}`)),
+    category: producto.categoria?.nombre,
+    brand: { '@type': 'Brand', name: 'Paletta' },
+    sku: String(producto.id),
+  };
+  if (conPrecio) {
+    datos.offers = {
+      '@type': 'Offer',
+      priceCurrency: 'ARS',
+      price: Number(producto.precio).toFixed(2),
+      availability: producto.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      url: `${SITE_URL}/producto/${producto.id}`,
+      seller: { '@type': 'Organization', name: 'Paletta' },
+    };
+  }
+  return datos;
+}
+
 const DetalleProducto = () => {
   const { id } = useParams();
   const { data: producto, loading, error } = useProductoPublico(id);
@@ -101,16 +118,23 @@ const DetalleProducto = () => {
 
   useEffect(() => setImagenActiva(0), [id]);
 
-  useEffect(() => {
-    if (producto?.nombre) document.title = `${producto.nombre} | Paletta`;
-    return () => { document.title = 'Paletta - Uniformes Escolares y Egresados'; };
-  }, [producto]);
+  useSeo({
+    titulo: producto ? `${producto.nombre}${producto.colegio ? ` - ${producto.colegio.nombre}` : ''}` : 'Producto',
+    descripcion: producto
+      ? `${producto.nombre}${producto.colegio ? ` del ${producto.colegio.nombre}` : ''}. ${producto.descripcion || ''}`
+      : undefined,
+    ruta: `/producto/${id}`,
+    imagen: producto?.imagenes?.[0]?.url,
+    tipo: 'product',
+    noindex: Boolean(error),
+    jsonLd: jsonLdProducto(producto, mostrarPrecios),
+  });
 
-  if (loading) return <div style={contenedor}><LoadingSpinner /></div>;
+  if (loading) return <div className="pagina angosta"><LoadingSpinner /></div>;
   if (error || !producto) {
     return (
-      <div style={contenedor}>
-        <p>Producto no encontrado.</p>
+      <div className="pagina angosta">
+        <h1 className="pagina-titulo">Producto no encontrado</h1>
         <Link to="/productos">← Volver a productos</Link>
       </div>
     );
@@ -119,60 +143,56 @@ const DetalleProducto = () => {
   const imagenes = producto.imagenes || [];
 
   return (
-    <div style={contenedor}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
-        <div style={{ width: 'min(300px, 100%)' }}>
+    <div className="pagina angosta">
+      <nav className="migas" aria-label="Ubicación">
+        <Link to="/productos">Productos</Link>
+        {producto.colegio && (<> / <Link to={`/colegios/${producto.colegio.id}/productos`}>{producto.colegio.nombre}</Link></>)}
+      </nav>
+      <article className="detalle">
+        <div className="detalle-galeria">
           <img
+            className="detalle-imagen"
             src={assetUrl(imagenes[imagenActiva]?.url)}
             alt={producto.nombre}
-            style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: '12px', background: '#f0f0f0' }}
+            width="600"
+            height="600"
             onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = IMAGEN_PRODUCTO_DEFAULT; }}
           />
           {imagenes.length > 1 && (
-            <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+            <div className="detalle-miniaturas">
               {imagenes.map((img, i) => (
                 <button
                   key={img.id}
                   type="button"
                   onClick={() => setImagenActiva(i)}
                   aria-label={`Ver imagen ${i + 1}`}
-                  style={{
-                    padding: 0, border: i === imagenActiva ? '2px solid #9c1f23' : '2px solid transparent',
-                    borderRadius: 8, background: 'none', cursor: 'pointer',
-                  }}
+                  aria-current={i === imagenActiva}
                 >
-                  <img src={assetUrl(img.url)} alt="" style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 6, display: 'block' }} />
+                  <img src={assetUrl(img.url)} alt="" width="56" height="56" loading="lazy" />
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        <div style={{ flex: 1, minWidth: 240 }}>
-          <h1 style={{ fontSize: '1.8rem', color: '#222', marginBottom: '1rem' }}>{producto.nombre}</h1>
-          {mostrarPrecios && (
-            <p style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#9c1f23', marginBottom: '1rem' }}>
-              {formatearPrecio(producto.precio)}
-            </p>
-          )}
-          <p style={{ fontSize: '1rem', color: '#555', marginBottom: '1rem', whiteSpace: 'pre-line' }}>
-            {producto.descripcion || 'Sin descripción'}
-          </p>
-          <p style={{ fontSize: '0.9rem', color: '#888', marginBottom: '0.5rem' }}>
-            <strong>Prenda:</strong> {producto.categoria?.nombre || 'Sin categoría'}
-          </p>
-          <p style={{ fontSize: '0.9rem', color: '#888', marginBottom: '1.5rem' }}>
-            <strong>Colegio:</strong>{' '}
-            {producto.colegio ? <Link to={`/colegios/${producto.colegio.id}/productos`}>{producto.colegio.nombre}</Link> : 'Sin colegio'}
-          </p>
+        <div className="detalle-info">
+          <h1>{producto.nombre}</h1>
+          {mostrarPrecios && <p className="detalle-precio">{formatearPrecio(producto.precio)}</p>}
+          <p className="detalle-descripcion">{producto.descripcion || 'Sin descripción'}</p>
+          <dl className="detalle-datos">
+            <dt>Prenda</dt>
+            <dd>{producto.categoria?.nombre || 'Sin categoría'}</dd>
+            <dt>Colegio</dt>
+            <dd>{producto.colegio ? <Link to={`/colegios/${producto.colegio.id}/productos`}>{producto.colegio.nombre}</Link> : 'Sin colegio'}</dd>
+          </dl>
 
           {habilitada ? (
             <SelectorCompra key={producto.id} producto={producto} />
           ) : (
-            <Link to="/contacto" className="tienda-boton">Consultar por este producto</Link>
+            <Link to="/contacto" className="btn">Consultar por este producto</Link>
           )}
         </div>
-      </div>
+      </article>
     </div>
   );
 };

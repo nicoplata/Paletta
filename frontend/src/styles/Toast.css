@@ -18,7 +18,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-family: opensans, Arial, sans-serif;
+  font-family: var(--fuente);
 }
 
 .toast-content {

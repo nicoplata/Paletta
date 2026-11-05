@@ -18,7 +18,7 @@
   font-weight: 600;
   color: #333;
   margin-bottom: 0.8rem;
-  font-family: opensans, Arial, sans-serif;
+  font-family: var(--fuente);
 }
 
 .filter-options {
@@ -36,7 +36,7 @@
   color: #666;
   cursor: pointer;
   transition: all 0.2s;
-  font-family: opensans, Arial, sans-serif;
+  font-family: var(--fuente);
 }
 
 .filter-button:hover {

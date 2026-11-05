@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import ProductList from '../components/ProductList';
 import FiltroProductos from '../components/FiltroProductos';
 import { filtrarProductos, useProductosPublicos } from '../hooks/useCatalogo';
+import useSeo from '../hooks/useSeo';
 import '../styles/ProductListPage.css';
 
 const PRODUCTOS_POR_PAGINA = 12;
@@ -10,6 +11,12 @@ const ProductListPage = () => {
   const { data: productos, loading, errorMensaje } = useProductosPublicos();
   const [filtros, setFiltros] = useState({ colegio: '', categoria: '' });
   const [paginaActual, setPaginaActual] = useState(1);
+
+  useSeo({
+    titulo: 'Productos',
+    descripcion: 'Uniformes escolares, buzos, camperas y ropa de egresados. Filtrá por colegio y tipo de prenda en el catálogo de Paletta.',
+    ruta: '/productos',
+  });
 
   // Al cambiar los filtros volvemos a la primera página
   useEffect(() => setPaginaActual(1), [filtros]);
@@ -26,7 +33,8 @@ const ProductListPage = () => {
   };
 
   return (
-    <div style={{ marginTop: 125 }}>
+    <div className="pagina">
+      <h1 className="pagina-titulo">Productos</h1>
       <div className="productosLayout">
         <FiltroProductos onChange={setFiltros} context="productos" />
 

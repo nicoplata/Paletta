@@ -1,18 +1,13 @@
 import { createGlobalStyle } from 'styled-components';
 
+// Estilos globales del panel: misma tipografía local que el sitio (sin fuentes externas).
 export const AdminGlobalStyles = createGlobalStyle`
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-
   body {
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--fuente);
+    background: #eef1f6;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Poppins', sans-serif;
-    font-weight: 600;
-  }
-
-  button, input, textarea, select {
-    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
   }
 `;

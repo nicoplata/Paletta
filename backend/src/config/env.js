@@ -60,6 +60,9 @@ const ENV = {
   // URL pública del sitio (para links en mails y redirecciones de Mercado Pago)
   SITE_URL: (process.env.SITE_URL || 'http://localhost:5173').replace(/\/$/, ''),
 
+  // Build del frontend (para inyectar metadatos de SEO en /producto/:id y /colegios/:id/productos)
+  FRONTEND_DIST: path.resolve(process.env.FRONTEND_DIST || path.join(__dirname, '..', '..', '..', 'frontend', 'dist')),
+
   // Tienda online
   TIENDA_HABILITADA: process.env.TIENDA_HABILITADA === 'true',
   ENVIO_COSTO: Number(process.env.ENVIO_COSTO) || 0,

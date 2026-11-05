@@ -1,0 +1,322 @@
+/*
+ * Base global del sitio (se importa una sola vez en main.jsx).
+ *
+ * Estrategia de estilos:
+ *  - Sitio público: archivos CSS por sección que usan SOLO las variables definidas acá.
+ *  - Panel de administración: styled-components (pages/admin/adminUI.jsx), que también usa estas variables.
+ *  - Nada de estilos inline salvo valores dinámicos (por ejemplo, un color calculado en tiempo de ejecución).
+ */
+
+@font-face {
+  font-family: 'Open Sans';
+  src: url('../assets/fonts/OpenSans-latin.woff2') format('woff2');
+  font-weight: 300 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Marca */
+  --color-primario: #9c1f23;
+  --color-primario-oscuro: #7a171b;
+  --color-primario-suave: #fdf0ef;
+
+  /* Neutros */
+  --color-texto: #222;
+  --color-texto-suave: #555;
+  --color-texto-tenue: #6b7280;
+  --color-borde: #e0e0e0;
+  --color-fondo: #fff;
+  --color-fondo-alt: #f7f7f7;
+  --color-superficie: #fafbfc;
+
+  /* Estados */
+  --color-exito: #2e7d32;
+  --color-exito-suave: #e8f5e9;
+  --color-error: #c62828;
+  --color-error-suave: #ffebee;
+  --color-aviso: #6d4c00;
+  --color-aviso-suave: #fff8e1;
+
+  /* Tipografía */
+  --fuente: 'Open Sans', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  --texto-xs: 0.8rem;
+  --texto-sm: 0.9rem;
+  --texto-md: 1rem;
+  --texto-lg: 1.15rem;
+  --texto-xl: 1.5rem;
+  --texto-2xl: clamp(1.6rem, 1.2rem + 1.6vw, 2.2rem);
+  --texto-hero: clamp(2rem, 1.4rem + 2.6vw, 3rem);
+
+  /* Espaciado y forma */
+  --esp-1: 0.25rem;
+  --esp-2: 0.5rem;
+  --esp-3: 0.75rem;
+  --esp-4: 1rem;
+  --esp-6: 1.5rem;
+  --esp-8: 2rem;
+  --esp-12: 3rem;
+  --radio-sm: 6px;
+  --radio: 10px;
+  --radio-lg: 14px;
+  --radio-pill: 999px;
+  --sombra-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --sombra: 0 4px 16px rgba(0, 0, 0, 0.1);
+
+  /* Layout */
+  --ancho-max: 1200px;
+  --header-alto: 90px;
+  --gutter: 1rem;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --header-alto: 125px;
+    --gutter: 1.5rem;
+  }
+}
+
+/* --- Reset mínimo --- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--header-alto) + 1rem);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--fuente);
+  font-size: var(--texto-md);
+  line-height: 1.5;
+  color: var(--color-texto);
+  background: var(--color-fondo);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+h1, h2, h3, h4, p, ul, ol, figure, fieldset {
+  margin: 0;
+}
+
+h1, h2, h3, h4 {
+  line-height: 1.2;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--color-primario);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primario);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- Layout --- */
+.layout-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Contenedor estándar de una página interna (deja lugar al header fijo) */
+.pagina {
+  width: 100%;
+  max-width: var(--ancho-max);
+  margin: 0 auto;
+  padding: calc(var(--header-alto) + var(--esp-8)) var(--gutter) var(--esp-12);
+}
+
+.pagina.angosta {
+  max-width: 1000px;
+}
+
+.pagina.sin-margen {
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 0;
+}
+
+.pagina-titulo {
+  font-size: var(--texto-2xl);
+  color: var(--color-primario);
+  margin-bottom: var(--esp-6);
+}
+
+.contenedor {
+  width: 100%;
+  max-width: var(--ancho-max);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+/* --- Botones --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--esp-2);
+  padding: 0.75rem 1.6rem;
+  border: 2px solid var(--color-primario);
+  border-radius: var(--radio-sm);
+  background: var(--color-primario);
+  color: #fff;
+  font-weight: 700;
+  font-size: var(--texto-md);
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--color-primario-oscuro);
+  border-color: var(--color-primario-oscuro);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-secundario {
+  background: #fff;
+  color: var(--color-primario);
+}
+
+.btn-secundario:hover:not(:disabled) {
+  background: var(--color-primario-suave);
+  color: var(--color-primario-oscuro);
+}
+
+/* Botón claro sobre fondos de color o imágenes */
+.btn-claro {
+  background: #fff;
+  color: var(--color-primario);
+  border-color: #fff;
+  border-radius: var(--radio-pill);
+  box-shadow: var(--sombra-sm);
+}
+
+.btn-claro:hover:not(:disabled) {
+  background: #f3f3f3;
+  border-color: #f3f3f3;
+  color: var(--color-primario-oscuro);
+}
+
+.btn-ancho {
+  width: 100%;
+}
+
+/* --- Formularios --- */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-1);
+  font-size: var(--texto-sm);
+  font-weight: 600;
+}
+
+.campo input,
+.campo textarea,
+.campo select {
+  width: 100%;
+  padding: 0.65rem;
+  border: 2px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  font-size: var(--texto-md);
+  font-weight: 400;
+  background: #fff;
+}
+
+.campo input:focus,
+.campo textarea:focus,
+.campo select:focus {
+  outline: none;
+  border-color: var(--color-primario);
+}
+
+.campo textarea {
+  resize: vertical;
+}
+
+/* --- Avisos --- */
+.aviso {
+  padding: var(--esp-3) var(--esp-4);
+  border-radius: var(--radio-sm);
+  border: 1px solid transparent;
+  font-size: var(--texto-sm);
+}
+
+.aviso.exito { background: var(--color-exito-suave); color: var(--color-exito); border-color: #c8e6c9; }
+.aviso.error { background: var(--color-error-suave); color: var(--color-error); border-color: #ffcdd2; }
+
+/* --- Utilidades --- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Link "saltar al contenido" (visible solo con teclado) */
+.saltar-contenido {
+  position: absolute;
+  left: var(--esp-4);
+  top: -100px;
+  z-index: 1000;
+  background: #fff;
+  color: var(--color-primario);
+  padding: var(--esp-2) var(--esp-4);
+  border-radius: var(--radio-sm);
+  font-weight: 700;
+}
+
+.saltar-contenido:focus {
+  top: var(--esp-4);
+}
+
+.layout-main:focus {
+  outline: none;
+}

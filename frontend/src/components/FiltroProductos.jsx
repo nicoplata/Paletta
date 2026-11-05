@@ -15,8 +15,10 @@ const FiltroProductos = ({ onChange, context = 'productos' }) => {
   const { data: categorias } = useCategorias();
   const [colegio, setColegio] = useState('');
   const [categoria, setCategoria] = useState('');
-  const [showColegios, setShowColegios] = useState(true);
-  const [showCategorias, setShowCategorias] = useState(true);
+  // En pantallas chicas los grupos arrancan plegados para no tapar los productos
+  const [esMobile] = useState(() => window.matchMedia?.('(max-width: 768px)').matches ?? false);
+  const [showColegios, setShowColegios] = useState(!esMobile);
+  const [showCategorias, setShowCategorias] = useState(!esMobile);
 
   useEffect(() => {
     onChange?.({ colegio, categoria });

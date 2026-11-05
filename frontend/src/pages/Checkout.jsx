@@ -4,6 +4,7 @@ import api, { mensajeError } from '../lib/api';
 import { formatearPrecio } from '../config';
 import { useCarrito } from '../context/CarritoContext';
 import { useTienda } from '../hooks/useTienda';
+import useSeo from '../hooks/useSeo';
 import '../styles/Tienda.css';
 
 const DATOS_KEY = 'paletta_checkout_datos';
@@ -36,6 +37,7 @@ const Campo = ({ label, name, valores, onChange, completo, ...props }) => (
 );
 
 const Checkout = () => {
+  useSeo({ titulo: 'Finalizar compra', noindex: true });
   const navigate = useNavigate();
   const { items, subtotal, vaciar } = useCarrito();
   const tienda = useTienda();

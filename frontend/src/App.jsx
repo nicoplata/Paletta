@@ -8,11 +8,7 @@ import LayoutGeneral from './layouts/LayoutGeneral';
 import LoadingSpinner from './components/common/LoadingSpinner';
 
 // Sitio público
-const SelectorColegiosHome = lazy(() => import('./components/SelectorColegiosHome'));
-const ProductListHome = lazy(() => import('./components/ProductListHome'));
-const Egresados = lazy(() => import('./components/Egresados'));
-const Contact = lazy(() => import('./components/Contact'));
-const Carousel = lazy(() => import('./components/Carousel'));
+const Inicio = lazy(() => import('./pages/Inicio'));
 const ProductListPage = lazy(() => import('./pages/ProductListPage'));
 const SelectorColegios = lazy(() => import('./pages/SelectorColegios'));
 const ProductosPorColegio = lazy(() => import('./pages/ProductosPorColegio'));
@@ -47,18 +43,7 @@ const App = () => (
           <Routes>
             {/* Sitio público con Header y Footer */}
             <Route path="/" element={<LayoutGeneral />}>
-              <Route
-                index
-                element={
-                  <>
-                    <Carousel />
-                    <SelectorColegiosHome />
-                    <ProductListHome />
-                    <Egresados />
-                    <Contact />
-                  </>
-                }
-              />
+              <Route index element={<Inicio />} />
               <Route path="productos" element={<ProductListPage />} />
               <Route path="colegios" element={<SelectorColegios />} />
               <Route path="colegios/:id/productos" element={<ProductosPorColegio />} />

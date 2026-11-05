@@ -23,6 +23,6 @@
 
 .loading-spinner span {
   color: #666;
-  font-family: opensans, Arial, sans-serif;
+  font-family: var(--fuente);
   font-size: 1rem;
 }

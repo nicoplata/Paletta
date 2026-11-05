@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route } from 'react-router-dom';
 import api from '../lib/api';
@@ -50,7 +50,7 @@ describe('EditarProducto', () => {
       nombre: 'Buzo canguro', precio: 38500.5, categoriaId: 2, colegioId: 1, activo: true,
       variantes: [{ talle: 'M', stock: 25, activo: true }, { talle: 'L', stock: 3, activo: true }],
     }));
-    expect(await screen.findByTestId('ubicacion')).toHaveTextContent('/admin/dashboard/productos/7/editar');
+    await waitFor(() => expect(screen.getByTestId('ubicacion')).toHaveTextContent('/admin/dashboard/productos/7/editar'));
   });
 
   it('carga un producto existente y guarda los cambios', async () => {

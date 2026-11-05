@@ -45,6 +45,9 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// 🔎 SEO: sitemap y páginas con metadatos (fuera de /api y sin rate limit de la API)
+app.use(require('./routes/seo'));
+
 // 🔌 API
 app.use('/api', apiLimiter);
 app.use('/api/auth', require('./routes/auth'));

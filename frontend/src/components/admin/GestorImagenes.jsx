@@ -47,7 +47,7 @@ const Borrar = styled.button`
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(231, 76, 60, 0.9);
+  background: var(--color-primario);
   color: white;
   border: none;
   border-radius: 50%;

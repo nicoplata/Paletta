@@ -1,19 +1,17 @@
 /* Estilos de la tienda: detalle (compra), carrito, checkout y estado del pedido */
 :root {
-  --tienda-bordo: #9c1f23;
-  --tienda-bordo-oscuro: #7a171b;
-  --tienda-gris: #6b7280;
-  --tienda-borde: #e0e0e0;
-  --tienda-fondo: #fafbfc;
+  --tienda-bordo: var(--color-primario);
+  --tienda-bordo-oscuro: var(--color-primario-oscuro);
+  --tienda-gris: var(--color-texto-tenue);
+  --tienda-borde: var(--color-borde);
+  --tienda-fondo: var(--color-superficie);
 }
 
 .tienda-pagina {
+  width: 100%;
   max-width: 1000px;
-  margin: 125px auto 3rem;
-  padding: 0 1rem;
-  font-family: opensans, Arial, sans-serif;
-  color: #222;
-  box-sizing: border-box;
+  margin: 0 auto;
+  padding: calc(var(--header-alto) + var(--esp-8)) var(--gutter) var(--esp-12);
 }
 
 .tienda-pagina h1 {
@@ -111,7 +109,7 @@
   border-radius: 12px;
   padding: 1.5rem;
   position: sticky;
-  top: 140px;
+  top: calc(var(--header-alto) + 1rem);
 }
 
 .tienda-resumen h2 { font-size: 1.15rem; margin: 0 0 1rem; }
@@ -132,7 +130,8 @@
 .tienda-aviso.ok { background: #e8f5e9; border-color: #c8e6c9; color: #1b5e20; }
 .tienda-aviso ul { margin: 0.5rem 0 0; padding-left: 1.25rem; }
 
-.tienda-vacio { text-align: center; padding: 3rem 1rem; }
+.tienda-vacio { text-align: center; }
+.tienda-vacio > * + * { margin-top: var(--esp-6); }
 
 /* --- Checkout --- */
 .tienda-form fieldset { border: 1px solid var(--tienda-borde); border-radius: 12px; padding: 1.25rem; margin: 0 0 1.25rem; }
@@ -211,14 +210,3 @@
   .tienda-item-precio { grid-column: 2; text-align: left; }
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}

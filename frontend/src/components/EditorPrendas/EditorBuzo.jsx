@@ -111,7 +111,7 @@ const EditorBuzo = () => {
             fontWeight: 700,
             fontSize: '1.05rem',
             cursor: 'pointer',
-            fontFamily: 'opensans, Arial, sans-serif',
+            fontFamily: 'var(--fuente)',
             letterSpacing: '0.01em',
             boxShadow: '0 2px 8px 0 rgba(0,0,0,0.07)'
           }}

@@ -1,207 +1,79 @@
 import { useState } from 'react';
 import api, { mensajeError } from '../lib/api';
+import { DATOS_CONTACTO } from './Footer';
+import '../styles/Secciones.css';
 
-const Contact = () => {
-  const [formData, setFormData] = useState({
-    nombre: '',
-    email: '',
-    mensaje: '',
-    sitio: '' // honeypot anti-spam (oculto para humanos)
-  });
-  const [status, setStatus] = useState({
-    type: '',
-    message: ''
-  });
+const VACIO = { nombre: '', email: '', mensaje: '', sitio: '' }; // "sitio" es un honeypot anti-spam
+
+const Contact = ({ titulo: Titulo = 'h2' }) => {
+  const [formData, setFormData] = useState(VACIO);
+  const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setStatus({ type: '', message: '' });
-
     try {
       await api.post('/contacto', formData);
-      setStatus({
-        type: 'success',
-        message: '¡Gracias por tu mensaje! Te contactaremos pronto.'
-      });
-      setFormData({ nombre: '', email: '', mensaje: '', sitio: '' });
+      setStatus({ type: 'success', message: '¡Gracias por tu mensaje! Te contactaremos pronto.' });
+      setFormData(VACIO);
     } catch (error) {
-      setStatus({
-        type: 'error',
-        message: mensajeError(error, 'Hubo un error al enviar el mensaje. Por favor, intentá nuevamente.')
-      });
+      setStatus({ type: 'error', message: mensajeError(error, 'Hubo un error al enviar el mensaje. Por favor, intentá nuevamente.') });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <section style={{ background: '#f7f7f7', padding: '3rem 0' }} id="contacto">
-      <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '2.5rem', justifyContent: 'center', alignItems: 'flex-start' }}>
-        {/* Formulario */}
-        <form onSubmit={handleSubmit} style={{
-          flex: '1 1 320px',
-          background: '#fff',
-          borderRadius: 12,
-          boxShadow: '0 2px 12px rgba(156,31,35,0.10)',
-          padding: '2rem',
-          minWidth: 300,
-          minHeight: 400,
-          fontFamily: 'opensans, Arial, sans-serif',
-          color: '#9c1f23',
-          boxSizing: 'border-box',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-        }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.2rem', fontWeight: 700, fontFamily: 'opensans, Arial, sans-serif', color: '#9c1f23', letterSpacing: '0.01em' }}>Contacto</h2>
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="nombre" style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#9c1f23' }}>Nombre</label>
-            <input 
-              type="text" 
-              id="nombre" 
-              name="nombre" 
-              value={formData.nombre}
-              onChange={handleChange}
-              required 
-              minLength={2}
-              maxLength={50}
-              style={{ 
-                width: '100%', 
-                padding: 8, 
-                borderRadius: 6, 
-                border: '1px solid #bdbdbd', 
-                fontFamily: 'opensans, Arial, sans-serif', 
-                fontSize: '1rem', 
-                color: '#222', 
-                background: '#fff' 
-              }} 
-            />
-          </div>
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="email" style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#9c1f23' }}>Email</label>
-            <input 
-              type="email" 
-              id="email" 
-              name="email" 
-              value={formData.email}
-              onChange={handleChange}
-              required 
-              style={{ 
-                width: '100%', 
-                padding: 8, 
-                borderRadius: 6, 
-                border: '1px solid #bdbdbd', 
-                fontFamily: 'opensans, Arial, sans-serif', 
-                fontSize: '1rem', 
-                color: '#222', 
-                background: '#fff' 
-              }} 
-            />
-          </div>
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="mensaje" style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#9c1f23' }}>Mensaje</label>
-            <textarea 
-              id="mensaje" 
-              name="mensaje" 
-              value={formData.mensaje}
-              onChange={handleChange}
-              rows={5} 
-              required 
-              minLength={10}
-              maxLength={2000}
-              style={{ 
-                width: '100%', 
-                padding: 8, 
-                borderRadius: 6, 
-                border: '1px solid #bdbdbd', 
-                resize: 'vertical', 
-                fontFamily: 'opensans, Arial, sans-serif', 
-                fontSize: '1rem', 
-                color: '#222', 
-                background: '#fff' 
-              }} />
-          </div>
+    <section className="contacto" id="contacto">
+      <div className="contacto-grilla">
+        <form className="contacto-form" onSubmit={handleSubmit}>
+          <Titulo>Contacto</Titulo>
+          <p className="contacto-datos">
+            Escribinos o llamanos al <a href={`tel:${DATOS_CONTACTO.telefonoLink}`}>{DATOS_CONTACTO.telefono}</a>.
+          </p>
+          <label className="campo" htmlFor="nombre">
+            Nombre
+            <input type="text" id="nombre" name="nombre" value={formData.nombre} onChange={handleChange} required minLength={2} maxLength={100} autoComplete="name" />
+          </label>
+          <label className="campo" htmlFor="email">
+            Email
+            <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} required autoComplete="email" />
+          </label>
+          <label className="campo" htmlFor="mensaje">
+            Mensaje
+            <textarea id="mensaje" name="mensaje" value={formData.mensaje} onChange={handleChange} rows={5} required minLength={10} maxLength={2000} />
+          </label>
           <input
             type="text"
             name="sitio"
+            className="honeypot"
             value={formData.sitio}
             onChange={handleChange}
             tabIndex={-1}
             autoComplete="off"
             aria-hidden="true"
-            style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
           />
           {status.message && (
-            <div
-              role={status.type === 'error' ? 'alert' : 'status'}
-              style={{
-                padding: '0.75rem', 
-                marginBottom: '1rem', 
-                borderRadius: 6, 
-                backgroundColor: status.type === 'success' ? '#e8f5e9' : '#ffebee',
-                color: status.type === 'success' ? '#2e7d32' : '#c62828',
-                fontSize: '0.9rem'
-              }}
-            >
+            <div role={status.type === 'error' ? 'alert' : 'status'} className={`aviso ${status.type === 'error' ? 'error' : 'exito'}`}>
               {status.message}
             </div>
           )}
-          <button 
-            type="submit" 
-            disabled={loading}
-            style={{ 
-              background: loading ? '#cccccc' : '#9c1f23', 
-              color: '#fff', 
-              border: 'none', 
-              borderRadius: 6, 
-              padding: '0.7rem 2.2rem', 
-              fontWeight: 700, 
-              fontSize: '1.1rem', 
-              cursor: loading ? 'not-allowed' : 'pointer', 
-              marginTop: 8, 
-              fontFamily: 'opensans, Arial, sans-serif', 
-              letterSpacing: '0.01em', 
-              boxShadow: '0 2px 8px 0 rgba(0,0,0,0.10)',
-              transition: 'background-color 0.2s'
-            }}
-          >
+          <button type="submit" className="btn" disabled={loading}>
             {loading ? 'Enviando...' : 'Enviar'}
           </button>
         </form>
-        {/* Mapa */}
-        <div style={{
-          flex: '1 1 320px',
-          minWidth: 300,
-          height: 400,
-          background: '#fff',
-          borderRadius: 12,
-          boxShadow: '0 2px 12px rgba(156,31,35,0.10)',
-          padding: 0,
-          display: 'flex',
-          alignItems: 'stretch',
-          justifyContent: 'center',
-          boxSizing: 'border-box',
-          overflow: 'hidden',
-        }}>
+        <div className="contacto-mapa">
           <iframe
-            title="Ubicación Paletta"
+            title={`Ubicación de Paletta: ${DATOS_CONTACTO.direccion}`}
             src="https://www.google.com/maps?q=Velez+Sarsfield+4270,+Munro,+Buenos+Aires,+Argentina&z=15&output=embed"
-            width="100%"
-            height="100%"
-            style={{ border: 0, borderRadius: 0, filter: 'grayscale(0.15) contrast(1.08)', display: 'block', width: '100%', height: '100%' }}
-            allowFullScreen=""
+            allowFullScreen
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-          ></iframe>
+          />
         </div>
       </div>
     </section>

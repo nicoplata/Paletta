@@ -143,6 +143,50 @@ La tienda viene apagada (`TIENDA_HABILITADA=false`): el sitio funciona como cat�
 Los pedidos impagos vencen solos (60 min con Mercado Pago, 48 h con transferencia, configurable) y su stock vuelve a estar disponible.
 Los pedidos se gestionan en el panel → *Pedidos*.
 
+## 10. SEO y vistas previas al compartir
+
+Desde la versión con SEO, el backend arma las páginas de producto y de colegio con su propio título,
+descripción e imagen (lo que muestran WhatsApp, Facebook y Google), y genera `sitemap.xml`.
+Para eso nginx tiene que enviarle esas rutas. **`deploy.sh` no toca la configuración de nginx**, así que,
+si tu servidor usa una configuración propia (por ejemplo, con Cloudflare), agregá estos bloques dentro del
+`server { ... }` del sitio, **antes** de `location / { ... }` (están también en `deploy/nginx.conf`):
+
+```nginx
+location = /sitemap.xml {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+location ~ ^/(producto/[0-9]+|colegios/[0-9]+/productos)/?$ {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_intercept_errors on;
+    error_page 502 503 504 = @spa;
+}
+
+location @spa {
+    try_files /index.html =404;
+}
+```
+
+Después: `sudo nginx -t && sudo systemctl reload nginx`. Si el backend se cae, esas páginas siguen funcionando
+con el `index.html` normal.
+
+Verificación:
+
+```bash
+curl -s https://www.paletta.com.ar/sitemap.xml | head
+curl -s https://www.paletta.com.ar/producto/1 | grep -E "<title>|og:image"
+```
+
+Recomendado: dar de alta el sitio en [Google Search Console](https://search.google.com/search-console),
+enviar `https://www.paletta.com.ar/sitemap.xml` y probar un link de producto en el
+[depurador de Facebook](https://developers.facebook.com/tools/debug/) (refresca la vista previa que también usa WhatsApp).
+
 ## Actualizaciones
 
 ```bash

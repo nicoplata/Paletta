@@ -69,3 +69,18 @@
   margin-bottom: 0.5rem;
   text-align: center;
 }
+
+/* Layout compartido por la home y /productos: filtros al costado (en mobile, arriba) */
+.productosLayout {
+  display: flex;
+  gap: var(--esp-8);
+  width: 100%;
+  align-items: flex-start;
+}
+
+@media (max-width: 768px) {
+  .productosLayout {
+    flex-direction: column;
+    gap: var(--esp-4);
+  }
+}

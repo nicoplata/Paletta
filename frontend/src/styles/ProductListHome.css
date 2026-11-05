@@ -1,15 +1,14 @@
 .homeWrapper {
-  display: flex;
-  justify-content: center;
-  padding: 2rem 1rem;
+  max-width: var(--ancho-max);
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--esp-8) var(--gutter);
 }
 
-.productosLayout {
-  display: flex;
-  gap: 2rem;
-  max-width: 1200px;
-  width: 100%;
-  align-items: flex-start;
+.homeWrapper > h2 {
+  font-size: var(--texto-2xl);
+  color: var(--color-primario);
+  margin-bottom: var(--esp-6);
 }
 
 .filtrosContainer.home {
@@ -30,33 +29,10 @@
   margin-top: 2rem;
 }
 
-.verMasBtn {
-  background-color: #800000;
-  color: white;
-  padding: 0.6rem 1.2rem;
-  border-radius: 6px;
-  text-decoration: none;
-  font-size: 0.85rem;
-  font-weight: 500;
-  transition: background-color 0.2s ease;
-}
-
-.verMasBtn:hover {
-  background-color: #a00000;
-}
 
 /* Responsive */
 @media (max-width: 768px) {
-  .productosLayout {
-    flex-direction: column;
-  }
-
   .filtrosContainer.home {
     width: 100%;
-    order: 2;
-  }
-
-  .productContainer.home {
-    order: 1;
   }
 }

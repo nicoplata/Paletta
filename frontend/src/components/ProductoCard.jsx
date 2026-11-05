@@ -47,7 +47,7 @@ const Meta = styled.p`
 `;
 
 const Price = styled.p`
-  color: #e74c3c;
+  color: var(--color-primario);
   font-weight: 600;
   margin: 0 0 0.5rem;
 `;
