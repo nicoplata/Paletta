@@ -124,6 +124,25 @@ Importante: copiá `/var/backups/paletta` fuera de la VPS (rclone a Google Drive
 - https://www.paletta.com.ar/admin: entrar con el admin del paso 4, crear un colegio con logo y un producto con imagen.
 - Verlos en el sitio público y enviar un mensaje de contacto (tiene que aparecer en *Mensajes*).
 
+## 9. Tienda online (cuando quieras activarla)
+
+La tienda viene apagada (`TIENDA_HABILITADA=false`): el sitio funciona como catálogo. Para activarla:
+
+1. **Cargar talles y stock** de cada producto desde el panel (Productos → editar → *Talles y stock*).
+2. **Mercado Pago** (opcional):
+   - En https://www.mercadopago.com.ar/developers/panel/app creá una aplicación (*Pagos online → Checkout Pro*).
+   - Copiá el **Access Token de producción** en `MP_ACCESS_TOKEN`.
+   - En *Webhooks* configurá la URL `https://www.paletta.com.ar/api/pagos/webhook` con el evento **Pagos**,
+     y copiá la **clave secreta** en `MP_WEBHOOK_SECRET` (sin ella, en producción se rechazan las notificaciones).
+   - Para probar primero, usá las credenciales de prueba y los usuarios de prueba de Mercado Pago.
+3. **Transferencia** (opcional): completá `TRANSFERENCIA_ALIAS` y/o `TRANSFERENCIA_CBU`, `TRANSFERENCIA_TITULAR`, `TRANSFERENCIA_BANCO`.
+4. **Envío**: `ENVIO_COSTO` (costo fijo) o `ENVIO_HABILITADO=false` para ofrecer solo retiro.
+5. **Mails**: configurá `MAIL_*` y `CONTACT_TO` para que el cliente reciba la confirmación y vos el aviso de cada pedido pagado.
+6. `SITE_URL=https://www.paletta.com.ar` y `TIENDA_HABILITADA=true` en `backend/.env`, y `pm2 reload paletta-api`.
+
+Los pedidos impagos vencen solos (60 min con Mercado Pago, 48 h con transferencia, configurable) y su stock vuelve a estar disponible.
+Los pedidos se gestionan en el panel → *Pedidos*.
+
 ## Actualizaciones
 
 ```bash

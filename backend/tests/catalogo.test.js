@@ -16,7 +16,7 @@ describe('Catálogo: productos, colegios y categorías', () => {
     nombre: 'Campera egresados',
     descripcion: 'Campera bordada',
     precio: 45999.9,
-    stock: 10,
+    variantes: [{ talle: 'S', stock: 4 }, { talle: 'M', stock: 6 }],
     categoriaId: base.categoria.id,
     colegioId: base.colegio.id,
     ...extra,
@@ -43,6 +43,8 @@ describe('Catálogo: productos, colegios y categorías', () => {
       const res = await request(app).post('/api/productos').set(headers.admin).send(nuevoProducto());
       assert.equal(res.status, 201);
       assert.equal(res.body.precio, 45999.9);
+      assert.deepEqual(res.body.variantes.map((v) => [v.talle, v.stock]), [['S', 4], ['M', 6]]);
+      assert.equal(res.body.stock, 10);
       producto = res.body;
     });
 
@@ -51,6 +53,39 @@ describe('Catálogo: productos, colegios y categorías', () => {
       assert.equal(res.status, 201);
       assert.notEqual(res.body.id, 999);
       assert.equal(res.body.hack, undefined);
+    });
+
+    it('exige al menos un talle y rechaza talles repetidos', async () => {
+      const sin = await request(app).post('/api/productos').set(headers.admin).send(nuevoProducto({ variantes: [] }));
+      assert.equal(sin.status, 400);
+      const repetidos = await request(app).post('/api/productos').set(headers.admin)
+        .send(nuevoProducto({ variantes: [{ talle: 'M', stock: 1 }, { talle: 'm', stock: 2 }] }));
+      assert.equal(repetidos.status, 400);
+    });
+
+    it('editar sincroniza variantes: actualiza, agrega, elimina y permite reusar un talle', async () => {
+      const [s, m] = producto.variantes;
+      const res = await request(app).put(`/api/productos/${producto.id}`).set(headers.admin).send(nuevoProducto({
+        variantes: [{ id: m.id, talle: 'M', stock: 1 }, { talle: 'S', stock: 9 }, { talle: 'L', stock: 2, activo: false }],
+      }));
+      assert.equal(res.status, 200);
+      assert.deepEqual(res.body.variantes.map((v) => [v.talle, v.stock, v.activo]), [['M', 1, true], ['S', 9, true], ['L', 2, false]]);
+      assert.equal(await db.Variante.findByPk(s.id), null);
+      assert.equal(res.body.stock, 10, 'el stock total no cuenta variantes inactivas');
+      producto = res.body;
+    });
+
+    it('no permite tocar variantes de otro producto', async () => {
+      const otro = await request(app).post('/api/productos').set(headers.admin).send(nuevoProducto({ nombre: 'Otro' }));
+      const res = await request(app).put(`/api/productos/${producto.id}`).set(headers.admin)
+        .send(nuevoProducto({ variantes: [{ id: otro.body.variantes[0].id, talle: 'S', stock: 1 }] }));
+      assert.equal(res.status, 400);
+      await request(app).delete(`/api/productos/${otro.body.id}`).set(headers.admin).expect(200);
+    });
+
+    it('el catálogo público no muestra talles inactivos', async () => {
+      const res = await request(app).get(`/api/productos/public/${producto.id}`);
+      assert.deepEqual(res.body.variantes.map((v) => v.talle), ['M', 'S']);
     });
 
     it('valida datos y relaciones', async () => {

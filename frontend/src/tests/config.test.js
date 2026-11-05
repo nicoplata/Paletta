@@ -40,3 +40,15 @@ describe('filtrarProductos', () => {
     expect(filtrarProductos(productos, { colegio: '1', categoria: '1' }).map((p) => p.id)).toEqual([1]);
   });
 });
+
+describe('linkWhatsApp', async () => {
+  const { linkWhatsApp } = await import('../pages/admin/PedidoDetalleAdmin');
+  it.each([
+    ['11 4444-5555', 'https://wa.me/5491144445555'],
+    ['011 15 4444-5555', 'https://wa.me/5491144445555'],
+    ['+54 9 11 4444 5555', 'https://wa.me/5491144445555'],
+    ['0221 15 456-7890', 'https://wa.me/5492214567890'],
+  ])('%s -> %s', (tel, esperado) => {
+    expect(linkWhatsApp(tel)).toBe(esperado);
+  });
+});

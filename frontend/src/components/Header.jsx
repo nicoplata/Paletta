@@ -3,6 +3,10 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import styles from '../styles/Header.module.css';
 import logoWhite from '../assets/img/palettaWhite.png';
 import logoBlack from '../assets/img/logoPaletta.png';
+import { FaShoppingCart } from 'react-icons/fa';
+import { useCarrito } from '../context/CarritoContext';
+import { useTienda } from '../hooks/useTienda';
+import '../styles/Tienda.css';
 
 const Header = ({ forceScrolled = false }) => {
   const navigate = useNavigate();
@@ -12,6 +16,8 @@ const Header = ({ forceScrolled = false }) => {
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
   const isHome = location.pathname === '/';
+  const { habilitada: tiendaHabilitada } = useTienda();
+  const { cantidadTotal } = useCarrito();
 
   useEffect(() => {
     const handleResize = () => {
@@ -94,6 +100,19 @@ const Header = ({ forceScrolled = false }) => {
               <li><Link to="/productos" style={{ color: navLinkColor, textDecoration: 'none' }}>Productos</Link></li>
               <li><Link to="/egresados" style={{ color: navLinkColor, textDecoration: 'none' }}>Egresados</Link></li>
               <li><Link to="/contacto" style={{ color: navLinkColor, textDecoration: 'none' }}>Contacto</Link></li>
+              {tiendaHabilitada && (
+                <li>
+                  <Link
+                    to="/carrito"
+                    className="carrito-header"
+                    style={{ color: navLinkColor }}
+                    aria-label={`Carrito, ${cantidadTotal} producto${cantidadTotal === 1 ? '' : 's'}`}
+                  >
+                    <FaShoppingCart size={20} aria-hidden="true" />
+                    {cantidadTotal > 0 && <span className="badge">{cantidadTotal}</span>}
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
         </div>

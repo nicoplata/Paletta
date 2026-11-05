@@ -39,6 +39,7 @@ export const producto = (over = {}) => ({
   descripcion: 'Campera bordada',
   precio: 45999.9,
   stock: 3,
+  variantes: [{ id: 10, talle: 'S', stock: 2, activo: true }, { id: 11, talle: 'M', stock: 1, activo: true }],
   activo: true,
   categoriaId: 1,
   colegioId: 1,

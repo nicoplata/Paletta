@@ -18,11 +18,6 @@ module.exports = (sequelize) => {
         return valor === null || valor === undefined ? valor : Number(valor);
       },
     },
-    stock: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0,
-    },
     activo: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
@@ -43,12 +38,22 @@ module.exports = (sequelize) => {
   Producto.associate = (models) => {
     Producto.belongsTo(models.Categoria, { foreignKey: 'categoriaId', as: 'categoria' });
     Producto.belongsTo(models.Colegio, { foreignKey: 'colegioId', as: 'colegio' });
+    Producto.hasMany(models.Variante, { foreignKey: 'productoId', as: 'variantes' });
     Producto.hasMany(models.Imagen, {
       foreignKey: 'entidadId',
       constraints: false,
       scope: { tipoEntidad: 'producto' },
       as: 'imagenes',
     });
+  };
+
+  // Expone "stock" como la suma de las variantes activas (cuando vienen incluidas).
+  Producto.prototype.toJSON = function () {
+    const valores = { ...this.get({ plain: true }) };
+    if (Array.isArray(valores.variantes)) {
+      valores.stock = valores.variantes.filter((v) => v.activo).reduce((acc, v) => acc + v.stock, 0);
+    }
+    return valores;
   };
 
   return Producto;

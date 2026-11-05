@@ -1,6 +1,6 @@
 # Paletta
 
-Sitio de Paletta (uniformes escolares e indumentaria de egresados): catálogo público por colegio y panel de administración.
+Sitio de Paletta (uniformes escolares e indumentaria de egresados): catálogo público por colegio, tienda online (carrito, Mercado Pago y transferencia) y panel de administración.
 
 - **frontend/**: React 18 + Vite. Sitio público y panel `/admin`.
 - **backend/**: Node 20+ con Express 5, Sequelize y PostgreSQL. API REST en `/api`.
@@ -44,6 +44,7 @@ Panel de administración: `http://localhost:5173/admin`.
 ### Variables de entorno
 
 - `backend/.env.example`: base de datos, `JWT_SECRET` (obligatorio en producción), CORS, SMTP opcional para el formulario de contacto.
+- Tienda: `TIENDA_HABILITADA`, Mercado Pago (`MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET`), transferencia (`TRANSFERENCIA_*`), envío (`ENVIO_*`). Ver `deploy/VPS.md` §9.
 - `frontend/.env.example`: `VITE_API_URL` (vacío si front y API comparten dominio) y `VITE_MOSTRAR_PRECIOS` (`false` = modo catálogo, `true` = muestra precios y stock).
 
 ## Tests y CI
@@ -75,4 +76,6 @@ Healthcheck para monitoreo: `GET /api/health`.
 
 Públicos: `GET /api/productos/public[/:id]`, `GET /api/colegios[/:id][/productos]`, `GET /api/categorias`, `POST /api/contacto`, `POST /api/auth/login`.
 
-Solo administradores (`Authorization: Bearer <token>`): CRUD de `/api/productos`, `/api/categorias`, `/api/colegios` (`/api/colegios/admin` lista también los inactivos), `/api/usuarios`, `/api/imagenes`, y la bandeja de `/api/contacto`.
+Tienda (pública): `GET /api/tienda/config`, `POST /api/pedidos`, `GET /api/pedidos/:token`, `POST /api/pedidos/:token/pagar`, `POST /api/pedidos/:token/verificar-pago`, `POST /api/pagos/webhook` (Mercado Pago, firma verificada).
+
+Solo administradores (`Authorization: Bearer <token>`): `/api/admin/pedidos` (listado, resumen, detalle, cambio de estado, notas) y: CRUD de `/api/productos`, `/api/categorias`, `/api/colegios` (`/api/colegios/admin` lista también los inactivos), `/api/usuarios`, `/api/imagenes`, y la bandeja de `/api/contacto`.
