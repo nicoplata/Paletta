@@ -1,156 +1,78 @@
-import '../styles/style.css';
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import '../styles/Secciones.css';
 
-const slides = [
+const SLIDES = [
   {
-    bgImage: '/img/paletta_2.jpg',
-    title: 'Bienvenido a Paletta',
-    desc: 'Indumentaria deportiva y urbana para egresados, colegios y empresas. Calidad, diseño y comodidad en cada prenda.',
+    principal: true,
+    titulo: 'Bienvenido a Paletta',
+    texto: 'Indumentaria deportiva y urbana para egresados, colegios y empresas. Calidad, diseño y comodidad en cada prenda.',
     cta: 'Ver productos',
-    ctaLink: '#productos',
+    link: '/productos',
   },
   {
-    bgColor: '#9c1f23',
-    title: 'Personalizá tu conjunto',
-    desc: 'Elegí colores, estampas y detalles únicos para tu grupo o empresa.',
-    cta: 'Personalizar',
-    ctaLink: '#personalizar',
+    titulo: 'Personalizá tu conjunto',
+    texto: 'Elegí colores, estampas y detalles únicos para tu grupo o empresa.',
+    cta: 'Egresados',
+    link: '/egresados',
   },
   {
-    bgColor: '#9c1f23',
-    title: 'Calidad garantizada',
-    desc: 'Materiales premium y confección nacional. ¡Conocé más sobre nosotros!',
-    cta: 'Sobre Paletta',
-    ctaLink: '#nosotros',
+    titulo: 'Calidad garantizada',
+    texto: 'Materiales premium y confección nacional. ¡Conocé más sobre nosotros!',
+    cta: 'Contactanos',
+    link: '/contacto',
   },
 ];
 
-const Carousel = (props) => {
-  const [current, setCurrent] = useState(0);
-  const timeoutRef = useRef(null);
+const INTERVALO = 6000;
 
-  // Auto-slide
+const Carousel = () => {
+  const [actual, setActual] = useState(0);
+  const [pausado, setPausado] = useState(false);
+
   useEffect(() => {
-    clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-      setCurrent((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearTimeout(timeoutRef.current);
-  }, [current]);
+    if (pausado) return undefined;
+    const t = setTimeout(() => setActual((i) => (i + 1) % SLIDES.length), INTERVALO);
+    return () => clearTimeout(t);
+  }, [actual, pausado]);
 
-  const goTo = (idx) => setCurrent(idx);
-  const prev = () => setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
-  const next = () => setCurrent((prev) => (prev + 1) % slides.length);
+  const ir = (i) => setActual((i + SLIDES.length) % SLIDES.length);
 
   return (
-    <div className="carouselContainer" style={{ position: 'relative', overflow: 'hidden', minHeight: '60vh' }}>
-      {slides.map((slide, idx) => (
+    <section
+      className="hero"
+      aria-roledescription="carrusel"
+      aria-label="Destacados"
+      onMouseEnter={() => setPausado(true)}
+      onMouseLeave={() => setPausado(false)}
+      onFocus={() => setPausado(true)}
+      onBlur={() => setPausado(false)}
+    >
+      {SLIDES.map((s, i) => (
         <div
-          key={idx}
-          className="carousel-slide"
-          style={{
-            background: slide.bgImage
-              ? `url('${slide.bgImage}') center/cover no-repeat #2a3a5c`
-              : slide.bgColor || '#222',
-            opacity: idx === current ? 1 : 0,
-            zIndex: idx === current ? 2 : 1,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            transition: 'opacity 0.7s cubic-bezier(.4,0,.2,1)',
-          }}
+          key={s.titulo}
+          className={`hero-slide${s.principal ? ' con-imagen' : ''}${i === actual ? ' activo' : ''}`}
+          aria-hidden={i !== actual}
+          aria-roledescription="slide"
+          aria-label={`${i + 1} de ${SLIDES.length}`}
         >
-          {idx === current && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 3,
-                color: '#fff',
-                background: idx === 0
-                  ? `radial-gradient(ellipse at center, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0.18) 60%, rgba(0,0,0,0.55) 100%), linear-gradient(180deg, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.10) 60%, rgba(0,0,0,0.01) 100%)`
-                  : 'linear-gradient(180deg, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.10) 60%, rgba(0,0,0,0.03) 100%)',
-                textShadow: '0 2px 8px rgba(0,0,0,0.25)'
-              }}
-            >
-              <h1 style={{ fontFamily: 'opensans, Arial, sans-serif', fontWeight: 700, fontSize: '2.5rem', marginBottom: '1rem', textAlign: 'center', letterSpacing: '0.01em' }}>{slide.title}</h1>
-              <p style={{ fontSize: '1.25rem', maxWidth: 540, textAlign: 'center', marginBottom: '2rem', fontWeight: 400 }}>{slide.desc}</p>
-              {slide.cta === 'Personalizar' ? (
-                <button
-                  onClick={props.onPersonalizar}
-                  style={{
-                    background: 'rgba(255,255,255,0.92)',
-                    color: '#222',
-                    borderRadius: '24px',
-                    padding: '0.9rem 2.2rem',
-                    fontWeight: 700,
-                    fontSize: '1.1rem',
-                    textDecoration: 'none',
-                    boxShadow: '0 2px 12px 0 rgba(0,0,0,0.10)',
-                    transition: 'background 0.2s',
-                    marginBottom: '1.5rem',
-                    display: 'inline-block',
-                    border: 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {slide.cta}
-                </button>
-              ) : (
-                <a href={slide.ctaLink} style={{
-                  background: 'rgba(255,255,255,0.92)',
-                  color: '#222',
-                  borderRadius: '24px',
-                  padding: '0.9rem 2.2rem',
-                  fontWeight: 700,
-                  fontSize: '1.1rem',
-                  textDecoration: 'none',
-                  boxShadow: '0 2px 12px 0 rgba(0,0,0,0.10)',
-                  transition: 'background 0.2s',
-                  marginBottom: '1.5rem',
-                  display: 'inline-block',
-                }}>{slide.cta}</a>
-              )}
-            </div>
-          )}
+          <div className="hero-contenido">
+            {i === 0 ? <h1>{s.titulo}</h1> : <h2>{s.titulo}</h2>}
+            <p>{s.texto}</p>
+            <Link to={s.link} className="btn btn-claro" tabIndex={i === actual ? 0 : -1}>{s.cta}</Link>
+          </div>
         </div>
       ))}
 
-      {/* Flechas */}
-      <button onClick={prev} aria-label="Anterior" style={{ position: 'absolute', top: '50%', left: 24, transform: 'translateY(-50%)', zIndex: 10, background: 'rgba(0,0,0,0.25)', border: 'none', borderRadius: '50%', width: 44, height: 44, color: '#fff', fontSize: 28, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&#8592;</button>
-      <button onClick={next} aria-label="Siguiente" style={{ position: 'absolute', top: '50%', right: 24, transform: 'translateY(-50%)', zIndex: 10, background: 'rgba(0,0,0,0.25)', border: 'none', borderRadius: '50%', width: 44, height: 44, color: '#fff', fontSize: 28, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&#8594;</button>
+      <button type="button" className="hero-flecha izquierda" onClick={() => ir(actual - 1)} aria-label="Anterior">&#8592;</button>
+      <button type="button" className="hero-flecha derecha" onClick={() => ir(actual + 1)} aria-label="Siguiente">&#8594;</button>
 
-      {/* Bullets */}
-      <div style={{ position: 'absolute', bottom: 32, left: 0, width: '100%', display: 'flex', justifyContent: 'center', gap: 12, zIndex: 10 }}>
-        {slides.map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => goTo(idx)}
-            aria-label={`Ir al slide ${idx + 1}`}
-            style={{
-              width: 14,
-              height: 14,
-              borderRadius: '50%',
-              border: 'none',
-              background: idx === current ? '#fff' : 'rgba(255,255,255,0.5)',
-              boxShadow: idx === current ? '0 0 0 2px #222' : 'none',
-              cursor: 'pointer',
-              transition: 'background 0.2s',
-              outline: 'none',
-            }}
-          />
+      <div className="hero-puntos">
+        {SLIDES.map((s, i) => (
+          <button key={s.titulo} type="button" onClick={() => ir(i)} aria-label={`Ir al destacado ${i + 1}`} aria-current={i === actual} />
         ))}
       </div>
-    </div>
+    </section>
   );
 };
 

@@ -4,9 +4,11 @@ import { assetUrl, formatearPrecio, IMAGEN_PRODUCTO_DEFAULT } from '../config';
 import { useCarrito } from '../context/CarritoContext';
 import { useProductosPublicos } from '../hooks/useCatalogo';
 import { useTienda } from '../hooks/useTienda';
+import useSeo from '../hooks/useSeo';
 import '../styles/Tienda.css';
 
 const Carrito = () => {
+  useSeo({ titulo: 'Carrito', noindex: true });
   const navigate = useNavigate();
   const { items, actualizarCantidad, quitar, subtotal, cantidadTotal, sincronizar } = useCarrito();
   const { habilitada, envio, cargando } = useTienda();

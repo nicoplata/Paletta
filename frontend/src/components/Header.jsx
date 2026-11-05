@@ -1,123 +1,92 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+import { FaShoppingCart } from 'react-icons/fa';
 import styles from '../styles/Header.module.css';
 import logoWhite from '../assets/img/palettaWhite.png';
 import logoBlack from '../assets/img/logoPaletta.png';
-import { FaShoppingCart } from 'react-icons/fa';
 import { useCarrito } from '../context/CarritoContext';
 import { useTienda } from '../hooks/useTienda';
 import '../styles/Tienda.css';
 
-const Header = ({ forceScrolled = false }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(forceScrolled);
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+const LINKS = [
+  { to: '/', texto: 'Inicio', end: true },
+  { to: '/colegios', texto: 'Colegios' },
+  { to: '/productos', texto: 'Productos' },
+  { to: '/egresados', texto: 'Egresados' },
+  { to: '/contacto', texto: 'Contacto' },
+];
 
-  const isHome = location.pathname === '/';
+const Header = () => {
+  const location = useLocation();
+  const [menuAbierto, setMenuAbierto] = useState(false);
+  const [scrolleado, setScrolleado] = useState(() => window.scrollY > 1);
   const { habilitada: tiendaHabilitada } = useTienda();
   const { cantidadTotal } = useCarrito();
 
+  const esHome = location.pathname === '/';
+
   useEffect(() => {
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 1024);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const onScroll = () => setScrolleado(window.scrollY > 1);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Cerrar el menú al navegar o con Escape
+  useEffect(() => setMenuAbierto(false), [location.pathname]);
   useEffect(() => {
-    if (isDesktop && menuOpen) setMenuOpen(false);
-  }, [isDesktop, menuOpen]);
+    if (!menuAbierto) return undefined;
+    const onKey = (e) => e.key === 'Escape' && setMenuAbierto(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuAbierto]);
 
-  useEffect(() => {
-    if (forceScrolled) return;
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 1);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [forceScrolled]);
-
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
-  };
-
-  const mostrarLogoNegro = !isHome || isScrolled || menuOpen;
-  const headerClass = `${styles.header} ${mostrarLogoNegro ? styles.scrolled : ''}`;
-  const lineColor = mostrarLogoNegro ? 'black' : 'white';
-  const navLinkColor = mostrarLogoNegro ? 'black' : 'white';
+  const solido = !esHome || scrolleado || menuAbierto;
 
   return (
-    <div className="container">
-      <div className={headerClass}>
-        <div
-          className={styles.logoContainer}
-          onClick={() => navigate('/')}
-          onKeyDown={(e) => e.key === 'Enter' && navigate('/')}
-          tabIndex={0}
-          style={{ cursor: 'pointer' }}
-        >
-          <img
-            src={mostrarLogoNegro ? logoBlack : logoWhite}
-            alt="Logo Paletta"
-          />
-        </div>
+    <header className={`${styles.header} ${solido ? styles.solido : ''}`}>
+      <Link to="/" className={styles.logo} aria-label="Paletta, ir al inicio">
+        <img src={solido ? logoBlack : logoWhite} alt="Paletta" width="136" height="80" />
+      </Link>
 
-        {!isDesktop && (
-          <div
-            className={styles.openMenu}
-            onClick={toggleMenu}
-            style={{ display: 'block' }}
-          >
-            <span className={`${styles.line1} ${menuOpen ? styles.activeline1 : ''}`} style={{ background: lineColor }}></span>
-            <span className={`${styles.line2} ${menuOpen ? styles.activeline2 : ''}`} style={{ background: lineColor }}></span>
-            <span className={`${styles.line3} ${menuOpen ? styles.activeline3 : ''}`} style={{ background: lineColor }}></span>
-          </div>
-        )}
+      <button
+        type="button"
+        className={`${styles.hamburguesa} ${menuAbierto ? styles.abierto : ''}`}
+        onClick={() => setMenuAbierto((v) => !v)}
+        aria-expanded={menuAbierto}
+        aria-controls="menu-principal"
+        aria-label={menuAbierto ? 'Cerrar menú' : 'Abrir menú'}
+      >
+        <span />
+        <span />
+        <span />
+      </button>
 
-        {!isDesktop && (
-          <div
-            className={styles.darkenBackground}
-            style={{ display: menuOpen ? 'block' : 'none', cursor: 'pointer' }}
-            onClick={toggleMenu}
-          ></div>
-        )}
+      {menuAbierto && (
+        <button type="button" className={styles.fondoOscuro} onClick={() => setMenuAbierto(false)} aria-label="Cerrar menú" tabIndex={-1} />
+      )}
 
-        <div
-          className={styles.navContainer}
-          style={
-            isDesktop
-              ? undefined
-              : { right: menuOpen ? '0px' : '-300px' }
-          }
-        >
-          <div className={styles.navDesktop}>
-            <ul>
-              <li><Link to="/" style={{ color: navLinkColor, textDecoration: 'none' }}>Inicio</Link></li>
-              <li><Link to="/colegios" style={{ color: navLinkColor, textDecoration: 'none' }}>Colegios</Link></li>
-              <li><Link to="/productos" style={{ color: navLinkColor, textDecoration: 'none' }}>Productos</Link></li>
-              <li><Link to="/egresados" style={{ color: navLinkColor, textDecoration: 'none' }}>Egresados</Link></li>
-              <li><Link to="/contacto" style={{ color: navLinkColor, textDecoration: 'none' }}>Contacto</Link></li>
-              {tiendaHabilitada && (
-                <li>
-                  <Link
-                    to="/carrito"
-                    className="carrito-header"
-                    style={{ color: navLinkColor }}
-                    aria-label={`Carrito, ${cantidadTotal} producto${cantidadTotal === 1 ? '' : 's'}`}
-                  >
-                    <FaShoppingCart size={20} aria-hidden="true" />
-                    {cantidadTotal > 0 && <span className="badge">{cantidadTotal}</span>}
-                  </Link>
-                </li>
-              )}
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
+      <nav id="menu-principal" className={`${styles.nav} ${menuAbierto ? styles.navAbierta : ''}`} aria-label="Principal">
+        <ul>
+          {LINKS.map((l) => (
+            <li key={l.to}>
+              <NavLink to={l.to} end={l.end}>{l.texto}</NavLink>
+            </li>
+          ))}
+          {tiendaHabilitada && (
+            <li>
+              <NavLink
+                to="/carrito"
+                className="carrito-header"
+                aria-label={`Carrito, ${cantidadTotal} producto${cantidadTotal === 1 ? '' : 's'}`}
+              >
+                <FaShoppingCart size={20} aria-hidden="true" />
+                {cantidadTotal > 0 && <span className="badge">{cantidadTotal}</span>}
+              </NavLink>
+            </li>
+          )}
+        </ul>
+      </nav>
+    </header>
   );
 };
 

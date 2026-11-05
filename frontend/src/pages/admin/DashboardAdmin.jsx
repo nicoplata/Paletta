@@ -51,7 +51,7 @@ const ToggleButton = styled.button`
   justify-content: center;
 
   &:hover {
-    color: #e74c3c;
+    color: var(--color-primario);
   }
 `;
 
@@ -83,12 +83,12 @@ const StyledNavLink = styled(NavLink)`
   }
 
   &:hover {
-    background: #fdf0ef;
-    color: #e74c3c;
+    background: var(--color-primario-suave);
+    color: var(--color-primario);
   }
 
   &.active {
-    background: #e74c3c;
+    background: var(--color-primario);
     color: white;
   }
 `;
@@ -109,11 +109,11 @@ const ContentArea = styled.div`
 
 const LogoutButton = styled(StyledNavLink)`
   margin-top: auto;
-  color: #e74c3c;
+  color: var(--color-primario);
   
   &:hover {
-    background: #fdf0ef;
-    color: #c0392b;
+    background: var(--color-primario-suave);
+    color: var(--color-primario-oscuro);
   }
 `;
 

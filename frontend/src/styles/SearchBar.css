@@ -14,7 +14,7 @@
   font-size: 1rem;
   color: #333;
   transition: border-color 0.2s, box-shadow 0.2s;
-  font-family: opensans, Arial, sans-serif;
+  font-family: var(--fuente);
 }
 
 .search-input:focus {

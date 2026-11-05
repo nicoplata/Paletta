@@ -1,0 +1,317 @@
+/* Secciones de la home y páginas institucionales */
+
+/* --- Carrusel / hero --- */
+.hero {
+  position: relative;
+  overflow: hidden;
+  min-height: clamp(420px, 70vh, 720px);
+  color: #fff;
+  background: var(--color-primario);
+}
+
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--header-alto) + var(--esp-4)) var(--gutter) var(--esp-12);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.7s ease, visibility 0.7s;
+  background-color: var(--color-primario);
+  background-position: center;
+  background-size: cover;
+}
+
+.hero-slide.activo {
+  opacity: 1;
+  visibility: visible;
+}
+
+.hero-slide.con-imagen {
+  background-image: url('/img/hero.jpg');
+}
+
+@media (max-width: 700px) {
+  .hero-slide.con-imagen {
+    background-image: url('/img/hero-mobile.jpg');
+  }
+}
+
+.hero-slide.con-imagen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.2) 60%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+.hero-contenido {
+  position: relative;
+  max-width: 640px;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.hero-contenido h1,
+.hero-contenido h2 {
+  font-size: var(--texto-hero);
+  font-weight: 700;
+  margin-bottom: var(--esp-4);
+}
+
+.hero-contenido p {
+  font-size: var(--texto-lg);
+  margin-bottom: var(--esp-8);
+}
+
+.hero-flecha {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-flecha:hover { background: rgba(0, 0, 0, 0.5); }
+.hero-flecha.izquierda { left: var(--gutter); }
+.hero-flecha.derecha { right: var(--gutter); }
+
+.hero-puntos {
+  position: absolute;
+  bottom: var(--esp-6);
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  gap: var(--esp-3);
+}
+
+.hero-puntos button {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.hero-puntos button[aria-current='true'] { background: #fff; }
+
+@media (max-width: 600px) {
+  .hero-flecha { display: none; }
+}
+
+/* --- Bloque Egresados --- */
+.egresados {
+  background: var(--color-primario);
+  color: #fff;
+  text-align: center;
+  padding: var(--esp-12) var(--gutter);
+}
+
+.egresados h2 {
+  font-size: var(--texto-2xl);
+  margin-bottom: var(--esp-4);
+}
+
+.egresados p {
+  max-width: 600px;
+  margin: 0 auto var(--esp-8);
+  font-size: var(--texto-lg);
+  opacity: 0.95;
+}
+
+.egresados-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--esp-3);
+}
+
+/* En su propia página, el bloque arranca debajo del header */
+.pagina-egresados .egresados {
+  padding-top: calc(var(--header-alto) + var(--esp-12));
+  padding-bottom: calc(var(--esp-12) * 1.5);
+}
+
+.egresados-lista {
+  max-width: 900px;
+  margin: var(--esp-12) auto 0;
+  padding: 0 var(--gutter);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--esp-6);
+}
+
+.egresados-lista article {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  padding: var(--esp-6);
+}
+
+.egresados-lista h3 {
+  color: var(--color-primario);
+  font-size: var(--texto-lg);
+  margin-bottom: var(--esp-2);
+}
+
+.egresados-lista p {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.egresados-cta {
+  text-align: center;
+  margin: var(--esp-8) 0 var(--esp-12);
+}
+
+/* --- Contacto --- */
+.contacto {
+  background: var(--color-fondo-alt);
+  padding: var(--esp-12) var(--gutter);
+}
+
+.pagina-contacto .contacto {
+  padding-top: calc(var(--header-alto) + var(--esp-8));
+}
+
+.contacto-grilla {
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: var(--esp-8);
+  align-items: stretch;
+}
+
+.contacto-form,
+.contacto-mapa {
+  background: #fff;
+  border-radius: var(--radio);
+  box-shadow: 0 2px 12px rgba(156, 31, 35, 0.1);
+}
+
+.contacto-form {
+  padding: var(--esp-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  position: relative;
+}
+
+.contacto-form h2 {
+  color: var(--color-primario);
+  font-size: var(--texto-xl);
+}
+
+.contacto-form .campo {
+  color: var(--color-primario);
+}
+
+.contacto-datos {
+  font-size: var(--texto-sm);
+  color: var(--color-texto-suave);
+}
+
+.contacto-mapa {
+  overflow: hidden;
+  min-height: 380px;
+}
+
+.contacto-mapa iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 380px;
+  border: 0;
+  display: block;
+}
+
+.honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+/* --- Footer --- */
+.footer {
+  background: var(--color-primario);
+  color: #fff;
+  padding: var(--esp-8) var(--gutter);
+  margin-top: auto;
+}
+
+.footer-grilla {
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--esp-6);
+}
+
+.footer img {
+  height: 54px;
+  width: auto;
+}
+
+.footer ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+}
+
+.footer a {
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.footer a:hover { text-decoration: underline; }
+
+.footer-contacto {
+  font-style: normal;
+  font-size: var(--texto-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-1);
+}
+
+.footer-contacto a { font-weight: 500; text-decoration: underline; }
+.footer-contacto span { opacity: 0.85; }
+
+.footer-legal {
+  max-width: 960px;
+  margin: var(--esp-6) auto 0;
+  padding-top: var(--esp-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: var(--texto-xs);
+  opacity: 0.8;
+}
+
+/* --- 404 --- */
+.no-encontrada {
+  text-align: center;
+}
+
+.no-encontrada p {
+  margin: var(--esp-4) 0 var(--esp-6);
+  color: var(--color-texto-suave);
+}

@@ -13,7 +13,7 @@ export const COLOR_ESTADO = {
   listo_para_retirar: '#8e44ad',
   enviado: '#16a085',
   entregado: '#7f8c8d',
-  cancelado: '#c0392b',
+  cancelado: 'var(--color-primario-oscuro)',
 };
 
 const Tabla = styled.table`
@@ -47,8 +47,8 @@ const Resumen = styled.div`
 `;
 
 const Tarjeta = styled.button`
-  background: ${({ $activa }) => ($activa ? '#fdf0ef' : '#fff')};
-  border: 2px solid ${({ $activa }) => ($activa ? '#e74c3c' : '#eee')};
+  background: ${({ $activa }) => ($activa ? 'var(--color-primario-suave)' : '#fff')};
+  border: 2px solid ${({ $activa }) => ($activa ? 'var(--color-primario)' : '#eee')};
   border-radius: 10px;
   padding: 0.9rem;
   text-align: left;

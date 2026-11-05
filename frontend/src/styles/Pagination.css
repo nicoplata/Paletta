@@ -4,7 +4,7 @@
   justify-content: center;
   gap: 4px;
   padding: 1rem;
-  font-family: opensans, Arial, sans-serif;
+  font-family: var(--fuente);
 }
 
 .pagination-button {

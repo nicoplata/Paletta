@@ -1,18 +1,18 @@
+import { Outlet } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { Outlet } from 'react-router-dom';
-import '../styles/LayoutGeneral.module.css'; // Importamos los estilos
+import ScrollArriba from '../components/ScrollArriba';
 
-const LayoutGeneral = () => {
-  return (
-    <>
-      <Header />
-      <main className="layout-main">
-        <Outlet />
-      </main>
-      <Footer />
-    </>
-  );
-};
+const LayoutGeneral = () => (
+  <>
+    <a href="#contenido" className="saltar-contenido">Saltar al contenido</a>
+    <ScrollArriba />
+    <Header />
+    <main id="contenido" className="layout-main" tabIndex={-1}>
+      <Outlet />
+    </main>
+    <Footer />
+  </>
+);
 
 export default LayoutGeneral;

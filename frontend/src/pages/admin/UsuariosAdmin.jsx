@@ -40,7 +40,7 @@ const UsuariosAdmin = () => {
               <CardTitle>{usuario.nombre}{usuario.id === actual?.id ? ' (vos)' : ''}</CardTitle>
               <CardText>{usuario.email}</CardText>
               <div style={{ marginTop: '0.5rem' }}>
-                <Tag $color={usuario.rol === 'administrador' ? '#e74c3c' : '#3498db'}>{usuario.rol}</Tag>
+                <Tag $color={usuario.rol === 'administrador' ? 'var(--color-primario)' : '#3498db'}>{usuario.rol}</Tag>
               </div>
               <Actions>
                 <IconButton onClick={() => navigate(`/admin/dashboard/usuarios/${usuario.id}/editar`)} aria-label="Editar">

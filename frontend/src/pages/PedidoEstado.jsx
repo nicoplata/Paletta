@@ -3,6 +3,7 @@ import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import api, { mensajeError } from '../lib/api';
 import { formatearPrecio } from '../config';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import useSeo from '../hooks/useSeo';
 import '../styles/Tienda.css';
 
 export const ESTADOS = {
@@ -26,6 +27,7 @@ const pasos = (tipoEntrega) => [
 const fecha = (iso) => (iso ? new Date(iso).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' }) : '');
 
 const PedidoEstado = () => {
+  useSeo({ titulo: 'Tu pedido', noindex: true });
   const { token } = useParams();
   const location = useLocation();
   const [params] = useSearchParams();

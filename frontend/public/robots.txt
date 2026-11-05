@@ -1,2 +1,7 @@
 User-agent: *
 Disallow: /admin
+Disallow: /carrito
+Disallow: /checkout
+Disallow: /pedido/
+
+Sitemap: https://www.paletta.com.ar/sitemap.xml

@@ -1,52 +1,36 @@
-import React from 'react';
+import { Link } from 'react-router-dom';
 import logoWhite from '../assets/img/palettaWhite.png';
+import '../styles/Secciones.css';
+
+export const DATOS_CONTACTO = {
+  email: 'info@paletta.com.ar',
+  telefono: '+54 11 4777-7777',
+  telefonoLink: '+541147777777',
+  direccion: 'Vélez Sarsfield 4270, Munro, Buenos Aires',
+};
 
 const Footer = () => (
-  <footer style={{
-    background: '#9c1f23',
-    color: '#fff',
-    padding: '2rem 0',
-    marginTop: '3rem',
-    fontFamily: 'opensans, Arial, sans-serif',
-    fontWeight: 400,
-    fontSize: '1.05rem',
-    letterSpacing: '0.01em',
-  }}>
-    <div style={{
-      maxWidth: 900,
-      margin: '0 auto',
-      display: 'flex',
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      justifyContent: 'space-between',
-      gap: 32,
-      flexWrap: 'wrap',
-    }}>
-      {/* Branding */}
-      <div style={{ minWidth: 180, marginBottom: 12, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-        <img
-          src={logoWhite}
-          alt="Logo Paletta"
-          style={{ height: 54, marginBottom: 8, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.10))' }}
-        />
+  <footer className="footer">
+    <div className="footer-grilla">
+      <div>
+        <img src={logoWhite} alt="Paletta" width="92" height="54" loading="lazy" />
       </div>
-      {/* Links */}
-      <nav style={{ minWidth: 180, marginBottom: 12 }}>
-        <ul style={{ display: 'flex', flexDirection: 'column', gap: 10, listStyle: 'none', padding: 0, margin: 0 }}>
-          <li><a href="#productos" style={{ color: '#fff', textDecoration: 'none', fontWeight: 600, fontSize: '1.05rem', letterSpacing: '0.01em', transition: 'color 0.2s' }}>Productos</a></li>
-          <li><a href="#colegios" style={{ color: '#fff', textDecoration: 'none', fontWeight: 600, fontSize: '1.05rem', letterSpacing: '0.01em', transition: 'color 0.2s' }}>Colegios</a></li>
-          <li><a href="#egresados" style={{ color: '#fff', textDecoration: 'none', fontWeight: 600, fontSize: '1.05rem', letterSpacing: '0.01em', transition: 'color 0.2s' }}>Egresados</a></li>
-          <li><a href="#contacto" style={{ color: '#fff', textDecoration: 'none', fontWeight: 600, fontSize: '1.05rem', letterSpacing: '0.01em', transition: 'color 0.2s' }}>Contacto</a></li>
+      <nav aria-label="Secciones">
+        <ul>
+          <li><Link to="/productos">Productos</Link></li>
+          <li><Link to="/colegios">Colegios</Link></li>
+          <li><Link to="/egresados">Egresados</Link></li>
+          <li><Link to="/contacto">Contacto</Link></li>
         </ul>
       </nav>
-      {/* Contacto */}
-      <div id="contacto" style={{ minWidth: 220, marginBottom: 12, fontSize: '0.98rem', opacity: 0.85 }}>
-        <div><strong>Contacto:</strong></div>
-        <div><a href="mailto:info@paletta.com.ar" style={{ color: '#fff', textDecoration: 'underline', fontWeight: 500 }}>info@paletta.com.ar</a></div>
-        <div><a href="tel:+541147777777" style={{ color: '#fff', textDecoration: 'underline', fontWeight: 500 }}>+54 11 4777-7777</a></div>
-        <div style={{ opacity: 0.8 }}>Vélez Sarsfield 4270, Munro, Buenos Aires</div>
-      </div>
+      <address className="footer-contacto">
+        <strong>Contacto</strong>
+        <a href={`mailto:${DATOS_CONTACTO.email}`}>{DATOS_CONTACTO.email}</a>
+        <a href={`tel:${DATOS_CONTACTO.telefonoLink}`}>{DATOS_CONTACTO.telefono}</a>
+        <span>{DATOS_CONTACTO.direccion}</span>
+      </address>
     </div>
+    <p className="footer-legal">© {new Date().getFullYear()} Paletta. Indumentaria para egresados, colegios y empresas.</p>
   </footer>
 );
 

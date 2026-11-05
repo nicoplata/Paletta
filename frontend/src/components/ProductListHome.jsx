@@ -13,7 +13,8 @@ const ProductListHome = () => {
   const destacados = filtrarProductos(productos, filtros).slice(0, 8);
 
   return (
-    <div className="homeWrapper">
+    <section className="homeWrapper" aria-labelledby="titulo-destacados">
+      <h2 id="titulo-destacados">Productos destacados</h2>
       <div className="productosLayout">
         <FiltroProductos onChange={setFiltros} context="home" />
         <div className="productContainer home" id="productos">
@@ -27,11 +28,11 @@ const ProductListHome = () => {
             destacados.map((producto) => <TarjetaProducto key={producto.id} producto={producto} mostrarColegio={false} />)
           )}
           <div className="verMasContainer">
-            <Link to="/productos" className="verMasBtn">Ver más productos</Link>
+            <Link to="/productos" className="btn">Ver todos los productos</Link>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

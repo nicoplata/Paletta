@@ -41,6 +41,12 @@ Panel de administración: `http://localhost:5173/admin`.
 | frontend | `npm test` | Tests (Vitest + Testing Library) |
 | frontend | `npm run build` | Build de producción en `frontend/dist` |
 
+### Estilos
+
+- `frontend/src/styles/base.css`: variables de diseño (colores, tipografía, espaciado), reset y componentes comunes (`.btn`, `.campo`, `.pagina`, `.aviso`). Se carga una sola vez en `main.jsx`.
+- Sitio público: un CSS por sección que usa solo esas variables. Panel admin: styled-components (`pages/admin/adminUI.jsx`) con las mismas variables.
+- SEO por página con el hook `useSeo` (título, descripción, canonical, Open Graph, `noindex`, JSON-LD).
+
 ### Variables de entorno
 
 - `backend/.env.example`: base de datos, `JWT_SECRET` (obligatorio en producción), CORS, SMTP opcional para el formulario de contacto.
@@ -70,7 +76,7 @@ Producción: VPS Ubuntu con nginx y pm2, en **www.paletta.com.ar**. La guía pas
 - `deploy/deploy.sh`: actualización (pull, dependencias, migraciones, build y reload).
 - `deploy/backup.sh`: backup diario de la base y de las imágenes (`backend/public/uploads`, que no está en git).
 
-Healthcheck para monitoreo: `GET /api/health`.
+Healthcheck para monitoreo: `GET /api/health`. SEO: `GET /sitemap.xml` y páginas de producto/colegio con metadatos servidas por el backend (ver `deploy/VPS.md` §10).
 
 ## API (resumen)
 

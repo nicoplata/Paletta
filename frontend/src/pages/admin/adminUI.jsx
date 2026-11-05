@@ -69,14 +69,14 @@ export const Actions = styled.div`
 export const IconButton = styled.button`
   background: none;
   border: none;
-  color: ${({ $peligro }) => ($peligro ? '#e74c3c' : '#3498db')};
+  color: ${({ $peligro }) => ($peligro ? 'var(--color-primario)' : '#3498db')};
   cursor: pointer;
   padding: 0.5rem;
   border-radius: 4px;
   transition: background 0.2s;
 
   &:hover {
-    background: ${({ $peligro }) => ($peligro ? '#fdf0ef' : '#edf6fd')};
+    background: ${({ $peligro }) => ($peligro ? 'var(--color-primario-suave)' : '#edf6fd')};
   }
 `;
 
@@ -90,11 +90,11 @@ export const Button = styled.button`
   font-size: 1rem;
   cursor: pointer;
   transition: background 0.2s;
-  background: ${({ $primario }) => ($primario ? '#e74c3c' : '#eee')};
+  background: ${({ $primario }) => ($primario ? 'var(--color-primario)' : '#eee')};
   color: ${({ $primario }) => ($primario ? 'white' : '#2c3e50')};
 
   &:hover:not(:disabled) {
-    background: ${({ $primario }) => ($primario ? '#c0392b' : '#ddd')};
+    background: ${({ $primario }) => ($primario ? 'var(--color-primario-oscuro)' : '#ddd')};
   }
 
   &:disabled {
@@ -136,7 +136,7 @@ const campo = `
 
   &:focus {
     outline: none;
-    border-color: #e74c3c;
+    border-color: var(--color-primario);
   }
 `;
 

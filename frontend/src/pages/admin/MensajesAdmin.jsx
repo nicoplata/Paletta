@@ -34,13 +34,13 @@ const MensajesAdmin = () => {
   return (
     <Container>
       <Header>
-        <Title>Mensajes de contacto {noLeidos > 0 && <Tag $color="#e74c3c">{noLeidos} sin leer</Tag>}</Title>
+        <Title>Mensajes de contacto {noLeidos > 0 && <Tag $color="var(--color-primario)">{noLeidos} sin leer</Tag>}</Title>
       </Header>
       {error && <ErrorBox>{error}</ErrorBox>}
       <div style={{ display: 'grid', gap: '1rem' }}>
         {cargando ? <Empty>Cargando...</Empty> : mensajes.length === 0 ? <Empty>No hay mensajes.</Empty> : (
           mensajes.map((m) => (
-            <Card key={m.id} style={{ borderLeft: m.leido ? '4px solid #eee' : '4px solid #e74c3c' }}>
+            <Card key={m.id} style={{ borderLeft: m.leido ? '4px solid #eee' : '4px solid var(--color-primario)' }}>
               <CardTitle>{m.nombre}</CardTitle>
               <CardText>
                 <a href={`mailto:${m.email}`}>{m.email}</a>{m.telefono ? ` · ${m.telefono}` : ''} · {fecha(m.createdAt)}
