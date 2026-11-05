@@ -58,6 +58,7 @@ app.use('/api/imagenes', require('./routes/imagenes'));
 app.use('/api/usuarios', require('./routes/usuarios'));
 app.use('/api/contacto', require('./routes/contacto'));
 app.use('/api/admin/pedidos', require('./routes/pedidosAdmin'));
+app.use('/api/admin', require('./routes/tiendaAdmin'));
 app.use('/api', require('./routes/tienda'));
 
 app.use(notFound);

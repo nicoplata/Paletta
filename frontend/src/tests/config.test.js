@@ -52,3 +52,17 @@ describe('linkWhatsApp', async () => {
     expect(linkWhatsApp(tel)).toBe(esperado);
   });
 });
+
+describe('estadoCupon', async () => {
+  const { estadoCupon } = await import('../pages/admin/CuponesAdmin');
+  const base = { activo: true, usos: 0, usosMaximos: null, desde: null, hasta: null };
+  it.each([
+    [base, 'Vigente'],
+    [{ ...base, activo: false }, 'Inactivo'],
+    [{ ...base, hasta: '2000-01-01' }, 'Vencido'],
+    [{ ...base, desde: '2999-01-01' }, 'Programado'],
+    [{ ...base, usos: 3, usosMaximos: 3 }, 'Agotado'],
+  ])('%o -> %s', (cupon, esperado) => {
+    expect(estadoCupon(cupon).texto).toBe(esperado);
+  });
+});

@@ -18,6 +18,18 @@ const limitePedidos = rateLimit({
 
 router.get('/tienda/config', c.config);
 
+// Límite estricto para que no se puedan adivinar códigos de cupón por fuerza bruta
+const limiteCupones = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: () => ENV.CUPONES_POR_10MIN,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados intentos con cupones. Probá de nuevo en unos minutos.' },
+});
+
+router.post('/cupones/validar', limiteCupones, validar(schemas.validarCupon), c.validarCupon);
+router.get('/envio/cotizar', validar(schemas.cotizarEnvio, 'query'), c.cotizarEnvio);
+
 router.post('/pedidos', limitePedidos, validar(schemas.pedido), c.crearPedido);
 router.get('/pedidos/:token', conToken, c.verPedido);
 router.post('/pedidos/:token/pagar', limitePedidos, conToken, c.iniciarPago);

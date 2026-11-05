@@ -138,7 +138,10 @@ const PedidoDetalleAdmin = () => {
               </Fila>
             ))}
             <Fila><span>Subtotal</span><span>{formatearPrecio(pedido.subtotal)}</span></Fila>
-            <Fila><span>Envío</span><span>{formatearPrecio(pedido.costoEnvio)}</span></Fila>
+            {pedido.descuento > 0 && (
+              <Fila><span>Descuento (cupón {pedido.cuponCodigo})</span><span>− {formatearPrecio(pedido.descuento)}</span></Fila>
+            )}
+            <Fila><span>Envío{pedido.zonaEnvio ? ` · ${pedido.zonaEnvio}` : ''}</span><span>{formatearPrecio(pedido.costoEnvio)}</span></Fila>
             <Fila $total $sinBorde><span>Total</span><span>{formatearPrecio(pedido.total)}</span></Fila>
           </Bloque>
 

@@ -66,12 +66,15 @@ const ENV = {
   // Tienda online
   TIENDA_HABILITADA: process.env.TIENDA_HABILITADA === 'true',
   ENVIO_COSTO: Number(process.env.ENVIO_COSTO) || 0,
+  // Envío gratis a partir de este subtotal (0 = desactivado)
+  ENVIO_GRATIS_DESDE: Number(process.env.ENVIO_GRATIS_DESDE) || 0,
   ENVIO_HABILITADO: process.env.ENVIO_HABILITADO !== 'false',
   RETIRO_DIRECCION: process.env.RETIRO_DIRECCION || 'Av. Vélez Sarsfield 4270, Munro, Vicente López, Buenos Aires',
   PEDIDO_VENCIMIENTO_MP_MIN: Number(process.env.PEDIDO_VENCIMIENTO_MP_MIN) || 60,
   PEDIDO_VENCIMIENTO_TRANSFERENCIA_HS: Number(process.env.PEDIDO_VENCIMIENTO_TRANSFERENCIA_HS) || 48,
   MAX_UNIDADES_POR_ITEM: Number(process.env.MAX_UNIDADES_POR_ITEM) || 50,
   PEDIDOS_POR_HORA: Number(process.env.PEDIDOS_POR_HORA) || 20,
+  CUPONES_POR_10MIN: Number(process.env.CUPONES_POR_10MIN) || 15,
 
   // Mercado Pago (Checkout Pro). Sin MP_ACCESS_TOKEN el método no se ofrece.
   MP_ACCESS_TOKEN: process.env.MP_ACCESS_TOKEN,

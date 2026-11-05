@@ -136,9 +136,15 @@ La tienda viene apagada (`TIENDA_HABILITADA=false`): el sitio funciona como cat�
      y copiá la **clave secreta** en `MP_WEBHOOK_SECRET` (sin ella, en producción se rechazan las notificaciones).
    - Para probar primero, usá las credenciales de prueba y los usuarios de prueba de Mercado Pago.
 3. **Transferencia** (opcional): completá `TRANSFERENCIA_ALIAS` y/o `TRANSFERENCIA_CBU`, `TRANSFERENCIA_TITULAR`, `TRANSFERENCIA_BANCO`.
-4. **Envío**: `ENVIO_COSTO` (costo fijo) o `ENVIO_HABILITADO=false` para ofrecer solo retiro.
-5. **Mails**: configurá `MAIL_*` y `CONTACT_TO` para que el cliente reciba la confirmación y vos el aviso de cada pedido pagado.
-6. `SITE_URL=https://www.paletta.com.ar` y `TIENDA_HABILITADA=true` en `backend/.env`, y `pm2 reload paletta-api`.
+4. **Envío**: desde el panel → *Envíos* podés cargar zonas por rango de código postal con su costo y demora
+   (si cargás zonas, solo se envía a esos códigos postales). Sin zonas se usa el costo fijo `ENVIO_COSTO`.
+   `ENVIO_GRATIS_DESDE` activa el envío gratis desde un monto, y `ENVIO_HABILITADO=false` deja solo el retiro.
+5. **Cupones**: se crean en el panel → *Cupones* (porcentaje o monto fijo, compra mínima, vigencia y límite de usos).
+   Si un pedido se cancela, el uso del cupón se devuelve.
+6. **Exportar pedidos**: en el panel → *Pedidos*, "Exportar pedidos" (uno por fila, para administración) o
+   "Exportar prendas" (una fila por prenda con talle y cantidad, para producción). El CSV abre directo en Excel.
+7. **Mails**: configurá `MAIL_*` y `CONTACT_TO` para que el cliente reciba la confirmación y vos el aviso de cada pedido pagado.
+8. `SITE_URL=https://www.paletta.com.ar` y `TIENDA_HABILITADA=true` en `backend/.env`, y `pm2 reload paletta-api`.
 
 Los pedidos impagos vencen solos (60 min con Mercado Pago, 48 h con transferencia, configurable) y su stock vuelve a estar disponible.
 Los pedidos se gestionan en el panel → *Pedidos*.

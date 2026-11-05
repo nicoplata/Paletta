@@ -27,19 +27,35 @@ async function llamar(metodo, ruta, cuerpo, { idempotencyKey } = {}) {
   return data;
 }
 
+// Ítems de la preferencia. Mercado Pago no admite ítems negativos: si hay descuento,
+// se manda un único ítem con el total de productos ya descontado (así el total coincide).
+function itemsParaMp(pedido, items) {
+  if (pedido.descuento > 0) {
+    const unidades = items.reduce((acc, it) => acc + it.cantidad, 0);
+    return [{
+      id: `pedido-${pedido.id}`,
+      title: `Pedido P-${String(pedido.id).padStart(6, '0')} (${unidades} prenda${unidades === 1 ? '' : 's'}, cupón ${pedido.cuponCodigo})`,
+      quantity: 1,
+      unit_price: Math.round((pedido.subtotal - pedido.descuento) * 100) / 100,
+      currency_id: 'ARS',
+    }];
+  }
+  return items.map((it) => ({
+    id: String(it.varianteId),
+    title: `${it.nombreProducto} - Talle ${it.talle}`,
+    quantity: it.cantidad,
+    unit_price: it.precioUnitario,
+    currency_id: 'ARS',
+  }));
+}
+
 // Crea la preferencia de pago para un pedido y devuelve { id, init_point }.
 async function crearPreferencia(pedido, items) {
   if (!configurado()) throw new AppError('Mercado Pago no está configurado', 503);
   const urlPedido = `${ENV.SITE_URL}/pedido/${pedido.token}`;
   const preferencia = {
     external_reference: String(pedido.id),
-    items: items.map((it) => ({
-      id: String(it.varianteId),
-      title: `${it.nombreProducto} - Talle ${it.talle}`,
-      quantity: it.cantidad,
-      unit_price: it.precioUnitario,
-      currency_id: 'ARS',
-    })),
+    items: itemsParaMp(pedido, items),
     payer: { name: pedido.nombre, email: pedido.email },
     back_urls: { success: urlPedido, pending: urlPedido, failure: urlPedido },
     auto_return: 'approved',
