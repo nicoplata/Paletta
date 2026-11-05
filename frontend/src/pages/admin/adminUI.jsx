@@ -28,7 +28,7 @@ export const Grid = styled.div`
 `;
 
 export const Card = styled.div`
-  background: white;
+  background: var(--color-superficie);
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
@@ -132,7 +132,7 @@ const campo = `
   border-radius: 8px;
   font-size: 1rem;
   font-family: inherit;
-  background: white;
+  background: var(--color-superficie);
 
   &:focus {
     outline: none;

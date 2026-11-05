@@ -30,7 +30,7 @@ const Tabla = styled.table`
 
   th { color: #7f8c8d; font-weight: 600; font-size: 0.85rem; }
   tbody tr:hover { background: #fafafa; }
-  a { color: #2c3e50; font-weight: 600; }
+  a { color: #2c3e50; font-weight: 600; white-space: nowrap; }
 
   @media (max-width: 800px) {
     thead { display: none; }

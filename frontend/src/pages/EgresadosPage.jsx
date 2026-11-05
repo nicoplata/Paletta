@@ -1,34 +1,35 @@
-import { Link } from 'react-router-dom';
 import Egresados from '../components/Egresados';
 import useSeo from '../hooks/useSeo';
+import { CONTACTO } from '../datosContacto';
 import '../styles/Secciones.css';
 
 const PASOS = [
-  { titulo: '1. Elegí las prendas', texto: 'Buzos, camperas y conjuntos para todo el curso.' },
-  { titulo: '2. Personalizalas', texto: 'Colores, estampas y detalles únicos para tu grupo.' },
-  { titulo: '3. Pedí tu presupuesto', texto: 'Escribinos y coordinamos talles, cantidades y entrega.' },
+  { titulo: 'Elegí el modelo', texto: 'Buzo canguro, con cierre, campera, chomba o remera para todo el curso.' },
+  { titulo: 'Diseñalo online', texto: 'Colores, nombres, apodos y bordados en el diseñador de egresados.' },
+  { titulo: 'Pedí tu presupuesto', texto: 'Te contactamos para coordinar talles, cantidades, pagos y entrega.' },
 ];
 
 const EgresadosPage = () => {
   useSeo({
     titulo: 'Buzos y camperas de egresados personalizados',
-    descripcion: 'Buzos, camperas y conjuntos de egresados personalizados con la mejor calidad y diseño. Pedí presupuesto para tu grupo en Paletta.',
+    descripcion: 'Buzos, camperas y chombas de egresados personalizados, hechos en Munro. Diseñá el tuyo online y pedí presupuesto para tu promo.',
     ruta: '/egresados',
   });
 
   return (
     <div className="pagina-egresados">
       <Egresados titulo="h1" />
-      <div className="egresados-lista">
-        {PASOS.map((p) => (
-          <article key={p.titulo}>
+      <ol className="egresados-lista">
+        {PASOS.map((p, i) => (
+          <li key={p.titulo}>
+            <span className="numero" aria-hidden="true">{i + 1}</span>
             <h3>{p.titulo}</h3>
             <p>{p.texto}</p>
-          </article>
+          </li>
         ))}
-      </div>
+      </ol>
       <p className="egresados-cta">
-        <Link to="/contacto" className="btn">Pedir presupuesto</Link>
+        <a href={CONTACTO.sitioEgresados} className="btn">Ir a Paletta Egresados →</a>
       </p>
     </div>
   );

@@ -5,31 +5,29 @@ import '../styles/ProductList.css';
 
 const TarjetaProducto = ({ producto, mostrarColegio = true }) => {
   const { mostrarPrecios } = useTienda();
+  const sinStock = mostrarPrecios && producto.stock === 0;
+
   return (
-  <Link
-    to={`/producto/${producto.id}`}
-    className="productCard"
-    style={{ textDecoration: 'none', color: 'inherit' }}
-  >
-    <img
-      src={assetUrl(producto.imagenes?.[0]?.url)}
-      alt={producto.nombre}
-      loading="lazy"
-      onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = IMAGEN_PRODUCTO_DEFAULT; }}
-    />
-    <h3>{producto.nombre}</h3>
-    {mostrarColegio && <div className="colegio">{producto.colegio?.nombre || 'Sin colegio'}</div>}
-    <div className="category">{producto.categoria?.nombre || 'Sin categoría'}</div>
-    {mostrarPrecios && (
-      <>
-        <div className="price">{formatearPrecio(producto.precio)}</div>
-        <div className={`stock${producto.stock > 0 ? '' : ' out'}`}>
-          {producto.stock > 0 ? 'En stock' : 'Sin stock'}
-        </div>
-      </>
-    )}
-    {producto.descripcion && <div className="description">{producto.descripcion}</div>}
-  </Link>
+    <Link to={`/producto/${producto.id}`} className="productCard">
+      <div className="tp-imagen">
+        <img
+          src={assetUrl(producto.imagenes?.[0]?.url)}
+          alt={producto.nombre}
+          loading="lazy"
+          width="400"
+          height="400"
+          onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = IMAGEN_PRODUCTO_DEFAULT; }}
+        />
+        {producto.categoria?.nombre && <span className="tp-etiqueta category">{producto.categoria.nombre}</span>}
+        {sinStock && <span className="tp-etiqueta tp-agotado">Sin stock</span>}
+      </div>
+      <div className="tp-info">
+        <h3>{producto.nombre}</h3>
+        {mostrarColegio && producto.colegio?.nombre && <p className="colegio">{producto.colegio.nombre}</p>}
+        {producto.descripcion && <p className="description">{producto.descripcion}</p>}
+        {mostrarPrecios && <p className="price">{formatearPrecio(producto.precio)}</p>}
+      </div>
+    </Link>
   );
 };
 

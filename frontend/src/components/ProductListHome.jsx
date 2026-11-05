@@ -14,7 +14,13 @@ const ProductListHome = () => {
 
   return (
     <section className="homeWrapper" aria-labelledby="titulo-destacados">
-      <h2 id="titulo-destacados">Productos destacados</h2>
+      <div className="home-cabecera">
+        <div>
+          <p className="eyebrow">Catálogo</p>
+          <h2 id="titulo-destacados" className="display">Productos destacados</h2>
+        </div>
+        <Link to="/productos" className="btn btn-secundario">Ver todos →</Link>
+      </div>
       <div className="productosLayout">
         <FiltroProductos onChange={setFiltros} context="home" />
         <div className="productContainer home" id="productos">
@@ -27,9 +33,6 @@ const ProductListHome = () => {
           ) : (
             destacados.map((producto) => <TarjetaProducto key={producto.id} producto={producto} mostrarColegio={false} />)
           )}
-          <div className="verMasContainer">
-            <Link to="/productos" className="btn">Ver todos los productos</Link>
-          </div>
         </div>
       </div>
     </section>

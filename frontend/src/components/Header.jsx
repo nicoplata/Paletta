@@ -1,17 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { FaShoppingCart } from 'react-icons/fa';
+import { FaShoppingBag, FaWhatsapp } from 'react-icons/fa';
 import styles from '../styles/Header.module.css';
-import logoWhite from '../assets/img/palettaWhite.png';
-import logoBlack from '../assets/img/logoPaletta.png';
+import isotipo from '../assets/img/isotipo.png';
 import { useCarrito } from '../context/CarritoContext';
 import { useTienda } from '../hooks/useTienda';
-import '../styles/Tienda.css';
+import { CONTACTO, linkWhatsApp } from '../datosContacto';
 
 const LINKS = [
-  { to: '/', texto: 'Inicio', end: true },
-  { to: '/colegios', texto: 'Colegios' },
   { to: '/productos', texto: 'Productos' },
+  { to: '/colegios', texto: 'Colegios' },
   { to: '/egresados', texto: 'Egresados' },
   { to: '/contacto', texto: 'Contacto' },
 ];
@@ -19,74 +17,106 @@ const LINKS = [
 const Header = () => {
   const location = useLocation();
   const [menuAbierto, setMenuAbierto] = useState(false);
-  const [scrolleado, setScrolleado] = useState(() => window.scrollY > 1);
+  const [scrolleado, setScrolleado] = useState(() => window.scrollY > 4);
   const { habilitada: tiendaHabilitada } = useTienda();
   const { cantidadTotal } = useCarrito();
 
-  const esHome = location.pathname === '/';
-
   useEffect(() => {
-    const onScroll = () => setScrolleado(window.scrollY > 1);
+    const onScroll = () => setScrolleado(window.scrollY > 4);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Cerrar el menú al navegar o con Escape
+  // Cerrar el menú al navegar o con Escape; bloquear el scroll mientras está abierto
   useEffect(() => setMenuAbierto(false), [location.pathname]);
   useEffect(() => {
     if (!menuAbierto) return undefined;
     const onKey = (e) => e.key === 'Escape' && setMenuAbierto(false);
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
   }, [menuAbierto]);
 
-  const solido = !esHome || scrolleado || menuAbierto;
+  const presupuesto = linkWhatsApp('Hola Paletta! Quiero pedir un presupuesto.');
 
   return (
-    <header className={`${styles.header} ${solido ? styles.solido : ''}`}>
-      <Link to="/" className={styles.logo} aria-label="Paletta, ir al inicio">
-        <img src={solido ? logoBlack : logoWhite} alt="Paletta" width="136" height="80" />
-      </Link>
+    <>
+      <header className={`${styles.header} ${scrolleado ? styles.conBorde : ''}`}>
+        <div className={styles.interior}>
+          <Link to="/" className={styles.logo} aria-label="Paletta, ir al inicio">
+            <img src={isotipo} alt="" width="34" height="27" />
+            Paletta
+          </Link>
 
-      <button
-        type="button"
-        className={`${styles.hamburguesa} ${menuAbierto ? styles.abierto : ''}`}
-        onClick={() => setMenuAbierto((v) => !v)}
-        aria-expanded={menuAbierto}
-        aria-controls="menu-principal"
-        aria-label={menuAbierto ? 'Cerrar menú' : 'Abrir menú'}
-      >
-        <span />
-        <span />
-        <span />
-      </button>
+          <nav className={styles.nav} aria-label="Principal">
+            {LINKS.map((l) => (
+              <NavLink key={l.to} to={l.to}>{l.texto}</NavLink>
+            ))}
+          </nav>
 
-      {menuAbierto && (
-        <button type="button" className={styles.fondoOscuro} onClick={() => setMenuAbierto(false)} aria-label="Cerrar menú" tabIndex={-1} />
-      )}
-
-      <nav id="menu-principal" className={`${styles.nav} ${menuAbierto ? styles.navAbierta : ''}`} aria-label="Principal">
-        <ul>
-          {LINKS.map((l) => (
-            <li key={l.to}>
-              <NavLink to={l.to} end={l.end}>{l.texto}</NavLink>
-            </li>
-          ))}
-          {tiendaHabilitada && (
-            <li>
+          <div className={styles.acciones}>
+            {tiendaHabilitada && (
               <NavLink
                 to="/carrito"
-                className="carrito-header"
+                className={styles.carrito}
                 aria-label={`Carrito, ${cantidadTotal} producto${cantidadTotal === 1 ? '' : 's'}`}
               >
-                <FaShoppingCart size={20} aria-hidden="true" />
-                {cantidadTotal > 0 && <span className="badge">{cantidadTotal}</span>}
+                <FaShoppingBag size={18} aria-hidden="true" />
+                {cantidadTotal > 0 && <span className={styles.badge}>{cantidadTotal}</span>}
               </NavLink>
-            </li>
-          )}
-        </ul>
-      </nav>
-    </header>
+            )}
+            <a href={presupuesto} className={`btn btn-sm ${styles.ctaEscritorio}`} target="_blank" rel="noopener noreferrer">
+              <FaWhatsapp aria-hidden="true" /> Pedí tu presupuesto
+            </a>
+            <button
+              type="button"
+              className={styles.hamburguesa}
+              onClick={() => setMenuAbierto(true)}
+              aria-expanded={menuAbierto}
+              aria-controls="menu-mobile"
+              aria-label="Abrir menú"
+            >
+              <span /><span /><span />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div
+        id="menu-mobile"
+        className={`${styles.menu} ${menuAbierto ? styles.menuAbierto : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menú"
+        aria-hidden={!menuAbierto}
+      >
+        <div className={styles.menuArriba}>
+          <Link to="/" className={styles.logo} tabIndex={menuAbierto ? 0 : -1}>
+            <img src={isotipo} alt="" width="34" height="27" />
+            Paletta
+          </Link>
+          <button type="button" className={styles.hamburguesa} onClick={() => setMenuAbierto(false)} aria-label="Cerrar menú" tabIndex={menuAbierto ? 0 : -1}>
+            ✕
+          </button>
+        </div>
+        <nav aria-label="Menú mobile">
+          {[{ to: '/', texto: 'Inicio', end: true }, ...LINKS, ...(tiendaHabilitada ? [{ to: '/carrito', texto: 'Carrito' }] : [])].map((l) => (
+            <NavLink key={l.to} to={l.to} end={l.end} tabIndex={menuAbierto ? 0 : -1}>{l.texto}</NavLink>
+          ))}
+        </nav>
+        <div className={styles.menuPie}>
+          <a href={presupuesto} className="btn btn-claro" target="_blank" rel="noopener noreferrer" tabIndex={menuAbierto ? 0 : -1}>
+            <FaWhatsapp aria-hidden="true" /> Pedí tu presupuesto
+          </a>
+          <a href={`tel:${CONTACTO.telefonoLink}`} className={`btn btn-secundario ${styles.llamar}`} tabIndex={menuAbierto ? 0 : -1}>
+            Llamar · {CONTACTO.telefono}
+          </a>
+        </div>
+      </div>
+    </>
   );
 };
 

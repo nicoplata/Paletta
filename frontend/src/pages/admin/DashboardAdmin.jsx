@@ -8,12 +8,12 @@ import { AdminGlobalStyles } from '../../styles/AdminStyles';
 const DashboardContainer = styled.div`
   min-height: 100vh;
   display: flex;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--color-fondo);
 `;
 
 const Sidebar = styled.div`
   width: ${props => props.$isCollapsed ? '80px' : '280px'};
-  background: white;
+  background: var(--color-superficie);
   height: 100vh;
   position: fixed;
   transition: all 0.3s ease;
@@ -101,7 +101,7 @@ const Content = styled.main`
 `;
 
 const ContentArea = styled.div`
-  background: white;
+  background: var(--color-superficie);
   border-radius: 15px;
   padding: 2rem;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);

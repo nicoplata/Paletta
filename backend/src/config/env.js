@@ -67,7 +67,7 @@ const ENV = {
   TIENDA_HABILITADA: process.env.TIENDA_HABILITADA === 'true',
   ENVIO_COSTO: Number(process.env.ENVIO_COSTO) || 0,
   ENVIO_HABILITADO: process.env.ENVIO_HABILITADO !== 'false',
-  RETIRO_DIRECCION: process.env.RETIRO_DIRECCION || 'Vélez Sarsfield 4270, Munro, Buenos Aires',
+  RETIRO_DIRECCION: process.env.RETIRO_DIRECCION || 'Av. Vélez Sarsfield 4270, Munro, Vicente López, Buenos Aires',
   PEDIDO_VENCIMIENTO_MP_MIN: Number(process.env.PEDIDO_VENCIMIENTO_MP_MIN) || 60,
   PEDIDO_VENCIMIENTO_TRANSFERENCIA_HS: Number(process.env.PEDIDO_VENCIMIENTO_TRANSFERENCIA_HS) || 48,
   MAX_UNIDADES_POR_ITEM: Number(process.env.MAX_UNIDADES_POR_ITEM) || 50,

@@ -1,79 +1,120 @@
+/* Grilla y tarjetas de producto (home, /productos y colegio) */
 .productContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: clamp(14px, 2vw, 22px);
   width: 100%;
-  min-height: 300px;
-  background: #fff;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  padding: 1rem 0;
-  justify-content: center;
 }
 
-/* Product card styles */
+.no-products {
+  grid-column: 1 / -1;
+  padding: 40px;
+  text-align: center;
+  color: var(--color-texto-tenue);
+  border: 2px dashed var(--color-borde);
+  border-radius: var(--radio-lg);
+}
+
 .productCard {
-  border: 1px solid #e0e0e0;
-  border-radius: 14px;
-  width: 240px;
-  max-width: 100%;
-  box-sizing: border-box;
-  background: #fafbfc;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  padding: 1.2rem 1rem 1.5rem 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition: box-shadow 0.2s;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  padding: 14px;
+  border-radius: var(--radio-lg);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease), border-color 0.25s;
 }
 
 .productCard:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
-  border-color: #bdbdbd;
+  transform: translateY(-4px);
+  box-shadow: var(--sombra);
+  border-color: color-mix(in oklab, var(--color-texto) 30%, transparent);
 }
 
-.productCard img {
-  width: 180px;
-  max-width: 100%;
-  height: 180px;
+.tp-imagen {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radio);
+  overflow: hidden;
+  background: color-mix(in oklab, var(--color-primario) 10%, var(--color-fondo-alt));
+}
+
+.tp-imagen img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 10px;
-  margin-bottom: 1rem;
-  background: #f0f0f0;
+  transition: transform 0.5s var(--ease);
 }
 
-.productCard h3 {
-  font-size: 1.1rem;
-  margin: 0 0 0.4rem 0;
-  text-align: center;
-  font-weight: 600;
-  color: #222;
+.productCard:hover .tp-imagen img {
+  transform: scale(1.04);
 }
 
-.productCard .colegio {
-  color: #800000;
-  font-weight: bold;
-  font-size: 0.9rem;
-  margin-bottom: 0.4rem;
-  text-align: center;
+.tp-etiqueta {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 12px;
+  border-radius: var(--radio-pill);
+  background: var(--color-fondo);
+  color: var(--color-texto);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
 }
 
-.productCard .category {
-  color: #888;
-  font-size: 0.9rem;
-  margin-bottom: 0.4rem;
-  text-align: center;
+.tp-agotado {
+  left: auto;
+  right: 10px;
+  background: var(--tinta);
+  color: var(--hueso);
 }
 
-.productCard .description {
-  font-size: 0.88rem;
-  color: #555;
-  margin-bottom: 0.5rem;
-  text-align: center;
+.tp-info {
+  display: grid;
+  gap: 4px;
+  padding: 0 6px 6px;
+}
+
+.tp-info h3 {
+  font-family: var(--fuente-display);
+  font-weight: 800;
+  font-stretch: 88%;
+  font-size: 1.35rem;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.tp-info .colegio {
+  font-weight: 700;
+  font-size: var(--texto-sm);
+  color: var(--color-primario);
+}
+
+.tp-info .description {
+  color: var(--color-texto-tenue);
+  font-size: var(--texto-sm);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tp-info .price {
+  margin-top: 4px;
+  font-family: var(--fuente-display);
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
 }
 
 /* Layout compartido por la home y /productos: filtros al costado (en mobile, arriba) */
 .productosLayout {
   display: flex;
-  gap: var(--esp-8);
+  gap: clamp(20px, 3vw, 36px);
   width: 100%;
   align-items: flex-start;
 }

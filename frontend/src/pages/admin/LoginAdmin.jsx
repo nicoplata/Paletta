@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { mensajeError } from '../../lib/api';
 import styles from '../../styles/LoginAdmin.module.css';
-import logoBlack from '../../assets/img/logoPaletta.png';
+import logoBlack from '../../assets/img/isotipo.png';
 
 const LoginAdmin = () => {
   const [email, setEmail] = useState('');

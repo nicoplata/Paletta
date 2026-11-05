@@ -1,62 +1,55 @@
-
 .volver {
   display: inline-block;
-  margin-bottom: var(--esp-3);
+  margin-bottom: var(--esp-4);
+  font-weight: 600;
   font-size: var(--texto-sm);
+  color: var(--color-texto-tenue);
+}
+
+.volver:hover {
+  color: var(--color-texto);
 }
 
 .filtrosContainer.productos {
   flex-shrink: 0;
-  width: 250px;
 }
 
 .productContainer.productos {
   flex: 1;
-}
-
-/* New wrapper to apply grid layout to ProductList content */
-.productGridWrapper {
-  display: grid;
-  gap: 1.5rem;
+  min-width: 0;
 }
 
 .paginacion {
   display: flex;
   justify-content: center;
-  margin-top: 2rem;
-  gap: 0.5rem;
   flex-wrap: wrap;
+  gap: 8px;
+  margin-top: var(--esp-8);
 }
 
 .paginacion button {
-  background-color: #eee;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: var(--radio-pill);
+  border: 2px solid var(--color-borde);
+  background: transparent;
+  font-weight: 700;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
 
-.paginacion button:hover {
-  background-color: #ddd;
+.paginacion button:hover:not(:disabled) {
+  border-color: var(--color-texto);
 }
 
 .paginacion button.activo {
-  background-color: var(--color-primario);
-  color: white;
-  font-weight: bold;
+  background: var(--tinta);
+  color: var(--hueso);
+  border-color: var(--tinta);
 }
 
 .paginacion button:disabled {
-  background-color: #ccc;
+  opacity: 0.4;
   cursor: not-allowed;
-}
-
-
-/* Responsive */
-@media (max-width: 768px) {
-  .filtrosContainer.productos {
-    width: 100%;
-  }
 }

@@ -4,7 +4,7 @@ import { assetUrl, formatearPrecio, IMAGEN_PRODUCTO_DEFAULT } from '../config';
 import { Actions, IconButton, Tag } from '../pages/admin/adminUI';
 
 const Card = styled.div`
-  background: white;
+  background: var(--color-superficie);
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
