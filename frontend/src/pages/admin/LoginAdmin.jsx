@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { mensajeError } from '../../lib/api';
 import styles from '../../styles/LoginAdmin.module.css';
 import logoBlack from '../../assets/img/logoPaletta.png';
 
@@ -10,34 +11,27 @@ const LoginAdmin = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login, logout, usuario } = useAuth();
+
+  if (usuario?.rol === 'administrador') {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
-      const response = await axios.post('http://localhost:3000/auth/login', {
-        email,
-        password
-      });
-
-      console.log('Respuesta del servidor:', response.data);
-      const { token, rol } = response.data;
-
-      // Guardar token y rol explícitamente
-      localStorage.setItem('token', token);
-      localStorage.setItem('rol', rol);
-      
-      // Configurar axios
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      setLoading(false);
+      const usuarioLogueado = await login(email, password);
+      if (usuarioLogueado.rol !== 'administrador') {
+        logout();
+        setError('Tu usuario no tiene acceso al panel de administración');
+        return;
+      }
       navigate('/admin/dashboard', { replace: true });
-
     } catch (err) {
-      console.error('Error detallado:', err);
-      setError(err.response?.data?.mensaje || 'Error de autenticación');
+      setError(mensajeError(err, 'No se pudo iniciar sesión'));
+    } finally {
       setLoading(false);
     }
   };

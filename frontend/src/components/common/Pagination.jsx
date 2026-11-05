@@ -10,7 +10,6 @@ const Pagination = ({
 }) => {
   // Genera el rango de páginas a mostrar
   const generatePageRange = () => {
-    const range = [];
     const totalNumbers = (siblingCount * 2) + 3; // números normales + actual + primero + último
     const totalButtons = showFirstLast ? totalNumbers : totalNumbers - 2;
 

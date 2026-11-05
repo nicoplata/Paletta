@@ -1,92 +1,102 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { assetUrl, formatearPrecio, IMAGEN_PRODUCTO_DEFAULT, MOSTRAR_PRECIOS } from '../config';
+import { useProductoPublico } from '../hooks/useCatalogo';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 import '../styles/style.css';
+
+const contenedor = {
+  padding: '2rem',
+  maxWidth: '900px',
+  margin: '125px auto 2rem',
+  background: '#fafbfc',
+  borderRadius: '14px',
+  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+  fontFamily: 'opensans, Arial, sans-serif',
+};
 
 const DetalleProducto = () => {
   const { id } = useParams();
-  const [producto, setProducto] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const modoCatalogo = true;
+  const { data: producto, loading, error } = useProductoPublico(id);
+  const [imagenActiva, setImagenActiva] = useState(0);
+
+  useEffect(() => setImagenActiva(0), [id]);
 
   useEffect(() => {
-    const fetchProducto = async () => {
-      try {
-        const res = await fetch(`http://localhost:3000/api/productos/public/${id}`);
-        if (!res.ok) throw new Error('Error al obtener el producto');
-        const data = await res.json();
-        setProducto(data);
-      } catch (err) {
-        console.error('Error al cargar el producto:', err);
-        setProducto(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (producto?.nombre) document.title = `${producto.nombre} | Paletta`;
+    return () => { document.title = 'Paletta - Uniformes Escolares y Egresados'; };
+  }, [producto]);
 
-    fetchProducto();
-  }, [id]);
+  if (loading) return <div style={contenedor}><LoadingSpinner /></div>;
+  if (error || !producto) {
+    return (
+      <div style={contenedor}>
+        <p>Producto no encontrado.</p>
+        <Link to="/productos">← Volver a productos</Link>
+      </div>
+    );
+  }
 
-  if (loading) return <p style={{ padding: '2rem' }}>Cargando...</p>;
-  if (!producto) return <p style={{ padding: '2rem' }}>Producto no encontrado.</p>;
-
-  const imagenPrincipal = `http://localhost:3000${producto.imagenes?.[0]?.url}` || '`http://localhost:3000/uploads/default-product.jpg`';
+  const imagenes = producto.imagenes || [];
 
   return (
-    <div style={{
-      padding: '2rem',
-      maxWidth: '900px',
-      margin: '125px auto auto auto',
-      background: '#fafbfc',
-      borderRadius: '14px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-      fontFamily: 'opensans, Arial, sans-serif'
-    }}>
+    <div style={contenedor}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
-        <img
-          src={imagenPrincipal}
-          alt={producto.nombre}
-          style={{
-            width: '300px',
-            height: '300px',
-            objectFit: 'cover',
-            borderRadius: '12px',
-            background: '#f0f0f0'
-          }}
-          onError={(e) => { e.target.onerror = null; e.target.src = '/img/default-product.jpg'; }}
-        />
+        <div style={{ width: 'min(300px, 100%)' }}>
+          <img
+            src={assetUrl(imagenes[imagenActiva]?.url)}
+            alt={producto.nombre}
+            style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: '12px', background: '#f0f0f0' }}
+            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = IMAGEN_PRODUCTO_DEFAULT; }}
+          />
+          {imagenes.length > 1 && (
+            <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+              {imagenes.map((img, i) => (
+                <button
+                  key={img.id}
+                  type="button"
+                  onClick={() => setImagenActiva(i)}
+                  aria-label={`Ver imagen ${i + 1}`}
+                  style={{
+                    padding: 0, border: i === imagenActiva ? '2px solid #9c1f23' : '2px solid transparent',
+                    borderRadius: 8, background: 'none', cursor: 'pointer',
+                  }}
+                >
+                  <img src={assetUrl(img.url)} alt="" style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 6, display: 'block' }} />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
-        <div style={{ flex: 1 }}>
-          <h2 style={{ fontSize: '1.8rem', color: '#222', marginBottom: '1rem' }}>{producto.nombre}</h2>
-          <p style={{ fontSize: '1rem', color: '#555', marginBottom: '1rem' }}>
-            <strong>Descripción:</strong> {producto.descripcion || 'Sin descripción'}
+        <div style={{ flex: 1, minWidth: 240 }}>
+          <h1 style={{ fontSize: '1.8rem', color: '#222', marginBottom: '1rem' }}>{producto.nombre}</h1>
+          <p style={{ fontSize: '1rem', color: '#555', marginBottom: '1rem', whiteSpace: 'pre-line' }}>
+            {producto.descripcion || 'Sin descripción'}
           </p>
-          <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#d32f2f', marginBottom: '0.8rem' }}>
-            {typeof producto.precio === 'number'
-              ? `$${producto.precio.toLocaleString('es-AR')}`
-              : 'Precio no disponible'}
-          </p>
-          <p style={{ fontSize: '0.95rem', color: producto.stock > 0 ? '#388e3c' : '#d32f2f', marginBottom: '0.8rem' }}>
-            {producto.stock > 0 ? `Stock: ${producto.stock}` : 'Sin stock'}
-          </p>
-          <p style={{ fontSize: '0.9rem', color: '#888', marginBottom: '0.5rem' }}>
-            <strong>Categoría:</strong> {producto.Categorium?.nombre || 'Sin categoría'}
-          </p>
-          <p style={{ fontSize: '0.9rem', color: '#888' }}>
-            <strong>Colegio:</strong> {producto.Colegio?.nombre || 'Sin colegio'}
-          </p>
-
-          {!modoCatalogo && (
+          {MOSTRAR_PRECIOS && (
             <>
-              <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#d32f2f', marginBottom: '0.8rem' }}>
-                {typeof producto.precio === 'number'
-                  ? `$${producto.precio.toLocaleString('es-AR')}`
-                  : 'Precio no disponible'}
+              <p style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#d32f2f', marginBottom: '0.8rem' }}>
+                {formatearPrecio(producto.precio)}
               </p>
               <p style={{ fontSize: '0.95rem', color: producto.stock > 0 ? '#388e3c' : '#d32f2f', marginBottom: '0.8rem' }}>
-                {producto.stock > 0 ? `Stock: ${producto.stock}` : 'Sin stock'}
+                {producto.stock > 0 ? 'En stock' : 'Sin stock'}
               </p>
             </>
           )}
+          <p style={{ fontSize: '0.9rem', color: '#888', marginBottom: '0.5rem' }}>
+            <strong>Prenda:</strong> {producto.categoria?.nombre || 'Sin categoría'}
+          </p>
+          <p style={{ fontSize: '0.9rem', color: '#888', marginBottom: '1.5rem' }}>
+            <strong>Colegio:</strong>{' '}
+            {producto.colegio ? <Link to={`/colegios/${producto.colegio.id}/productos`}>{producto.colegio.nombre}</Link> : 'Sin colegio'}
+          </p>
+          <Link
+            to="/contacto"
+            style={{ display: 'inline-block', background: '#9c1f23', color: '#fff', padding: '0.7rem 1.6rem', borderRadius: 6, textDecoration: 'none', fontWeight: 700 }}
+          >
+            Consultar por este producto
+          </Link>
         </div>
       </div>
     </div>

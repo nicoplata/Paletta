@@ -1,27 +1,12 @@
-// src/routes/RutaProtegida.jsx
-import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const RutaProtegida = ({ children, rolRequerido }) => {
-  const token = localStorage.getItem('token');
-  const rol = localStorage.getItem('rol');
+  const { usuario, cargando } = useAuth();
 
-  useEffect(() => {
-    console.log('Token:', token);
-    console.log('Rol actual:', rol);
-    console.log('Rol requerido:', rolRequerido);
-  }, [token, rol, rolRequerido]);
-
-  if (!token) {
-    console.log('No hay token');
-    return <Navigate to="/admin" replace />;
-  }
-
-  if (rolRequerido && rol !== rolRequerido) {
-    console.log('Rol incorrecto');
-    localStorage.clear(); // Limpiar storage si el rol no coincide
-    return <Navigate to="/admin" replace />;
-  }
+  if (cargando) return <div style={{ padding: '2rem' }}>Verificando sesión...</div>;
+  if (!usuario) return <Navigate to="/admin" replace />;
+  if (rolRequerido && usuario.rol !== rolRequerido) return <Navigate to="/" replace />;
 
   return children;
 };

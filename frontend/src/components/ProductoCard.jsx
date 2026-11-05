@@ -1,119 +1,86 @@
-import React from 'react';
 import styled from 'styled-components';
-import { FaEdit, FaTrash, FaImage } from 'react-icons/fa';
+import { FaEdit, FaImage, FaTrash } from 'react-icons/fa';
+import { assetUrl, formatearPrecio, IMAGEN_PRODUCTO_DEFAULT } from '../config';
+import { Actions, IconButton, Tag } from '../pages/admin/adminUI';
 
 const Card = styled.div`
   background: white;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  transition: transform 0.2s;
-
-  &:hover {
-    transform: translateY(-5px);
-  }
+  display: flex;
+  flex-direction: column;
+  opacity: ${({ $inactivo }) => ($inactivo ? 0.6 : 1)};
 `;
 
 const ImageContainer = styled.div`
-  height: 200px;
-  overflow: hidden;
-  position: relative;
+  height: 180px;
   background: #f5f5f5;
   display: flex;
   align-items: center;
   justify-content: center;
-`;
 
-const Image = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-
-const PlaceholderIcon = styled(FaImage)`
-  font-size: 3rem;
-  color: #ccc;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `;
 
 const Content = styled.div`
-  padding: 1rem;
+  padding: 1rem 1rem 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 `;
 
 const Title = styled.h3`
   color: #2c3e50;
-  margin: 0 0 0.5rem 0;
-  font-size: 1.1rem;
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+`;
+
+const Meta = styled.p`
+  color: #7f8c8d;
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
 `;
 
 const Price = styled.p`
   color: #e74c3c;
   font-weight: 600;
-  margin: 0;
+  margin: 0 0 0.5rem;
 `;
 
-const Actions = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-top: 1px solid #eee;
-`;
-
-const ActionButton = styled.button`
-  background: none;
-  border: none;
-  color: ${props => props.delete ? '#e74c3c' : '#3498db'};
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 4px;
-  transition: all 0.2s;
-
-  &:hover {
-    background: ${props => props.delete ? '#fdf0ef' : '#edf6fd'};
-  }
-`;
-
-const ProductoCard = ({ producto, onEdit, onDelete, showPrice }) => {
-  const getImageUrl = () => {
-    try {
-      if (producto.imagenes && producto.imagenes.length > 0) {
-        return `http://localhost:3000${producto.imagenes[0].url}`;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error al obtener URL de imagen:', error);
-      return null;
-    }
-  };
+// Tarjeta de producto del panel de administración.
+const ProductoCard = ({ producto, onEdit, onDelete }) => {
+  const imagen = producto.imagenes?.[0]?.url;
 
   return (
-    <Card>
+    <Card $inactivo={!producto.activo}>
       <ImageContainer>
-        {getImageUrl() ? (
-          <Image 
-            src={getImageUrl()} 
+        {imagen ? <img
+            src={assetUrl(imagen)}
             alt={producto.nombre}
-            onError={(e) => {
-              console.log('Error loading image:', e);
-              e.target.style.display = 'none';
-            }}
-          />
-        ) : (
-          <PlaceholderIcon />
-        )}
+            loading="lazy"
+            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = IMAGEN_PRODUCTO_DEFAULT; }}
+          /> : <FaImage size={48} color="#ccc" />}
       </ImageContainer>
       <Content>
         <Title>{producto.nombre}</Title>
-        {showPrice && <Price>${producto.precio}</Price>}
+        <Meta>{producto.colegio?.nombre || 'Sin colegio'} · {producto.categoria?.nombre || 'Sin categoría'}</Meta>
+        <Price>{formatearPrecio(producto.precio)} · Stock: {producto.stock}</Price>
+        <div>{!producto.activo && <Tag $color="#7f8c8d">Oculto</Tag>}</div>
+        <Actions>
+          <IconButton onClick={() => onEdit(producto)} aria-label="Editar">
+            <FaEdit />
+          </IconButton>
+          <IconButton $peligro onClick={() => onDelete(producto.id)} aria-label="Eliminar">
+            <FaTrash />
+          </IconButton>
+        </Actions>
       </Content>
-      <Actions>
-        <ActionButton onClick={() => onEdit(producto)}>
-          <FaEdit />
-        </ActionButton>
-        <ActionButton delete onClick={() => onDelete(producto.id)}>
-          <FaTrash />
-        </ActionButton>
-      </Actions>
+      <div style={{ height: '0.5rem' }} />
     </Card>
   );
 };

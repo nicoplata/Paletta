@@ -1,27 +1,15 @@
-import React, { useEffect, useState, useContext, useRef } from 'react';
+import { useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CarritoContext } from '../context/CarritoContext';
+import TarjetaColegio from './TarjetaColegio';
+import { useColegios } from '../hooks/useCatalogo';
 import '../styles/SelectorColegiosHome.css';
 
 const SelectorColegiosHome = () => {
   const navigate = useNavigate();
   const { setColegioSeleccionado } = useContext(CarritoContext);
-  const [colegios, setColegios] = useState([]);
+  const { data: colegios } = useColegios();
   const scrollRef = useRef(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch('http://localhost:3000/api/colegios');
-        if (!res.ok) throw new Error('Error en la respuesta del servidor');
-        const colegiosData = await res.json();
-        setColegios(colegiosData);
-      } catch (err) {
-        console.error('Error al cargar colegios:', err);
-      }
-    };
-    fetchData();
-  }, []);
 
   const handleSelect = (colegio) => {
     setColegioSeleccionado(colegio);
@@ -29,44 +17,22 @@ const SelectorColegiosHome = () => {
   };
 
   const scroll = (direction) => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({
-        left: direction === 'left' ? -200 : 200,
-        behavior: 'smooth',
-      });
-    }
+    scrollRef.current?.scrollBy({ left: direction === 'left' ? -200 : 200, behavior: 'smooth' });
   };
+
+  if (colegios.length === 0) return null;
 
   return (
     <div className="selector-colegios-home">
-      <button className="flecha izquierda" onClick={() => scroll('left')}>‹</button>
+      <button type="button" className="flecha izquierda" onClick={() => scroll('left')} aria-label="Anterior">‹</button>
       <div className="contenedor-scroll">
         <div className="grid-colegios" ref={scrollRef}>
-          {colegios.map((colegio) => {
-            const imagenUrl = colegio.imagenes?.[0]?.url
-              ? `http://localhost:3000${colegio.imagenes[0].url}`
-              : 'http://localhost:3000/imagenes/colegio-default.jpg';
-
-            return (
-              <div
-                key={colegio.id}
-                className="tarjeta-colegio"
-                onClick={() => handleSelect(colegio)}
-                role="button"
-                tabIndex={0}
-              >
-                <img
-                  src={imagenUrl}
-                  alt={colegio.nombre}
-                  className="imagen-colegio"
-                  onError={(e) => { e.target.src = 'http://localhost:3000/imagenes/colegio-default.jpg'; }}
-                />
-              </div>
-            );
-          })}
+          {colegios.map((colegio) => (
+            <TarjetaColegio key={colegio.id} colegio={colegio} onSelect={handleSelect} />
+          ))}
         </div>
       </div>
-      <button className="flecha derecha" onClick={() => scroll('right')}>›</button>
+      <button type="button" className="flecha derecha" onClick={() => scroll('right')} aria-label="Siguiente">›</button>
     </div>
   );
 };

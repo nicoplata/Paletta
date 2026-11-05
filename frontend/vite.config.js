@@ -1,21 +1,29 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  define: {
-    // Asegurarse de que process.env esté definido para Sentry
-    'process.env': {}
-  },
-  build: {
-    sourcemap: true // Necesario para que Sentry funcione correctamente
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      loader: {
-        '.js': 'jsx'
-      }
-    }
-  }
-})
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  // En desarrollo, /api y /uploads se redirigen al backend local.
+  const backend = env.VITE_DEV_BACKEND || 'http://localhost:3000';
+
+  return {
+    plugins: [react()],
+    server: {
+      proxy: {
+        '/api': backend,
+        '/uploads': backend,
+      },
+    },
+    build: {
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            react: ['react', 'react-dom', 'react-router-dom'],
+            vendor: ['axios', '@tanstack/react-query', 'styled-components'],
+          },
+        },
+      },
+    },
+  };
+});

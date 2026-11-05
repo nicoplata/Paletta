@@ -1,5 +1,4 @@
 import React from 'react';
-import { useA11y } from '../hooks/useA11y';
 
 const SkipLink = () => {
   return (

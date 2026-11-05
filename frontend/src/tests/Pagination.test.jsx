@@ -51,7 +51,7 @@ describe('Pagination', () => {
     
     // Debería mostrar 1 ... 4 5 6 ... 10
     expect(screen.getByText('1')).toBeInTheDocument();
-    expect(screen.getByText('...')).toBeInTheDocument();
+    expect(screen.getAllByText('...')).toHaveLength(2);
     expect(screen.getByText('4')).toBeInTheDocument();
     expect(screen.getByText('5')).toBeInTheDocument();
     expect(screen.getByText('6')).toBeInTheDocument();
