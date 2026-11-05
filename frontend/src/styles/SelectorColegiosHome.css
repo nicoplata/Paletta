@@ -1,31 +1,53 @@
-
+/* Franja de colegios en la home */
 .selector-colegios-home {
   position: relative;
   width: 100%;
-  padding: 20px 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
+  max-width: calc(var(--ancho-max) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding: clamp(40px, 6vw, 72px) var(--gutter) 0;
 }
 
-.selector-colegios-home .contenedor-scroll {
-  width: 100%;
-  overflow-x: auto;
-  pointer-events: auto;
+.selector-colegios-home .cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.selector-colegios-home .flechas {
+  display: flex;
+  gap: 8px;
+}
+
+.selector-colegios-home .flecha {
+  width: 44px;
+  height: 44px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid var(--color-borde);
+  background: transparent;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.25s, color 0.25s, border-color 0.25s;
+}
+
+.selector-colegios-home .flecha:hover {
+  background: var(--tinta);
+  color: var(--hueso);
+  border-color: var(--tinta);
 }
 
 .selector-colegios-home .grid-colegios {
   display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  gap: 20px;
+  gap: 14px;
   overflow-x: auto;
   scroll-behavior: smooth;
-  padding: 10px 20px;
+  scroll-snap-type: x mandatory;
   scrollbar-width: none;
-  z-index: 1;
-  position: relative;
+  padding: 4px 2px 12px;
 }
 
 .selector-colegios-home .grid-colegios::-webkit-scrollbar {
@@ -34,72 +56,34 @@
 
 .selector-colegios-home .tarjeta-colegio {
   flex: 0 0 auto;
-  width: 75px;
-  height: 75px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+  width: 96px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+  scroll-snap-align: start;
+  border-radius: 24px;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  box-shadow: none;
+  transition: transform 0.3s var(--ease), border-color 0.25s;
+}
+
+.selector-colegios-home .tarjeta-colegio:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-texto);
 }
 
 .selector-colegios-home .imagen-colegio {
-  margin-top: 0;
-  width: 75px;
-  height: 75px;
+  margin: 0;
+  width: 70px;
+  height: 70px;
   object-fit: contain;
-  border-radius: 8px;
-}
-
-.selector-colegios-home .flecha {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: rgba(255,255,255,0.8);
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  z-index: 10;
-  padding: 10px;
-  border-radius: 50%;
-  pointer-events: auto;
-}
-
-.selector-colegios-home .flecha.izquierda {
-  left: 10px;
-}
-
-.selector-colegios-home .flecha.derecha {
-  right: 10px;
-}
-
-@media (max-width: 1220px) {
-  .selector-colegios-home {
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 768px) {
-  .selector-colegios-home .tarjeta-colegio {
-    width: 60px;
-    height: 60px;
-  }
-
-  .selector-colegios-home .imagen-colegio {
-    width: 60px;
-    height: 60px;
-  }
-
-  .selector-colegios-home .flecha {
-    font-size: 20px;
-    padding: 8px;
-  }
 }
 
 /* Las tarjetas son <button> por accesibilidad: reseteamos estilos nativos */
 button.tarjeta-colegio {
-  background-color: transparent;
-  border: 0;
   padding: 0;
   font: inherit;
   color: inherit;
+  cursor: pointer;
 }

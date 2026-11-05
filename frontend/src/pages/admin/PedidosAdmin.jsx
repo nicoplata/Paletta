@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
+import { FaFileExcel } from 'react-icons/fa';
+import api, { mensajeError } from '../../lib/api';
 import { formatearPrecio } from '../../config';
+import { useToast } from '../../context/ToastContext';
 import useRecurso from '../../hooks/useRecurso';
 import { ESTADOS } from '../PedidoEstado';
-import { Container, Empty, ErrorBox, Header, Input, Select, Tag, Title } from './adminUI';
+import { Button, Container, Empty, ErrorBox, Header, Input, Select, Tag, Title } from './adminUI';
 
 export const COLOR_ESTADO = {
   pendiente_pago: '#f39c12',
@@ -30,7 +33,7 @@ const Tabla = styled.table`
 
   th { color: #7f8c8d; font-weight: 600; font-size: 0.85rem; }
   tbody tr:hover { background: #fafafa; }
-  a { color: #2c3e50; font-weight: 600; }
+  a { color: #2c3e50; font-weight: 600; white-space: nowrap; }
 
   @media (max-width: 800px) {
     thead { display: none; }
@@ -86,6 +89,32 @@ const PedidosAdmin = () => {
 
   const contar = (e) => resumen?.porEstado?.[e] || 0;
 
+  const { showToast } = useToast();
+  const [exportando, setExportando] = useState(false);
+  // La descarga necesita el token, así que se pide con el cliente de la API y se arma el archivo acá
+  const exportar = async (detalle) => {
+    setExportando(true);
+    try {
+      const { data, headers } = await api.get('/admin/pedidos/exportar', {
+        params: { detalle, ...(estado ? { estado } : {}) },
+        responseType: 'blob',
+      });
+      const nombre = /filename="([^"]+)"/.exec(headers['content-disposition'] || '')?.[1] || `pedidos-${detalle}.csv`;
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombre;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      showToast(mensajeError(err, 'No se pudo exportar'), 'error');
+    } finally {
+      setExportando(false);
+    }
+  };
+
   return (
     <Container>
       <Header>
@@ -96,6 +125,12 @@ const PedidosAdmin = () => {
             <option value="">Todos los estados</option>
             {Object.entries(ESTADOS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </Select>
+          <Button type="button" onClick={() => exportar('pedidos')} disabled={exportando} title="Un renglón por pedido (para administración)">
+            <FaFileExcel /> Exportar pedidos
+          </Button>
+          <Button type="button" onClick={() => exportar('items')} disabled={exportando} title="Un renglón por prenda con talle y cantidad (para producción)">
+            <FaFileExcel /> Exportar prendas
+          </Button>
         </div>
       </Header>
 

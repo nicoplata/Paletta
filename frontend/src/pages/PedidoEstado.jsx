@@ -169,7 +169,7 @@ const PedidoEstado = () => {
             <p>
               {pedido.tipoEntrega === 'retiro'
                 ? 'Retiro en el local. Te avisamos por mail cuando esté listo.'
-                : `Envío a ${pedido.direccion}, ${pedido.ciudad}, ${pedido.provincia} (${pedido.codigoPostal}).`}
+                : `Envío a ${pedido.direccion}, ${pedido.ciudad}, ${pedido.provincia} (${pedido.codigoPostal})${pedido.zonaEnvio ? ` · zona ${pedido.zonaEnvio}` : ''}.`}
             </p>
             <p><small>Pedido realizado el {fecha(pedido.creadoAt)}{pedido.pagadoAt ? ` · Pagado el ${fecha(pedido.pagadoAt)}` : ''}</small></p>
           </section>
@@ -184,6 +184,9 @@ const PedidoEstado = () => {
             </div>
           ))}
           <div className="tienda-fila" style={{ marginTop: '0.75rem' }}><span>Subtotal</span><span>{formatearPrecio(pedido.subtotal)}</span></div>
+          {pedido.descuento > 0 && (
+            <div className="tienda-fila descuento"><span>Descuento{pedido.cuponCodigo ? ` (${pedido.cuponCodigo})` : ''}</span><span>− {formatearPrecio(pedido.descuento)}</span></div>
+          )}
           <div className="tienda-fila"><span>Envío</span><span>{pedido.costoEnvio > 0 ? formatearPrecio(pedido.costoEnvio) : 'Gratis'}</span></div>
           <div className="tienda-fila total"><span>Total</span><span>{formatearPrecio(pedido.total)}</span></div>
           <p style={{ marginTop: '1rem' }}><small>¿Dudas? <Link to="/contacto">Escribinos</Link> indicando el número de pedido.</small></p>

@@ -28,6 +28,8 @@ const db = {
   Variante: require('./varianteModel')(sequelize),
   Pedido: require('./pedidoModel')(sequelize),
   PedidoItem: require('./pedidoItemModel')(sequelize),
+  Cupon: require('./cuponModel')(sequelize),
+  ZonaEnvio: require('./zonaEnvioModel')(sequelize),
 };
 
 Object.values(db).forEach((model) => {

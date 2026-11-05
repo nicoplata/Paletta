@@ -1,21 +1,20 @@
 import { Link } from 'react-router-dom';
-import logoWhite from '../assets/img/palettaWhite.png';
+import isotipo from '../assets/img/isotipo.png';
+import { CONTACTO, linkWhatsApp } from '../datosContacto';
 import '../styles/Secciones.css';
-
-export const DATOS_CONTACTO = {
-  email: 'info@paletta.com.ar',
-  telefono: '+54 11 4777-7777',
-  telefonoLink: '+541147777777',
-  direccion: 'Vélez Sarsfield 4270, Munro, Buenos Aires',
-};
 
 const Footer = () => (
   <footer className="footer">
     <div className="footer-grilla">
-      <div>
-        <img src={logoWhite} alt="Paletta" width="92" height="54" loading="lazy" />
+      <div className="footer-marca">
+        <Link to="/" className="footer-logo">
+          <img src={isotipo} alt="" width="40" height="32" loading="lazy" />
+          Paletta
+        </Link>
+        <p>Uniformes escolares, egresados y empresas. Fabricación propia en Munro, Vicente López.</p>
       </div>
       <nav aria-label="Secciones">
+        <h3>Navegá</h3>
         <ul>
           <li><Link to="/productos">Productos</Link></li>
           <li><Link to="/colegios">Colegios</Link></li>
@@ -23,14 +22,28 @@ const Footer = () => (
           <li><Link to="/contacto">Contacto</Link></li>
         </ul>
       </nav>
-      <address className="footer-contacto">
-        <strong>Contacto</strong>
-        <a href={`mailto:${DATOS_CONTACTO.email}`}>{DATOS_CONTACTO.email}</a>
-        <a href={`tel:${DATOS_CONTACTO.telefonoLink}`}>{DATOS_CONTACTO.telefono}</a>
-        <span>{DATOS_CONTACTO.direccion}</span>
-      </address>
+      <div>
+        <h3>Contacto</h3>
+        <address>
+          <a href={linkWhatsApp()} target="_blank" rel="noopener noreferrer">WhatsApp {CONTACTO.telefono}</a>
+          <a href={`mailto:${CONTACTO.email}`}>{CONTACTO.email}</a>
+          <span>{CONTACTO.direccion}</span>
+          <span>{CONTACTO.horarios}</span>
+        </address>
+      </div>
+      <div>
+        <h3>Redes</h3>
+        <ul>
+          <li><a href={CONTACTO.instagramUniformes} target="_blank" rel="noopener noreferrer">@paletta.uniformes</a></li>
+          <li><a href={CONTACTO.instagramEgresados} target="_blank" rel="noopener noreferrer">@paletta.egresados</a></li>
+          <li><a href={CONTACTO.sitioEgresados}>Paletta Egresados</a></li>
+        </ul>
+      </div>
     </div>
-    <p className="footer-legal">© {new Date().getFullYear()} Paletta. Indumentaria para egresados, colegios y empresas.</p>
+    <div className="footer-legal">
+      <span>© {new Date().getFullYear()} Paletta. Hecho en Munro.</span>
+      <span>{CONTACTO.direccion}</span>
+    </div>
   </footer>
 );
 

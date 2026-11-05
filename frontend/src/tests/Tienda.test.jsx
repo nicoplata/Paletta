@@ -149,6 +149,72 @@ describe('Checkout', () => {
   });
 });
 
+describe('Checkout: cupones y envío por zona', () => {
+  const rutas = [<Route key="p" path="/pedido/:token" element={<p>Página del pedido</p>} />];
+  const renderCheckout = () => renderConProviders(<Checkout />, { ruta: '/checkout', path: '/checkout', rutasExtra: rutas });
+
+  it('aplica un cupón válido, muestra el descuento y lo envía con el pedido', async () => {
+    const user = userEvent.setup();
+    carritoGuardado([itemCarrito]);
+    conConfig({ ...CONFIG, metodosPago: ['transferencia'] });
+    api.post.mockImplementation((url) => {
+      if (url === '/cupones/validar') return Promise.resolve({ data: { codigo: 'PROMO10', descuento: 9199.98 } });
+      if (url === '/pedidos') return Promise.resolve({ data: { pedido: { token: 't1' } } });
+      return Promise.reject(new Error(url));
+    });
+    renderCheckout();
+    await user.type(await screen.findByLabelText('Cupón de descuento'), 'promo10');
+    await user.click(screen.getByRole('button', { name: 'Aplicar' }));
+    expect(await screen.findByText('PROMO10')).toBeInTheDocument();
+    expect(api.post).toHaveBeenCalledWith('/cupones/validar', { codigo: 'PROMO10', items: [{ varianteId: 10, cantidad: 2 }] });
+    expect(screen.getByText('− $ 9.199,98')).toBeInTheDocument();
+    expect(screen.getByText('$ 82.799,82', { selector: '.total span' })).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Nombre y apellido'), 'María Pérez');
+    await user.type(screen.getByLabelText('Email'), 'maria@mail.com');
+    await user.type(screen.getByLabelText('Teléfono'), '1144445555');
+    await user.click(screen.getByRole('button', { name: /confirmar pedido/i }));
+    expect(api.post).toHaveBeenLastCalledWith('/pedidos', expect.objectContaining({ cupon: 'PROMO10' }));
+  });
+
+  it('muestra el error de un cupón inválido', async () => {
+    const user = userEvent.setup();
+    carritoGuardado([itemCarrito]);
+    conConfig(CONFIG);
+    api.post.mockRejectedValueOnce(errorApi(400, { error: 'El cupón está vencido' }));
+    renderCheckout();
+    await user.type(await screen.findByLabelText('Cupón de descuento'), 'VIEJO');
+    await user.click(screen.getByRole('button', { name: 'Aplicar' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('El cupón está vencido');
+  });
+
+  it('cotiza el envío por código postal y bloquea el pedido si no hay cobertura', async () => {
+    const user = userEvent.setup();
+    carritoGuardado([itemCarrito]);
+    api.get.mockImplementation((url, opciones) => {
+      if (url === '/tienda/config') return Promise.resolve({ data: CONFIG });
+      if (url === '/envio/cotizar') {
+        return Promise.resolve({
+          data: opciones.params.cp === '1605'
+            ? { disponible: true, costo: 3000, zona: 'Vicente López', demora: '24 a 48 h' }
+            : { disponible: false, motivo: 'Todavía no hacemos envíos a ese código postal.' },
+        });
+      }
+      return Promise.reject(new Error(url));
+    });
+    renderCheckout();
+    await user.click(await screen.findByLabelText(/envío a domicilio/i));
+    await user.type(screen.getByLabelText('Código postal'), '1605');
+    expect(await screen.findByText(/Envío a Vicente López: \$ 3\.000,00 · 24 a 48 h/)).toBeInTheDocument();
+    expect(screen.getByText('$ 94.999,80', { selector: '.total span' })).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText('Código postal'));
+    await user.type(screen.getByLabelText('Código postal'), '5000');
+    expect(await screen.findByText(/no hacemos envíos/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /confirmar pedido|ir a pagar/i })).toBeDisabled();
+  });
+});
+
 describe('Página del pedido', () => {
   const pedido = {
     token: 'tok', numero: 'P-000007', estado: 'pendiente_pago', nombre: 'María', email: 'm@m.com',

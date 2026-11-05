@@ -1,52 +1,59 @@
 /*
  * Base global del sitio (se importa una sola vez en main.jsx).
+ * Estética compartida con egresados.paletta.com.ar: fondo hueso, tinta, bordó de marca,
+ * Bricolage Grotesque para títulos y DM Sans para texto, botones píldora y tarjetas redondeadas.
  *
  * Estrategia de estilos:
  *  - Sitio público: archivos CSS por sección que usan SOLO las variables definidas acá.
- *  - Panel de administración: styled-components (pages/admin/adminUI.jsx), que también usa estas variables.
- *  - Nada de estilos inline salvo valores dinámicos (por ejemplo, un color calculado en tiempo de ejecución).
+ *  - Panel de administración: styled-components (pages/admin/adminUI.jsx) con estas mismas variables.
+ *  - Nada de estilos inline salvo valores dinámicos.
  */
-
-@font-face {
-  font-family: 'Open Sans';
-  src: url('../assets/fonts/OpenSans-latin.woff2') format('woff2');
-  font-weight: 300 800;
-  font-style: normal;
-  font-display: swap;
-}
+@import '@fontsource-variable/bricolage-grotesque/wdth.css';
+@import '@fontsource-variable/dm-sans/index.css';
 
 :root {
-  /* Marca */
-  --color-primario: #9c1f23;
-  --color-primario-oscuro: #7a171b;
-  --color-primario-suave: #fdf0ef;
+  /* Paleta (igual que el sitio de egresados) */
+  --tinta: #0E0E12;
+  --hueso: #F5F1E8;
+
+  /* Marca: bordó del isologo */
+  --color-primario: #8F141B;
+  --color-primario-oscuro: #6E0F15;
+  --color-primario-vivo: #D6362A;
+  --color-primario-suave: color-mix(in oklab, #8F141B 14%, #F5F1E8);
+  --color-sobre-primario: #F5F1E8;
 
   /* Neutros */
-  --color-texto: #222;
-  --color-texto-suave: #555;
-  --color-texto-tenue: #6b7280;
-  --color-borde: #e0e0e0;
-  --color-fondo: #fff;
-  --color-fondo-alt: #f7f7f7;
-  --color-superficie: #fafbfc;
+  --color-texto: var(--tinta);
+  --color-texto-suave: #3D3A42;
+  --color-texto-tenue: #55525B;
+  --color-borde: rgba(14, 14, 18, 0.16);
+  --color-fondo: var(--hueso);
+  --color-fondo-alt: #ECE6D8;
+  --color-superficie: #FBF9F3;
 
   /* Estados */
-  --color-exito: #2e7d32;
-  --color-exito-suave: #e8f5e9;
-  --color-error: #c62828;
-  --color-error-suave: #ffebee;
-  --color-aviso: #6d4c00;
-  --color-aviso-suave: #fff8e1;
+  --color-exito: #1E6B34;
+  --color-exito-suave: #E3F1E4;
+  --color-error: #B3261E;
+  --color-error-suave: #FBE4E1;
+  --color-aviso: #6D4C00;
+  --color-aviso-suave: #FFF3CF;
+
+  /* Acentos para detalles (stickers, etiquetas) */
+  --acento-amarillo: #FFD23F;
+  --acento-lima: #C8F53C;
 
   /* Tipografía */
-  --fuente: 'Open Sans', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  --fuente: 'DM Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fuente-display: 'Bricolage Grotesque Variable', 'Arial Narrow', system-ui, sans-serif;
   --texto-xs: 0.8rem;
-  --texto-sm: 0.9rem;
-  --texto-md: 1rem;
-  --texto-lg: 1.15rem;
-  --texto-xl: 1.5rem;
-  --texto-2xl: clamp(1.6rem, 1.2rem + 1.6vw, 2.2rem);
-  --texto-hero: clamp(2rem, 1.4rem + 2.6vw, 3rem);
+  --texto-sm: 0.92rem;
+  --texto-md: 1.0625rem;
+  --texto-lg: clamp(1.1rem, 1.7vw, 1.3rem);
+  --texto-xl: 1.6rem;
+  --texto-2xl: clamp(2rem, 1.2rem + 3.2vw, 3.6rem);
+  --texto-hero: clamp(3rem, 1.4rem + 6vw, 6.6rem);
 
   /* Espaciado y forma */
   --esp-1: 0.25rem;
@@ -56,24 +63,20 @@
   --esp-6: 1.5rem;
   --esp-8: 2rem;
   --esp-12: 3rem;
-  --radio-sm: 6px;
-  --radio: 10px;
-  --radio-lg: 14px;
+  --esp-seccion: clamp(56px, 8vw, 120px);
+  --radio-sm: 12px;
+  --radio: 20px;
+  --radio-lg: 32px;
+  --radio-xl: 48px;
   --radio-pill: 999px;
-  --sombra-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --sombra: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --sombra-sm: 0 2px 10px rgba(14, 14, 18, 0.06);
+  --sombra: 0 34px 60px -30px rgba(14, 14, 18, 0.45);
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 
   /* Layout */
-  --ancho-max: 1200px;
-  --header-alto: 90px;
-  --gutter: 1rem;
-}
-
-@media (min-width: 1024px) {
-  :root {
-    --header-alto: 125px;
-    --gutter: 1.5rem;
-  }
+  --ancho-max: 1240px;
+  --header-alto: 68px;
+  --gutter: clamp(16px, 4vw, 40px);
 }
 
 /* --- Reset mínimo --- */
@@ -95,10 +98,12 @@ body {
   flex-direction: column;
   font-family: var(--fuente);
   font-size: var(--texto-md);
-  line-height: 1.5;
+  line-height: 1.55;
   color: var(--color-texto);
   background: var(--color-fondo);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
 }
 
 #root {
@@ -112,7 +117,7 @@ h1, h2, h3, h4, p, ul, ol, figure, fieldset {
 }
 
 h1, h2, h3, h4 {
-  line-height: 1.2;
+  line-height: 1.1;
 }
 
 img {
@@ -129,12 +134,18 @@ textarea {
 }
 
 a {
-  color: var(--color-primario);
+  color: inherit;
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-primario);
-  outline-offset: 2px;
+  outline: 3px solid var(--color-texto);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: var(--color-primario);
+  color: var(--color-sobre-primario);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -147,67 +158,111 @@ a {
   }
 }
 
+/* --- Tipografía --- */
+.display,
+.pagina-titulo {
+  font-family: var(--fuente-display);
+  font-weight: 800;
+  font-stretch: 84%;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  text-wrap: balance;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.eyebrow::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-primario-vivo);
+  flex: none;
+}
+
+.lead {
+  font-size: var(--texto-lg);
+  line-height: 1.5;
+  color: var(--color-texto-tenue);
+  max-width: 52ch;
+  text-wrap: pretty;
+}
+
 /* --- Layout --- */
 .layout-main {
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow-x: clip; /* la cinta rotada no debe generar scroll horizontal */
+}
+
+/* Sin esto, un hijo con contenido que no se parte (p. ej. una fila con scroll horizontal)
+   ensancha toda la página en mobile */
+.layout-main > * {
+  min-width: 0;
 }
 
 /* Contenedor estándar de una página interna (deja lugar al header fijo) */
 .pagina {
   width: 100%;
-  max-width: var(--ancho-max);
+  max-width: calc(var(--ancho-max) + 2 * var(--gutter));
   margin: 0 auto;
-  padding: calc(var(--header-alto) + var(--esp-8)) var(--gutter) var(--esp-12);
+  padding: calc(var(--header-alto) + clamp(28px, 5vw, 56px)) var(--gutter) var(--esp-seccion);
 }
 
 .pagina.angosta {
-  max-width: 1000px;
-}
-
-.pagina.sin-margen {
-  max-width: none;
-  padding-left: 0;
-  padding-right: 0;
-  padding-bottom: 0;
+  max-width: calc(1040px + 2 * var(--gutter));
 }
 
 .pagina-titulo {
   font-size: var(--texto-2xl);
-  color: var(--color-primario);
-  margin-bottom: var(--esp-6);
+  margin-bottom: var(--esp-8);
 }
 
 .contenedor {
   width: 100%;
-  max-width: var(--ancho-max);
+  max-width: calc(var(--ancho-max) + 2 * var(--gutter));
   margin: 0 auto;
   padding: 0 var(--gutter);
 }
 
-/* --- Botones --- */
+/* --- Botones (píldora) --- */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--esp-2);
-  padding: 0.75rem 1.6rem;
+  gap: 0.6em;
+  min-height: 52px;
+  padding: 0 1.6em;
   border: 2px solid var(--color-primario);
-  border-radius: var(--radio-sm);
+  border-radius: var(--radio-pill);
   background: var(--color-primario);
-  color: #fff;
+  color: var(--color-sobre-primario);
   font-weight: 700;
-  font-size: var(--texto-md);
-  line-height: 1.2;
+  font-size: 1rem;
+  line-height: 1;
   text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s, transform 0.35s var(--ease);
 }
 
 .btn:hover:not(:disabled) {
-  background: var(--color-primario-oscuro);
-  border-color: var(--color-primario-oscuro);
+  background: var(--tinta);
+  border-color: var(--tinta);
+  color: var(--hueso);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .btn:disabled {
@@ -215,68 +270,110 @@ a {
   cursor: not-allowed;
 }
 
+/* Contorno en tinta (acción secundaria) */
 .btn-secundario {
-  background: #fff;
-  color: var(--color-primario);
+  background: transparent;
+  color: var(--color-texto);
+  border-color: var(--color-texto);
 }
 
 .btn-secundario:hover:not(:disabled) {
-  background: var(--color-primario-suave);
-  color: var(--color-primario-oscuro);
+  background: var(--tinta);
+  color: var(--hueso);
 }
 
-/* Botón claro sobre fondos de color o imágenes */
+/* Sobre fondos bordó o tinta */
 .btn-claro {
-  background: #fff;
-  color: var(--color-primario);
-  border-color: #fff;
-  border-radius: var(--radio-pill);
-  box-shadow: var(--sombra-sm);
+  background: var(--hueso);
+  color: var(--tinta);
+  border-color: var(--hueso);
 }
 
 .btn-claro:hover:not(:disabled) {
-  background: #f3f3f3;
-  border-color: #f3f3f3;
-  color: var(--color-primario-oscuro);
+  background: transparent;
+  color: var(--hueso);
+  border-color: var(--hueso);
+}
+
+.btn-sm {
+  min-height: 44px;
+  padding: 0 1.15em;
+  font-size: 0.92rem;
 }
 
 .btn-ancho {
   width: 100%;
 }
 
+/* Chips (filtros, talles) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  min-height: 44px;
+  padding: 0 1.05em;
+  border-radius: var(--radio-pill);
+  border: 2px solid var(--color-borde);
+  background: transparent;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.25s, color 0.25s, border-color 0.25s;
+}
+
+.chip:hover {
+  border-color: var(--color-texto);
+}
+
+.chip[aria-pressed='true'],
+.chip[aria-checked='true'] {
+  background: var(--tinta);
+  color: var(--hueso);
+  border-color: var(--tinta);
+}
+
 /* --- Formularios --- */
 .campo {
   display: flex;
   flex-direction: column;
-  gap: var(--esp-1);
+  gap: var(--esp-2);
   font-size: var(--texto-sm);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .campo input,
 .campo textarea,
 .campo select {
   width: 100%;
-  padding: 0.65rem;
+  min-height: 52px;
+  padding: 0.7rem 1rem;
   border: 2px solid var(--color-borde);
-  border-radius: var(--radio-sm);
-  font-size: var(--texto-md);
+  border-radius: 14px;
+  font-size: 1rem;
   font-weight: 400;
-  background: #fff;
+  background: var(--color-fondo);
+  color: var(--color-texto);
 }
 
 .campo input:focus,
 .campo textarea:focus,
 .campo select:focus {
   outline: none;
-  border-color: var(--color-primario);
+  border-color: var(--color-texto);
 }
 
 .campo textarea {
   resize: vertical;
 }
 
-/* --- Avisos --- */
+/* --- Tarjetas y avisos --- */
+.tarjeta {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-lg);
+}
+
 .aviso {
   padding: var(--esp-3) var(--esp-4);
   border-radius: var(--radio-sm);
@@ -284,8 +381,25 @@ a {
   font-size: var(--texto-sm);
 }
 
-.aviso.exito { background: var(--color-exito-suave); color: var(--color-exito); border-color: #c8e6c9; }
-.aviso.error { background: var(--color-error-suave); color: var(--color-error); border-color: #ffcdd2; }
+.aviso.exito { background: var(--color-exito-suave); color: var(--color-exito); border-color: color-mix(in oklab, var(--color-exito) 25%, transparent); }
+.aviso.error { background: var(--color-error-suave); color: var(--color-error); border-color: color-mix(in oklab, var(--color-error) 25%, transparent); }
+
+/* Fondo de puntitos (detalle de marca) */
+.puntos {
+  position: relative;
+}
+
+.puntos::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(var(--tinta) 1.2px, transparent 1.6px);
+  background-size: 22px 22px;
+  opacity: 0.07;
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent 80%);
+  mask-image: linear-gradient(180deg, #000, transparent 80%);
+  pointer-events: none;
+}
 
 /* --- Utilidades --- */
 .sr-only {
@@ -303,18 +417,19 @@ a {
 /* Link "saltar al contenido" (visible solo con teclado) */
 .saltar-contenido {
   position: absolute;
-  left: var(--esp-4);
+  left: 12px;
   top: -100px;
   z-index: 1000;
-  background: #fff;
-  color: var(--color-primario);
-  padding: var(--esp-2) var(--esp-4);
-  border-radius: var(--radio-sm);
+  background: var(--tinta);
+  color: var(--hueso);
+  padding: 12px 18px;
+  border-radius: var(--radio-pill);
   font-weight: 700;
+  text-decoration: none;
 }
 
 .saltar-contenido:focus {
-  top: var(--esp-4);
+  top: 12px;
 }
 
 .layout-main:focus {

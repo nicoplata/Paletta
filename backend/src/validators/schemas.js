@@ -96,6 +96,53 @@ schemas.pedido = Joi.object({
   codigoPostal: siEnvio(Joi.string().trim().pattern(/^[A-Za-z0-9]{4,8}$/)),
   notas: textoOpcional(1000),
   metodoPago: Joi.string().valid('mercadopago', 'transferencia').required(),
+  cupon: Joi.string().trim().max(40).allow('', null),
+});
+
+const itemsCarrito = Joi.array().items(Joi.object({
+  varianteId: id.required(),
+  cantidad: Joi.number().integer().min(1).max(1000).required(),
+})).min(1).max(30);
+
+schemas.validarCupon = Joi.object({
+  codigo: Joi.string().trim().min(1).max(40).required(),
+  items: itemsCarrito.required(),
+});
+
+schemas.cotizarEnvio = Joi.object({
+  cp: Joi.string().trim().max(10).required(),
+  subtotal: Joi.number().min(0).default(0),
+});
+
+schemas.cupon = Joi.object({
+  codigo: Joi.string().trim().uppercase().pattern(/^[A-Z0-9_-]{3,40}$/).required()
+    .messages({ 'string.pattern.base': 'El código solo puede tener letras, números, guiones y _ (3 a 40)' }),
+  descripcion: textoOpcional(255),
+  tipo: Joi.string().valid('porcentaje', 'monto').required(),
+  valor: Joi.number().positive().precision(2).required()
+    .when('tipo', { is: 'porcentaje', then: Joi.number().max(100) }),
+  minimoCompra: Joi.number().min(0).precision(2).allow(null),
+  desde: Joi.date().allow(null),
+  hasta: Joi.date().allow(null).when('desde', { is: Joi.date().required(), then: Joi.date().min(Joi.ref('desde')) }),
+  usosMaximos: Joi.number().integer().min(1).allow(null),
+  activo: Joi.boolean().default(true),
+});
+
+schemas.zonaEnvio = Joi.object({
+  nombre: Joi.string().trim().min(2).max(100).required(),
+  cpDesde: Joi.number().integer().min(1000).max(9999).required(),
+  cpHasta: Joi.number().integer().min(1000).max(9999).min(Joi.ref('cpDesde')).required()
+    .messages({ 'number.min': 'El CP final debe ser mayor o igual al inicial' }),
+  costo: Joi.number().min(0).precision(2).required(),
+  demora: textoOpcional(100),
+  activo: Joi.boolean().default(true),
+});
+
+schemas.exportarPedidos = Joi.object({
+  estado: Joi.string().valid('pendiente_pago', 'pagado', 'en_preparacion', 'listo_para_retirar', 'enviado', 'entregado', 'cancelado'),
+  desde: Joi.date(),
+  hasta: Joi.date(),
+  detalle: Joi.string().valid('pedidos', 'items').default('pedidos'),
 });
 
 schemas.tokenParam = Joi.object({ token: Joi.string().guid({ version: 'uuidv4' }).required() }).unknown(true);

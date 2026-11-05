@@ -10,6 +10,7 @@ const conId = validar(schemas.idParam, 'params');
 router.use(soloAdmin);
 router.get('/', c.listar);
 router.get('/resumen', c.resumen);
+router.get('/exportar', validar(schemas.exportarPedidos, 'query'), c.exportar);
 router.get('/:id', conId, c.obtener);
 router.patch('/:id', conId, validar(schemas.pedidoAdmin), c.actualizar);
 router.patch('/:id/estado', conId, validar(schemas.cambioEstado), c.cambiarEstado);

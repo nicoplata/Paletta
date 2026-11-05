@@ -23,17 +23,20 @@ const SelectorColegiosHome = () => {
   if (colegios.length === 0) return null;
 
   return (
-    <div className="selector-colegios-home">
-      <button type="button" className="flecha izquierda" onClick={() => scroll('left')} aria-label="Anterior">‹</button>
-      <div className="contenedor-scroll">
-        <div className="grid-colegios" ref={scrollRef}>
-          {colegios.map((colegio) => (
-            <TarjetaColegio key={colegio.id} colegio={colegio} onSelect={handleSelect} />
-          ))}
+    <section className="selector-colegios-home" aria-labelledby="titulo-colegios">
+      <div className="cabecera">
+        <p className="eyebrow" id="titulo-colegios">Elegí tu colegio</p>
+        <div className="flechas">
+          <button type="button" className="flecha" onClick={() => scroll('left')} aria-label="Ver colegios anteriores">←</button>
+          <button type="button" className="flecha" onClick={() => scroll('right')} aria-label="Ver más colegios">→</button>
         </div>
       </div>
-      <button type="button" className="flecha derecha" onClick={() => scroll('right')} aria-label="Siguiente">›</button>
-    </div>
+      <div className="grid-colegios" ref={scrollRef}>
+        {colegios.map((colegio) => (
+          <TarjetaColegio key={colegio.id} colegio={colegio} onSelect={handleSelect} />
+        ))}
+      </div>
+    </section>
   );
 };
 

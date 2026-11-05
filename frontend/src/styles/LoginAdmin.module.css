@@ -3,37 +3,41 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 2rem var(--gutter);
+  background: var(--color-fondo);
 }
 
 .loginBox {
-  background: white;
-  padding: 2.5rem;
-  border-radius: 15px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
+  padding: clamp(24px, 5vw, 40px);
+  border-radius: var(--radio-lg);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  box-shadow: var(--sombra);
 }
 
 .logo {
   display: block;
-  width: 180px;
-  margin: 0 auto 2rem;
+  width: 72px;
+  margin: 0 auto 1.25rem;
 }
 
 .title {
-  color: #2c3e50;
+  font-family: var(--fuente-display);
+  font-weight: 800;
+  font-stretch: 84%;
+  letter-spacing: -0.035em;
   font-size: 2rem;
-  font-weight: 600;
+  line-height: 1;
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.75rem;
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .inputGroup {
@@ -43,54 +47,52 @@
 }
 
 .label {
-  color: #2c3e50;
-  font-weight: 500;
+  font-weight: 700;
+  font-size: 0.92rem;
 }
 
 .input {
-  padding: 0.75rem 1rem;
-  border: 2px solid #eee;
-  border-radius: 8px;
+  min-height: 52px;
+  padding: 0 1rem;
+  border: 2px solid var(--color-borde);
+  border-radius: 14px;
+  background: var(--color-fondo);
   font-size: 1rem;
-  transition: all 0.3s ease;
 }
 
 .input:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  border-color: var(--color-texto);
 }
 
 .button {
-  margin-top: 1rem;
-  background: #3498db;
-  color: white;
-  padding: 0.75rem;
-  border: none;
-  border-radius: 8px;
+  margin-top: 0.5rem;
+  min-height: 52px;
+  border: 2px solid var(--color-primario);
+  border-radius: var(--radio-pill);
+  background: var(--color-primario);
+  color: var(--color-sobre-primario);
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s, border-color 0.3s;
 }
 
-.button:hover {
-  background: #2980b9;
-  transform: translateY(-1px);
+.button:hover:not(:disabled) {
+  background: var(--tinta);
+  border-color: var(--tinta);
 }
 
 .button:disabled {
-  background: #95a5a6;
+  opacity: 0.55;
   cursor: not-allowed;
-  transform: none;
 }
 
 .error {
-  color: var(--color-primario);
+  color: var(--color-error);
   text-align: center;
-  margin-top: 1rem;
   padding: 0.75rem;
-  background: var(--color-primario-suave);
-  border-radius: 8px;
+  background: var(--color-error-suave);
+  border-radius: var(--radio-sm);
   font-size: 0.9rem;
 }

@@ -36,6 +36,9 @@ module.exports = (sequelize) => {
 
     subtotal: dinero('subtotal'),
     costoEnvio: dinero('costoEnvio'),
+    descuento: dinero('descuento'),
+    cuponCodigo: { type: DataTypes.STRING(40) },
+    zonaEnvio: { type: DataTypes.STRING },
     total: dinero('total'),
 
     metodoPago: { type: DataTypes.ENUM(...METODOS_PAGO), allowNull: false },

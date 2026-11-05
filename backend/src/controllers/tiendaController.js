@@ -1,4 +1,6 @@
-const { Pedido } = require('../models');
+const { Pedido, Variante, Producto } = require('../models');
+const cupones = require('../services/cupones');
+const envio = require('../services/envio');
 const pedidos = require('../services/pedidos');
 const mercadoPago = require('../services/mercadoPago');
 const { AppError } = require('../utils/errorHandler');
@@ -21,7 +23,10 @@ function pedidoPublico(p) {
     codigoPostal: p.codigoPostal,
     metodoPago: p.metodoPago,
     subtotal: p.subtotal,
+    descuento: p.descuento,
+    cuponCodigo: p.cuponCodigo,
     costoEnvio: p.costoEnvio,
+    zonaEnvio: p.zonaEnvio,
     total: p.total,
     items: (p.items || []).map((it) => ({
       nombreProducto: it.nombreProducto,
@@ -100,3 +105,22 @@ exports.webhookMercadoPago = async (req, res) => {
 };
 
 exports.pedidoPublico = pedidoPublico;
+
+// Subtotal de un carrito calculado con los precios de la base (para previsualizar cupones).
+async function subtotalDeItems(items) {
+  const variantes = await Variante.findAll({
+    where: { id: items.map((it) => it.varianteId) },
+    include: [{ model: Producto, as: 'producto', attributes: ['precio'] }],
+  });
+  const precios = new Map(variantes.map((v) => [v.id, v.producto.precio]));
+  return Math.round(items.reduce((acc, it) => acc + (precios.get(it.varianteId) || 0) * it.cantidad, 0) * 100) / 100;
+}
+
+exports.validarCupon = async (req, res) => {
+  const subtotal = await subtotalDeItems(req.body.items);
+  res.json(await cupones.previsualizar(req.body.codigo, subtotal));
+};
+
+exports.cotizarEnvio = async (req, res) => {
+  res.json(await envio.cotizar(req.query.cp, req.query.subtotal));
+};

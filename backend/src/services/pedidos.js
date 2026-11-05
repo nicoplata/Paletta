@@ -6,6 +6,8 @@ const { sequelize, Pedido, PedidoItem, Variante, Producto, Colegio } = require('
 const { AppError } = require('../utils/errorHandler');
 const mercadoPago = require('./mercadoPago');
 const notificaciones = require('./notificacionesPedido');
+const cupones = require('./cupones');
+const envio = require('./envio');
 
 const redondear = (n) => Math.round(n * 100) / 100;
 
@@ -31,7 +33,7 @@ function configuracionPublica() {
   return {
     habilitada: ENV.TIENDA_HABILITADA,
     metodosPago: metodosDisponibles(),
-    envio: { habilitado: ENV.ENVIO_HABILITADO, costo: ENV.ENVIO_COSTO },
+    envio: { habilitado: ENV.ENVIO_HABILITADO, costo: ENV.ENVIO_COSTO, gratisDesde: ENV.ENVIO_GRATIS_DESDE || null },
     retiro: { direccion: ENV.RETIRO_DIRECCION },
     maxUnidadesPorItem: ENV.MAX_UNIDADES_POR_ITEM,
   };
@@ -142,8 +144,15 @@ async function crearPedido(datos) {
     }
 
     const subtotal = redondear(items.reduce((acc, it) => acc + it.subtotal, 0));
-    const costoEnvio = datos.tipoEntrega === 'envio' ? ENV.ENVIO_COSTO : 0;
     const esEnvio = datos.tipoEntrega === 'envio';
+
+    // Cupón: se valida y se reserva un uso dentro de esta misma transacción
+    const cupon = datos.cupon ? await cupones.aplicarEnPedido(datos.cupon, subtotal, transaction) : null;
+    const descuento = cupon ? cupon.descuento : 0;
+
+    // Envío: por zona de código postal (o costo fijo si no hay zonas); el envío gratis se mide sobre el subtotal con descuento
+    const cotizacion = esEnvio ? await envio.costoParaPedido(datos.codigoPostal, subtotal - descuento) : null;
+    const costoEnvio = cotizacion ? cotizacion.costo : 0;
 
     const nuevo = await Pedido.create({
       nombre: datos.nombre,
@@ -157,8 +166,11 @@ async function crearPedido(datos) {
       codigoPostal: esEnvio ? datos.codigoPostal : null,
       notas: datos.notas || null,
       subtotal,
+      descuento,
+      cuponCodigo: cupon ? cupon.codigo : null,
       costoEnvio,
-      total: redondear(subtotal + costoEnvio),
+      zonaEnvio: cotizacion?.zona || null,
+      total: redondear(subtotal - descuento + costoEnvio),
       metodoPago: datos.metodoPago,
       venceAt,
     }, { transaction });
@@ -199,6 +211,7 @@ async function marcarPagado(pedidoId, { mpPaymentId = null, mpEstado = null, ori
 
     if (p.estado === 'cancelado') {
       const { faltantes } = await moverStock(p.items, -1, transaction);
+      if (p.cuponCodigo) await sequelize.models.Cupon.increment('usos', { by: 1, where: { codigo: p.cuponCodigo }, transaction });
       cambios.canceladoAt = null;
       cambios.motivoCancelacion = null;
       if (faltantes.length) {
@@ -223,6 +236,7 @@ async function cancelar(pedidoId, motivo) {
     if (p.estado === 'cancelado') return p;
     if (!TRANSICIONES[p.estado].includes('cancelado')) throw new AppError('Este pedido ya no se puede cancelar', 409);
     await moverStock(p.items, +1, transaction);
+    await cupones.liberarUso(p.cuponCodigo, transaction);
     await p.update({ estado: 'cancelado', canceladoAt: new Date(), motivoCancelacion: motivo || null }, { transaction });
     return p;
   });

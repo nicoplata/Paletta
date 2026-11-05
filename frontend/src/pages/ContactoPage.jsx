@@ -4,7 +4,7 @@ import useSeo from '../hooks/useSeo';
 const ContactoPage = () => {
   useSeo({
     titulo: 'Contacto',
-    descripcion: 'Contactá a Paletta: Vélez Sarsfield 4270, Munro, Buenos Aires. Pedí presupuesto de uniformes escolares y ropa de egresados.',
+    descripcion: 'Contactá a Paletta: Av. Vélez Sarsfield 4270, Munro, Vicente López. WhatsApp (011) 7357-4623. Pedí presupuesto de uniformes escolares y ropa de egresados.',
     ruta: '/contacto',
   });
   return (

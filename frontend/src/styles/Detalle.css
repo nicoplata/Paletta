@@ -10,9 +10,9 @@
   grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
   gap: var(--esp-8);
   background: var(--color-superficie);
-  border-radius: var(--radio-lg);
-  box-shadow: var(--sombra-sm);
-  padding: var(--esp-8);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-xl);
+  padding: clamp(16px, 3vw, 32px);
 }
 
 .detalle-imagen {
@@ -20,8 +20,8 @@
   height: auto;
   aspect-ratio: 1;
   object-fit: cover;
-  border-radius: var(--radio);
-  background: #f0f0f0;
+  border-radius: var(--radio-lg);
+  background: color-mix(in oklab, var(--color-primario) 10%, var(--color-fondo-alt));
 }
 
 .detalle-miniaturas {
@@ -34,7 +34,7 @@
 .detalle-miniaturas button {
   padding: 0;
   border: 2px solid transparent;
-  border-radius: 8px;
+  border-radius: 14px;
   background: none;
   cursor: pointer;
 }
@@ -51,14 +51,21 @@
 }
 
 .detalle-info h1 {
+  font-family: var(--fuente-display);
+  font-weight: 800;
+  font-stretch: 84%;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
   font-size: var(--texto-2xl);
   margin-bottom: var(--esp-3);
 }
 
 .detalle-precio {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-primario);
+  font-family: var(--fuente-display);
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-texto);
   margin-bottom: var(--esp-4);
 }
 

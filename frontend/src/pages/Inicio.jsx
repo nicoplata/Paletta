@@ -1,4 +1,5 @@
-import Carousel from '../components/Carousel';
+import Hero from '../components/Hero';
+import Cinta from '../components/Cinta';
 import SelectorColegiosHome from '../components/SelectorColegiosHome';
 import ProductListHome from '../components/ProductListHome';
 import Egresados from '../components/Egresados';
@@ -9,7 +10,8 @@ const Inicio = () => {
   useSeo({ ruta: '/' });
   return (
     <>
-      <Carousel />
+      <Hero />
+      <Cinta />
       <SelectorColegiosHome />
       <ProductListHome />
       <Egresados />

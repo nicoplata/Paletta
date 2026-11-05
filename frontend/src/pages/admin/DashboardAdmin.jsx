@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaBars, FaTimes, FaBox, FaTags, FaSchool, FaUsers, FaSignOutAlt, FaEnvelope, FaExternalLinkAlt, FaShoppingBag } from 'react-icons/fa';
+import { FaBars, FaTimes, FaBox, FaTags, FaSchool, FaUsers, FaSignOutAlt, FaEnvelope, FaExternalLinkAlt, FaShoppingBag, FaTicketAlt, FaTruck } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { AdminGlobalStyles } from '../../styles/AdminStyles';
 
 const DashboardContainer = styled.div`
   min-height: 100vh;
   display: flex;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--color-fondo);
 `;
 
 const Sidebar = styled.div`
   width: ${props => props.$isCollapsed ? '80px' : '280px'};
-  background: white;
+  background: var(--color-superficie);
   height: 100vh;
   position: fixed;
   transition: all 0.3s ease;
@@ -101,7 +101,7 @@ const Content = styled.main`
 `;
 
 const ContentArea = styled.div`
-  background: white;
+  background: var(--color-superficie);
   border-radius: 15px;
   padding: 2rem;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
@@ -143,6 +143,14 @@ const DashboardAdmin = () => {
             <StyledNavLink to="/admin/dashboard/pedidos" $isCollapsed={isCollapsed}>
               <FaShoppingBag />
               <span>Pedidos</span>
+            </StyledNavLink>
+            <StyledNavLink to="/admin/dashboard/cupones" $isCollapsed={isCollapsed}>
+              <FaTicketAlt />
+              <span>Cupones</span>
+            </StyledNavLink>
+            <StyledNavLink to="/admin/dashboard/envios" $isCollapsed={isCollapsed}>
+              <FaTruck />
+              <span>Envíos</span>
             </StyledNavLink>
             <StyledNavLink to="/admin/dashboard/productos" $isCollapsed={isCollapsed}>
               <FaBox />

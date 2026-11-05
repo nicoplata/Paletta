@@ -10,7 +10,8 @@ const validar = (schema, origen = 'body') => (req, res, next) => {
   if (error) {
     return next(new AppError('Datos inválidos', 400, error.details.map((d) => d.message)));
   }
-  req[origen] = value;
+  // En Express 5 req.query es un getter de solo lectura: se redefine en la instancia
+  Object.defineProperty(req, origen, { value, writable: true, configurable: true, enumerable: true });
   next();
 };
 

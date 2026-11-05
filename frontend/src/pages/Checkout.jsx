@@ -44,6 +44,11 @@ const Checkout = () => {
   const [datos, setDatos] = useState(leerDatos);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState(null);
+  const [codigoCupon, setCodigoCupon] = useState('');
+  const [cupon, setCupon] = useState(null); // { codigo, descuento, descripcion }
+  const [errorCupon, setErrorCupon] = useState('');
+  const [validandoCupon, setValidandoCupon] = useState(false);
+  const [cotizacion, setCotizacion] = useState(null); // { disponible, costo, zona, demora, gratis, motivo }
 
   // Elegir automáticamente el método si hay uno solo
   useEffect(() => {
@@ -52,12 +57,61 @@ const Checkout = () => {
     }
   }, [tienda.metodosPago, datos.metodoPago]);
 
+  // Cotizar el envío cuando hay un código postal completo (con una pequeña espera mientras se escribe)
+  const cpActual = datos.codigoPostal;
+  const conEnvio = datos.tipoEntrega === 'envio';
+  const subtotalConDescuento = Math.max(0, subtotal - (cupon?.descuento || 0));
+  useEffect(() => {
+    if (!conEnvio || !/^[A-Za-z]?\d{4}[A-Za-z]{0,3}$/.test(cpActual.trim())) {
+      setCotizacion(null);
+      return undefined;
+    }
+    let vigente = true;
+    const t = setTimeout(() => {
+      api.get('/envio/cotizar', { params: { cp: cpActual.trim(), subtotal: subtotalConDescuento } })
+        .then(({ data }) => vigente && setCotizacion(data))
+        .catch(() => vigente && setCotizacion(null));
+    }, 350);
+    return () => { vigente = false; clearTimeout(t); };
+  }, [conEnvio, cpActual, subtotalConDescuento]);
+
+  // Si cambia el carrito, el descuento calculado deja de valer: se vuelve a validar al confirmar
+  const firmaCarrito = items.map((it) => `${it.varianteId}x${it.cantidad}`).join(',');
+  useEffect(() => { setCupon((c) => (c ? { ...c, desactualizado: true } : c)); }, [firmaCarrito]);
+
+  const aplicarCupon = async () => {
+    const codigo = codigoCupon.trim();
+    if (!codigo) return;
+    setValidandoCupon(true);
+    setErrorCupon('');
+    try {
+      const { data } = await api.post('/cupones/validar', {
+        codigo,
+        items: items.map((it) => ({ varianteId: it.varianteId, cantidad: it.cantidad })),
+      });
+      setCupon(data);
+    } catch (err) {
+      setCupon(null);
+      setErrorCupon(mensajeError(err, 'No se pudo validar el cupón'));
+    } finally {
+      setValidandoCupon(false);
+    }
+  };
+
+  const quitarCupon = () => {
+    setCupon(null);
+    setCodigoCupon('');
+    setErrorCupon('');
+  };
+
   if (!tienda.cargando && !tienda.habilitada) return <Navigate to="/carrito" replace />;
   if (items.length === 0 && !enviando) return <Navigate to="/carrito" replace />;
 
   const esEnvio = datos.tipoEntrega === 'envio';
-  const costoEnvio = esEnvio ? tienda.envio.costo : 0;
-  const total = subtotal + costoEnvio;
+  const descuento = cupon?.descuento || 0;
+  const costoEnvio = esEnvio ? (cotizacion?.disponible ? cotizacion.costo : tienda.envio.costo) : 0;
+  const total = Math.max(0, subtotal - descuento) + costoEnvio;
+  const envioSinCobertura = esEnvio && cotizacion && !cotizacion.disponible;
 
   const handleChange = (e) => setDatos((d) => ({ ...d, [e.target.name]: e.target.value }));
 
@@ -69,8 +123,13 @@ const Checkout = () => {
     }
     setError(null);
     setEnviando(true);
+    if (envioSinCobertura) {
+      setError({ mensaje: cotizacion.motivo });
+      return;
+    }
     const payload = {
       ...datos,
+      cupon: cupon?.codigo || undefined,
       items: items.map((it) => ({ varianteId: it.varianteId, cantidad: it.cantidad })),
     };
     if (!esEnvio) {
@@ -143,8 +202,11 @@ const Checkout = () => {
               <label className={`tienda-opcion${esEnvio ? ' seleccionada' : ''}`}>
                 <input type="radio" name="tipoEntrega" value="envio" checked={esEnvio} onChange={handleChange} />
                 <span>
-                  <strong>Envío a domicilio · {tienda.envio.costo > 0 ? formatearPrecio(tienda.envio.costo) : 'Gratis'}</strong>
-                  <small>Te contactamos para coordinar la entrega.</small>
+                  <strong>Envío a domicilio</strong>
+                  <small>
+                    El costo depende de tu código postal.
+                    {tienda.envio.gratisDesde ? ` Gratis en compras desde ${formatearPrecio(tienda.envio.gratisDesde)}.` : ''}
+                  </small>
                 </span>
               </label>
             )}
@@ -154,6 +216,13 @@ const Checkout = () => {
                 <Campo label="Localidad" name="ciudad" valores={datos} onChange={handleChange} required autoComplete="address-level2" />
                 <Campo label="Provincia" name="provincia" valores={datos} onChange={handleChange} required autoComplete="address-level1" />
                 <Campo label="Código postal" name="codigoPostal" valores={datos} onChange={handleChange} required pattern="[A-Za-z0-9]{4,8}" autoComplete="postal-code" />
+                {cotizacion && (
+                  <p className={`tienda-cotizacion completo${cotizacion.disponible ? '' : ' error'}`} role="status">
+                    {cotizacion.disponible
+                      ? `Envío ${cotizacion.zona ? `a ${cotizacion.zona}` : ''}: ${cotizacion.costo > 0 ? formatearPrecio(cotizacion.costo) : 'gratis'}${cotizacion.demora ? ` · ${cotizacion.demora}` : ''}`
+                      : cotizacion.motivo}
+                  </p>
+                )}
               </div>
             )}
           </fieldset>
@@ -189,10 +258,41 @@ const Checkout = () => {
               <span>{formatearPrecio(it.precio * it.cantidad)}</span>
             </div>
           ))}
-          <div className="tienda-fila" style={{ marginTop: '0.75rem' }}><span>Subtotal</span><span>{formatearPrecio(subtotal)}</span></div>
-          <div className="tienda-fila"><span>Envío</span><span>{costoEnvio > 0 ? formatearPrecio(costoEnvio) : 'Gratis'}</span></div>
+          <div className="tienda-cupon">
+            {cupon ? (
+              <p className="tienda-cupon-aplicado">
+                <span>Cupón <strong>{cupon.codigo}</strong>{cupon.desactualizado ? ' (se recalcula al confirmar)' : ''}</span>
+                <button type="button" className="tienda-link" onClick={quitarCupon}>Quitar</button>
+              </p>
+            ) : (
+              <div className="tienda-cupon-form">
+                <label className="sr-only" htmlFor="cupon">Cupón de descuento</label>
+                <input
+                  id="cupon"
+                  value={codigoCupon}
+                  onChange={(e) => setCodigoCupon(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); aplicarCupon(); } }}
+                  placeholder="Cupón de descuento"
+                  maxLength={40}
+                  autoComplete="off"
+                />
+                <button type="button" className="tienda-boton secundario" onClick={aplicarCupon} disabled={!codigoCupon.trim() || validandoCupon}>
+                  {validandoCupon ? '…' : 'Aplicar'}
+                </button>
+              </div>
+            )}
+            {errorCupon && <p className="tienda-error" role="alert">{errorCupon}</p>}
+          </div>
+          <div className="tienda-fila"><span>Subtotal</span><span>{formatearPrecio(subtotal)}</span></div>
+          {descuento > 0 && (
+            <div className="tienda-fila descuento"><span>Descuento</span><span>− {formatearPrecio(descuento)}</span></div>
+          )}
+          <div className="tienda-fila">
+            <span>Envío</span>
+            <span>{!esEnvio ? 'Retiro gratis' : envioSinCobertura ? 'Sin cobertura' : costoEnvio > 0 ? formatearPrecio(costoEnvio) : 'Gratis'}</span>
+          </div>
           <div className="tienda-fila total"><span>Total</span><span>{formatearPrecio(total)}</span></div>
-          <button type="submit" className="tienda-boton ancho" disabled={enviando || tienda.metodosPago.length === 0} style={{ marginTop: '1rem' }}>
+          <button type="submit" className="tienda-boton ancho" disabled={enviando || tienda.metodosPago.length === 0 || envioSinCobertura} style={{ marginTop: '1rem' }}>
             {enviando ? 'Procesando…' : datos.metodoPago === 'mercadopago' ? 'Ir a pagar' : 'Confirmar pedido'}
           </button>
           <Link to="/carrito" style={{ display: 'block', textAlign: 'center', marginTop: '0.75rem', color: '#9c1f23' }}>Volver al carrito</Link>

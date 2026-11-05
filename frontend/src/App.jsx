@@ -34,6 +34,8 @@ const EditarUsuario = lazy(() => import('./pages/admin/EditarUsuario'));
 const MensajesAdmin = lazy(() => import('./pages/admin/MensajesAdmin'));
 const PedidosAdmin = lazy(() => import('./pages/admin/PedidosAdmin'));
 const PedidoDetalleAdmin = lazy(() => import('./pages/admin/PedidoDetalleAdmin'));
+const CuponesAdmin = lazy(() => import('./pages/admin/CuponesAdmin'));
+const ZonasEnvioAdmin = lazy(() => import('./pages/admin/ZonasEnvioAdmin'));
 
 const App = () => (
   <AuthProvider>
@@ -84,6 +86,8 @@ const App = () => (
               <Route path="mensajes" element={<MensajesAdmin />} />
               <Route path="pedidos" element={<PedidosAdmin />} />
               <Route path="pedidos/:id" element={<PedidoDetalleAdmin />} />
+              <Route path="cupones" element={<CuponesAdmin />} />
+              <Route path="envios" element={<ZonasEnvioAdmin />} />
             </Route>
           </Routes>
         </Suspense>
