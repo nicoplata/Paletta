@@ -37,7 +37,8 @@ Panel de administración: `http://localhost:5173/admin`.
 | backend | `npm run db:migrate` | Aplica migraciones pendientes (`-- status` / `-- down`) |
 | backend | `npm run seed` | Crea/actualiza el admin (`ADMIN_EMAIL`, `ADMIN_PASSWORD`) y categorías base |
 | frontend | `npm run lint` | ESLint |
-| frontend | `npm test` | Tests (Jest + Testing Library) |
+| backend | `npm test` / `npm run lint` | Tests de integración (node:test + supertest) / ESLint |
+| frontend | `npm test` | Tests (Vitest + Testing Library) |
 | frontend | `npm run build` | Build de producción en `frontend/dist` |
 
 ### Variables de entorno
@@ -45,50 +46,28 @@ Panel de administración: `http://localhost:5173/admin`.
 - `backend/.env.example`: base de datos, `JWT_SECRET` (obligatorio en producción), CORS, SMTP opcional para el formulario de contacto.
 - `frontend/.env.example`: `VITE_API_URL` (vacío si front y API comparten dominio) y `VITE_MOSTRAR_PRECIOS` (`false` = modo catálogo, `true` = muestra precios y stock).
 
-## Despliegue en VPS
-
-Esquema: nginx sirve el build del frontend y las imágenes subidas, y hace proxy de `/api` al backend en Node, gestionado con pm2. Todo bajo el mismo dominio, sin problemas de CORS.
+## Tests y CI
 
 ```bash
-# En la VPS (una vez): Node 20+, PostgreSQL, nginx, pm2 (npm i -g pm2), certbot
-sudo -u postgres createuser -P paletta
-sudo -u postgres createdb -O paletta paletta
+# Backend: tests de integración contra un Postgres real (base "paletta_test", se recrea en cada corrida)
+createdb paletta_test
+cd backend && npm run lint && npm test
 
-git clone <repo> /var/www/paletta && cd /var/www/paletta
-
-# Backend
-cd backend
-cp .env.example .env    # NODE_ENV=production, DB_*, JWT_SECRET, CORS_ORIGINS, MAIL_* (opcional)
-npm ci --omit=dev
-npm run db:migrate
-ADMIN_EMAIL=... ADMIN_PASSWORD=... npm run seed
-cd ..
-pm2 start deploy/ecosystem.config.cjs && pm2 save && pm2 startup
-
-# Frontend
-cd frontend
-cp .env.example .env    # VITE_API_URL vacío; VITE_MOSTRAR_PRECIOS según corresponda
-npm ci && npm run build
-
-# nginx + HTTPS
-sudo cp ../deploy/nginx.conf /etc/nginx/sites-available/paletta   # ajustar dominio y rutas
-sudo ln -s /etc/nginx/sites-available/paletta /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
-sudo certbot --nginx -d paletta.com.ar -d www.paletta.com.ar
+# Frontend: Vitest + Testing Library
+cd frontend && npm run lint && npm test
 ```
 
-Actualizar una versión:
+El backend toma la conexión de las variables `DB_*` (o del `.env`), y el nombre de la base de tests de `TEST_DB_NAME`.
+GitHub Actions (`.github/workflows/ci.yml`) corre lint, tests, build y `npm audit` en cada push a `main` y en cada PR.
 
-```bash
-cd /var/www/paletta && git pull
-(cd backend && npm ci --omit=dev && npm run db:migrate) && pm2 restart paletta-api
-(cd frontend && npm ci && npm run build)
-```
+## Despliegue
 
-### Backups (importante)
+Producción: VPS Ubuntu con nginx y pm2, en **www.paletta.com.ar**. La guía paso a paso está en [`deploy/VPS.md`](deploy/VPS.md).
 
-- Base: `pg_dump paletta | gzip > backup-$(date +%F).sql.gz`, programado con cron y copiado fuera de la VPS.
-- Imágenes: `backend/public/uploads/` vive solo en el servidor (no está en git), así que hay que incluirla en el backup.
+- `deploy/nginx.conf`: sirve el frontend y las imágenes, hace proxy de `/api`, redirige `paletta.com.ar` a `www` y agrega cabeceras de seguridad.
+- `deploy/ecosystem.config.cjs`: configuración de pm2 para la API.
+- `deploy/deploy.sh`: actualización (pull, dependencias, migraciones, build y reload).
+- `deploy/backup.sh`: backup diario de la base y de las imágenes (`backend/public/uploads`, que no está en git).
 
 Healthcheck para monitoreo: `GET /api/health`.
 

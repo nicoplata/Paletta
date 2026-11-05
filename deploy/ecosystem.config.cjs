@@ -2,11 +2,13 @@
 // Uso (desde la raíz del repo en la VPS):
 //   pm2 start deploy/ecosystem.config.cjs
 //   pm2 save && pm2 startup
+const path = require('path');
+
 module.exports = {
   apps: [
     {
       name: 'paletta-api',
-      cwd: './backend',
+      cwd: path.join(__dirname, '..', 'backend'),
       script: 'src/server.js',
       instances: 1,
       exec_mode: 'fork',
