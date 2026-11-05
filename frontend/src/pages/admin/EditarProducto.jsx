@@ -5,11 +5,15 @@ import api, { mensajeError } from '../../lib/api';
 import useRecurso from '../../hooks/useRecurso';
 import { useToast } from '../../context/ToastContext';
 import GestorImagenes from '../../components/admin/GestorImagenes';
+import EditorVariantes from '../../components/admin/EditorVariantes';
 import {
   Button, ButtonGroup, CheckLabel, Container, ErrorBox, Form, FormGroup, Header, Hint, Input, Label, Row, Select, TextArea, Title,
 } from './adminUI';
 
-const VACIO = { nombre: '', descripcion: '', precio: '', stock: '0', categoriaId: '', colegioId: '', activo: true };
+const VACIO = {
+  nombre: '', descripcion: '', precio: '', categoriaId: '', colegioId: '', activo: true,
+  variantes: [{ talle: 'Único', stock: '0', activo: true }],
+};
 
 const EditarProducto = () => {
   const { id } = useParams();
@@ -37,7 +41,7 @@ const EditarProducto = () => {
           nombre: data.nombre,
           descripcion: data.descripcion || '',
           precio: String(data.precio ?? ''),
-          stock: String(data.stock ?? 0),
+          variantes: (data.variantes || []).map((v) => ({ id: v.id, talle: v.talle, stock: String(v.stock), activo: v.activo })),
           categoriaId: String(data.categoriaId),
           colegioId: String(data.colegioId),
           activo: data.activo,
@@ -60,7 +64,12 @@ const EditarProducto = () => {
     const payload = {
       ...producto,
       precio: Number(producto.precio),
-      stock: Number(producto.stock || 0),
+      variantes: producto.variantes.map((v) => ({
+        ...(v.id ? { id: v.id } : {}),
+        talle: v.talle.trim(),
+        stock: Number(v.stock || 0),
+        activo: v.activo,
+      })),
       categoriaId: Number(producto.categoriaId),
       colegioId: Number(producto.colegioId),
     };
@@ -124,11 +133,15 @@ const EditarProducto = () => {
             <Label htmlFor="precio">Precio (ARS)</Label>
             <Input id="precio" type="number" name="precio" min="0" step="0.01" value={producto.precio} onChange={handleChange} required />
           </FormGroup>
-          <FormGroup>
-            <Label htmlFor="stock">Stock</Label>
-            <Input id="stock" type="number" name="stock" min="0" step="1" value={producto.stock} onChange={handleChange} required />
-          </FormGroup>
         </Row>
+
+        <FormGroup>
+          <Label as="span">Talles y stock</Label>
+          <EditorVariantes
+            variantes={producto.variantes}
+            onChange={(variantes) => setProducto((prev) => ({ ...prev, variantes }))}
+          />
+        </FormGroup>
 
         <FormGroup>
           <CheckLabel>

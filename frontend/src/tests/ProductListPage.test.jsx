@@ -14,6 +14,7 @@ const responder = (productos) => {
     if (url === '/productos/public') return Promise.resolve({ data: productos });
     if (url === '/colegios') return Promise.resolve({ data: colegios });
     if (url === '/categorias') return Promise.resolve({ data: categorias });
+    if (url === '/tienda/config') return Promise.resolve({ data: { habilitada: false, metodosPago: [], envio: {} } });
     return Promise.reject(new Error(`URL inesperada ${url}`));
   });
 };

@@ -35,12 +35,20 @@ describe('EditarProducto', () => {
     await user.selectOptions(await screen.findByLabelText('Categoría'), await screen.findByRole('option', { name: 'Buzo' }));
     await user.selectOptions(screen.getByLabelText('Colegio'), await screen.findByRole('option', { name: 'San Martín' }));
     await user.type(screen.getByLabelText('Precio (ARS)'), '38500.5');
-    await user.clear(screen.getByLabelText('Stock'));
-    await user.type(screen.getByLabelText('Stock'), '25');
+    // talle "Único" por defecto -> lo renombro a M y agrego L
+    await user.clear(screen.getByLabelText('Talle 1'));
+    await user.type(screen.getByLabelText('Talle 1'), 'M');
+    await user.clear(screen.getByLabelText('Stock del talle M'));
+    await user.type(screen.getByLabelText('Stock del talle M'), '25');
+    await user.click(screen.getByRole('button', { name: /agregar talle/i }));
+    await user.type(screen.getByLabelText('Talle 2'), 'L');
+    await user.clear(screen.getByLabelText('Stock del talle L'));
+    await user.type(screen.getByLabelText('Stock del talle L'), '3');
     await user.click(screen.getByRole('button', { name: /guardar/i }));
 
     expect(api.post).toHaveBeenCalledWith('/productos', expect.objectContaining({
-      nombre: 'Buzo canguro', precio: 38500.5, stock: 25, categoriaId: 2, colegioId: 1, activo: true,
+      nombre: 'Buzo canguro', precio: 38500.5, categoriaId: 2, colegioId: 1, activo: true,
+      variantes: [{ talle: 'M', stock: 25, activo: true }, { talle: 'L', stock: 3, activo: true }],
     }));
     expect(await screen.findByTestId('ubicacion')).toHaveTextContent('/admin/dashboard/productos/7/editar');
   });
@@ -55,7 +63,11 @@ describe('EditarProducto', () => {
     await user.click(screen.getByLabelText(/visible en el sitio/i));
     await user.click(screen.getByRole('button', { name: /guardar/i }));
 
-    expect(api.put).toHaveBeenCalledWith('/productos/1', expect.objectContaining({ activo: false, precio: 45999.9 }));
+    expect(api.put).toHaveBeenCalledWith('/productos/1', expect.objectContaining({
+      activo: false,
+      precio: 45999.9,
+      variantes: [{ id: 10, talle: 'S', stock: 2, activo: true }, { id: 11, talle: 'M', stock: 1, activo: true }],
+    }));
     expect(await screen.findByText('Listado')).toBeInTheDocument();
   });
 

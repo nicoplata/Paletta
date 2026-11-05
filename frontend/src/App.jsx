@@ -20,6 +20,9 @@ const DetalleProducto = lazy(() => import('./pages/DetalleProducto'));
 const EgresadosPage = lazy(() => import('./pages/EgresadosPage'));
 const ContactoPage = lazy(() => import('./pages/ContactoPage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const Carrito = lazy(() => import('./pages/Carrito'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const PedidoEstado = lazy(() => import('./pages/PedidoEstado'));
 
 // Panel de administración
 const LoginAdmin = lazy(() => import('./pages/admin/LoginAdmin'));
@@ -33,6 +36,8 @@ const EditarColegio = lazy(() => import('./pages/admin/EditarColegio'));
 const UsuariosAdmin = lazy(() => import('./pages/admin/UsuariosAdmin'));
 const EditarUsuario = lazy(() => import('./pages/admin/EditarUsuario'));
 const MensajesAdmin = lazy(() => import('./pages/admin/MensajesAdmin'));
+const PedidosAdmin = lazy(() => import('./pages/admin/PedidosAdmin'));
+const PedidoDetalleAdmin = lazy(() => import('./pages/admin/PedidoDetalleAdmin'));
 
 const App = () => (
   <AuthProvider>
@@ -60,6 +65,9 @@ const App = () => (
               <Route path="producto/:id" element={<DetalleProducto />} />
               <Route path="egresados" element={<EgresadosPage />} />
               <Route path="contacto" element={<ContactoPage />} />
+              <Route path="carrito" element={<Carrito />} />
+              <Route path="checkout" element={<Checkout />} />
+              <Route path="pedido/:token" element={<PedidoEstado />} />
               <Route path="*" element={<NotFound />} />
             </Route>
 
@@ -89,6 +97,8 @@ const App = () => (
               <Route path="usuarios/nuevo" element={<EditarUsuario />} />
               <Route path="usuarios/:id/editar" element={<EditarUsuario />} />
               <Route path="mensajes" element={<MensajesAdmin />} />
+              <Route path="pedidos" element={<PedidosAdmin />} />
+              <Route path="pedidos/:id" element={<PedidoDetalleAdmin />} />
             </Route>
           </Routes>
         </Suspense>

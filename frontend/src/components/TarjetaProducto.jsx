@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
-import { assetUrl, formatearPrecio, IMAGEN_PRODUCTO_DEFAULT, MOSTRAR_PRECIOS } from '../config';
+import { assetUrl, formatearPrecio, IMAGEN_PRODUCTO_DEFAULT } from '../config';
+import { useTienda } from '../hooks/useTienda';
 import '../styles/ProductList.css';
 
-const TarjetaProducto = ({ producto, mostrarColegio = true }) => (
+const TarjetaProducto = ({ producto, mostrarColegio = true }) => {
+  const { mostrarPrecios } = useTienda();
+  return (
   <Link
     to={`/producto/${producto.id}`}
     className="productCard"
@@ -17,7 +20,7 @@ const TarjetaProducto = ({ producto, mostrarColegio = true }) => (
     <h3>{producto.nombre}</h3>
     {mostrarColegio && <div className="colegio">{producto.colegio?.nombre || 'Sin colegio'}</div>}
     <div className="category">{producto.categoria?.nombre || 'Sin categoría'}</div>
-    {MOSTRAR_PRECIOS && (
+    {mostrarPrecios && (
       <>
         <div className="price">{formatearPrecio(producto.precio)}</div>
         <div className={`stock${producto.stock > 0 ? '' : ' out'}`}>
@@ -27,6 +30,7 @@ const TarjetaProducto = ({ producto, mostrarColegio = true }) => (
     )}
     {producto.descripcion && <div className="description">{producto.descripcion}</div>}
   </Link>
-);
+  );
+};
 
 export default TarjetaProducto;
