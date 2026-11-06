@@ -12,11 +12,13 @@ import { ESTADOS_PRODUCCION, Seccion, Tabla, TablaScroll, pesos } from './comun'
 const PLANES_POSIBLES = [1, 2, 3, 4, 5, 6, 8, 10, 12];
 
 export const VACIO_PROMO = {
+  codigo: '',
   colegio: '', curso: '', anio: String(new Date().getFullYear() + 1), planes: [1, 3, 6], descuentoContado: '10',
   recargoTipo: '', recargoValor: '', primerVencimiento: '', fechaCierre: '', notas: '',
 };
 
 export const aPayloadPromo = (f) => ({
+  ...(f.codigo ? { codigo: f.codigo } : {}),
   colegio: f.colegio,
   curso: f.curso,
   anio: Number(f.anio),
@@ -44,6 +46,11 @@ export const FormPromo = ({ valor, onChange, onSubmit, onCancel, guardando, erro
         <FormGroup><Label htmlFor="curso">Curso</Label><Input id="curso" name="curso" value={valor.curso} onChange={cambiar} required placeholder="6º A" /></FormGroup>
         <FormGroup><Label htmlFor="anio">Promo (año)</Label><Input id="anio" name="anio" type="number" min="2020" max="2100" value={valor.anio} onChange={cambiar} required /></FormGroup>
       </Row>
+      <FormGroup>
+        <Label htmlFor="codigo">Código de la promo (opcional)</Label>
+        <Input id="codigo" name="codigo" value={valor.codigo} onChange={(e) => onChange({ ...valor, codigo: e.target.value.toUpperCase() })} maxLength={19} placeholder="Si lo dejás vacío se genera uno, ej.: EGR27-K7M2" />
+        <Hint>Es el que va en el contrato: con él entran familias y comisión. Conviene que no sea fácil de adivinar.</Hint>
+      </FormGroup>
       <FormGroup>
         <Label as="span">Planes de pago que pueden elegir</Label>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -186,7 +193,7 @@ const EgresadosAdmin = () => {
               <tbody>
                 {promos.map((p) => (
                   <tr key={p.id} style={{ opacity: p.activo ? 1 : 0.55 }}>
-                    <td><Link to={`/admin/dashboard/egresados/${p.id}`}><strong>{p.colegio}</strong> · {p.curso} · {p.anio}</Link></td>
+                    <td><Link to={`/admin/dashboard/egresados/${p.id}`}><strong>{p.colegio}</strong> · {p.curso} · {p.anio}</Link><br /><small>{p.codigo}</small></td>
                     <td>{p.activo ? ESTADOS_PRODUCCION[p.estadoProduccion] : 'Inactiva'}</td>
                     <td className="num">{p.resumen.alumnos}</td>
                     <td className="num">{p.resumen.plan}</td>

@@ -9,6 +9,7 @@ const telefono = Joi.string().trim().pattern(/^[+\d][\d\s()-]{7,28}$/).message('
 const plan = Joi.number().integer().valid(1, 2, 3, 4, 5, 6, 8, 10, 12);
 
 const promo = {
+  codigo: Joi.string().trim().pattern(/^[A-Za-z0-9][A-Za-z0-9 -]{3,18}$/).message('el código tiene que tener entre 4 y 19 letras, números o guiones'),
   colegio: texto(2, 150),
   curso: texto(1, 60),
   anio: Joi.number().integer().min(2020).max(2100),
@@ -39,6 +40,11 @@ const requeridos = (obj, campos) => Object.fromEntries(Object.entries(obj).map((
 
 module.exports = {
   slugParam: Joi.object({ slug: Joi.string().pattern(/^[A-Za-z0-9_-]{6,24}$/).required() }),
+  codigoParam: Joi.object({ codigo: Joi.string().trim().pattern(/^[A-Za-z0-9 -]{4,24}$/).required() }),
+  ingresoComision: Joi.object({
+    codigo: Joi.string().trim().pattern(/^[A-Za-z0-9 -]{4,24}$/).required(),
+    clave: Joi.string().trim().pattern(/^\d{6}$/).message('la clave tiene 6 números').required(),
+  }),
   tokenParam: Joi.object({ token: Joi.string().pattern(/^[A-Za-z0-9_-]{16,32}$/).required() }),
 
   // Comisión

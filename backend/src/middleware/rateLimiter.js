@@ -41,4 +41,13 @@ const comprobantesLimiter = rateLimit({
   message: { error: 'Subiste muchos archivos seguidos. Probá de nuevo en un rato o escribinos por WhatsApp.' },
 });
 
-module.exports = { apiLimiter, loginLimiter, contactoLimiter, ingresoEgresadosLimiter, comprobantesLimiter };
+// Búsqueda de promos por código: limita los intentos con códigos inexistentes
+const codigoPromoLimiter = rateLimit({
+  ...base,
+  windowMs: 15 * 60 * 1000,
+  limit: Number(process.env.EGR_CODIGOS_POR_15MIN) || 20,
+  skipSuccessfulRequests: true,
+  message: { error: 'Probaste muchos códigos. Esperá unos minutos y revisá el código con la comisión.' },
+});
+
+module.exports = { apiLimiter, loginLimiter, contactoLimiter, ingresoEgresadosLimiter, comprobantesLimiter, codigoPromoLimiter };

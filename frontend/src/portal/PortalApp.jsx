@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Route, Routes, useParams } from 'react-router-dom';
+import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 import Ingreso from './Ingreso';
 import PanelFamilia from './PanelFamilia';
 import TableroComision from './TableroComision';
+import Inicio from './Inicio';
 import { EGRESADOS, guardarToken, leerToken } from './utils';
 import logo from '../assets/img/isotipo.png';
 
@@ -28,22 +29,13 @@ const Promo = () => {
     : <Ingreso slug={slug} onIngreso={cambiarToken} />;
 };
 
-const SinLink = () => (
-  <>
-    <Marca />
-    <main className="pf-main pf-angosto">
-      <h1 className="pf-titulo">Mi promo</h1>
-      <p className="lead">Para entrar necesitás el link de tu promo. Pedíselo a la comisión del curso o escribinos.</p>
-      <a className="btn" href={EGRESADOS.sitio}>Ir a Paletta Egresados</a>
-    </main>
-  </>
-);
-
 const PortalApp = () => (
   <Routes>
+    <Route index element={<Inicio />} />
+    <Route path="/comision" element={<TableroComision />} />
     <Route path="/comision/:token" element={<TableroComision />} />
     <Route path="/:slug" element={<Promo />} />
-    <Route path="*" element={<SinLink />} />
+    <Route path="*" element={<Navigate to="/" replace />} />
   </Routes>
 );
 
