@@ -90,7 +90,14 @@ router.get('/codigo/:codigo', codigoPromoLimiter, validar(v.codigoParam, 'params
   res.json({ codigo: promo.codigo, slug: promo.slug, colegio: promo.colegio, curso: promo.curso, anio: promo.anio, cerrada: promoCerrada(promo) });
 });
 
-// 🔑 Comisión: entra con el código de la promo + su clave de 6 números
+// 🔓 "Mi curso": el avance de toda la promo con solo el código (pagos solo en totales, sin acciones)
+router.get('/codigo/:codigo/curso', codigoPromoLimiter, validar(v.codigoParam, 'params'), async (req, res) => {
+  const promo = await EgrPromo.findOne({ where: { codigoBusqueda: EgrPromo.normalizarCodigo(req.params.codigo), activo: true } });
+  if (!promo) throw new AppError('No encontramos una promo con ese código.', 404);
+  res.json({ ...(await tableroComision(promo, { publico: true })), codigo: promo.codigo });
+});
+
+// 🔑 Comisión: entra con el código de la promo + su clave de 6 números (para editar la comisión y aprobar el diseño)
 router.post('/comision/ingresar', ingresoEgresadosLimiter, validar(v.ingresoComision), async (req, res) => {
   const promo = await EgrPromo.findOne({ where: { codigoBusqueda: EgrPromo.normalizarCodigo(req.body.codigo), activo: true } });
   if (!promo || promo.comisionClave !== req.body.clave) {

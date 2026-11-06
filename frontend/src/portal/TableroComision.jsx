@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Marca } from './PortalApp';
-import { api, conToken, diasHasta, fecha, guardarSesionComision, leerSesionComision, linkWhatsApp, mensajeError } from './utils';
+import { EGRESADOS, api, conToken, diasHasta, fecha, guardarSesionComision, leerSesionComision, linkWhatsApp, mensajeError } from './utils';
 
 const waLibre = (texto) => `https://wa.me/?text=${encodeURIComponent(texto)}`;
 
@@ -102,12 +102,52 @@ const AprobarDiseno = ({ tablero, aprobar }) => {
   );
 };
 
-const TableroComision = () => {
-  const { token } = useParams();
+// Para entrar como comisión desde "Mi curso" (solo hace falta para editar la comisión y aprobar el diseño)
+const ClaveComision = ({ codigo }) => {
   const navigate = useNavigate();
-  // Con el link secreto anterior (/comision/<token>) o con la sesión de la clave (/comision)
-  const sesion = token ? null : leerSesionComision();
-  const base = token ? `/comision/${token}` : '/comision';
+  const [clave, setClave] = useState('');
+  const [error, setError] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const entrar = async (e) => {
+    e.preventDefault();
+    setEnviando(true);
+    setError('');
+    try {
+      const { data } = await api.post('/comision/ingresar', { codigo, clave });
+      guardarSesionComision({ token: data.token, codigo });
+      navigate('/comision');
+    } catch (err) {
+      setError(mensajeError(err));
+      setEnviando(false);
+    }
+  };
+  return (
+    <form className="pf-form tb-clave" onSubmit={entrar}>
+      <label className="campo">¿Sos de la comisión? Clave de 6 números
+        <input
+          value={clave}
+          onChange={(e) => { setClave(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(''); }}
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          placeholder="••••••"
+          pattern="\d{6}"
+          required
+        />
+      </label>
+      {error && <p className="aviso error" role="alert">{error}</p>}
+      <button type="submit" className="btn btn-sm" disabled={enviando || clave.length !== 6}>{enviando ? 'Entrando…' : 'Entrar como comisión'}</button>
+    </form>
+  );
+};
+
+const TableroComision = () => {
+  const { token, codigo } = useParams();
+  const navigate = useNavigate();
+  // Tres formas de verlo: "Mi curso" con el código (público, solo lectura), la sesión de la comisión
+  // (clave) o el link secreto anterior (/comision/<token>)
+  const publico = Boolean(codigo);
+  const sesion = token || publico ? null : leerSesionComision();
+  const base = publico ? `/codigo/${encodeURIComponent(codigo)}/curso` : token ? `/comision/${token}` : '/comision';
   const opciones = sesion ? conToken(sesion.token) : {};
   const salir = useCallback(() => {
     guardarSesionComision(null);
@@ -118,7 +158,7 @@ const TableroComision = () => {
   const [paso, setPaso] = useState(null);
 
   const cargar = useCallback(async () => {
-    if (!token && !sesion) {
+    if (!publico && !token && !sesion) {
       navigate('/', { replace: true });
       return;
     }
@@ -131,7 +171,7 @@ const TableroComision = () => {
       else setError(mensajeError(err, 'No pudimos cargar el tablero.'));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, sesion?.token]);
+  }, [token, codigo, sesion?.token]);
   useEffect(() => { cargar(); }, [cargar]);
 
   const accion = async (metodo, ruta, datos) => {
@@ -149,7 +189,7 @@ const TableroComision = () => {
       <>
         <Marca />
         <main className="pf-main pf-angosto">
-          <h1 className="pf-titulo">Tablero de la comisión</h1>
+          <h1 className="pf-titulo">Mi curso</h1>
           <p className="aviso error" role="alert">{error}</p>
           <a className="btn" href={linkWhatsApp('¡Hola Paletta! Soy de una comisión de egresados y no puedo entrar al tablero.')} target="_blank" rel="noopener noreferrer">Escribinos por WhatsApp</a>
         </main>
@@ -162,6 +202,13 @@ const TableroComision = () => {
   const diasCierre = diasHasta(promo.fechaCierre);
   const actualPaso = PASOS.find((p) => p.clave === paso);
   const curso = `${promo.curso} · ${promo.colegio}`;
+  const codigoPromo = tablero.codigo || sesion?.codigo || '';
+  const portal = `${EGRESADOS.sitio}/mi-promo`;
+  const comoEntrar = codigoPromo
+    ? `entren a ${portal} con el código ${codigoPromo}, elijan “Mi pedido” y pongan el DNI del alumno`
+    : `entren acá con el DNI del alumno: ${linkFamilias}`;
+  // En la vista pública los pagos van solo en totales
+  const pagosPrivados = tablero.publico && (paso === 'sena' || paso === 'pagos');
 
   let pendientes = [];
   let hechos = 0;
@@ -174,16 +221,16 @@ const TableroComision = () => {
     ({ pendientes, hechos, total } = pasos[paso]);
   }
   const recordatorio = (p) => (paso === 'pagos'
-    ? `¡Hola! Soy de la comisión de ${curso}. Les recordamos que ${p.nombre} tiene una cuota pendiente. La cuponera está acá (se entra con el DNI del alumno): ${linkFamilias}`
-    : `¡Hola! Soy de la comisión de ${curso}. A ${p.nombre} le falta ${actualPaso.accion} (${p.motivo}). Se hace acá, con el DNI del alumno: ${linkFamilias}`);
-  const recordatorioGrupal = paso === 'pagos'
-    ? `¡Hola familias de ${curso}! Recuerden revisar las cuotas en la cuponera del portal (se entra con el DNI del alumno): ${linkFamilias}`
-    : `¡Hola familias de ${curso}! Para que las prendas lleguen a tiempo, todavía falta ${actualPaso?.accion} de: ${pendientes.map((p) => p.nombre).join(', ')}. Se hace acá, con el DNI del alumno: ${linkFamilias}`;
+    ? `¡Hola! Soy de la comisión de ${curso}. Les recordamos que ${p.nombre} tiene una cuota pendiente. Para ver la cuponera, ${comoEntrar}.`
+    : `¡Hola! Soy de la comisión de ${curso}. A ${p.nombre} le falta ${actualPaso.accion} (${p.motivo}). Para hacerlo, ${comoEntrar}.`);
+  const recordatorioGrupal = paso === 'pagos' || pagosPrivados
+    ? `¡Hola familias de ${curso}! Recuerden revisar las cuotas en la cuponera: ${comoEntrar}.`
+    : `¡Hola familias de ${curso}! Para que las prendas lleguen a tiempo, todavía falta ${actualPaso?.accion} de: ${pendientes.map((p) => p.nombre).join(', ')}. Para hacerlo, ${comoEntrar}.`;
 
   return (
     <>
       <Marca>
-        <span className="tb-quien">Comisión · {promo.curso} · {promo.anio}</span>
+        <span className="tb-quien">{tablero.publico ? 'Mi curso' : 'Comisión'} · {promo.curso} · {promo.anio}</span>
         {sesion && <button type="button" className="btn btn-secundario btn-sm" onClick={salir}>Salir</button>}
       </Marca>
       <main className="pf-main tb-main">
@@ -216,7 +263,7 @@ const TableroComision = () => {
           <section className="pf-card tb-detalle" aria-labelledby="tb-paso">
             <div className="tb-tabs" role="tablist" aria-label="Pasos de las familias">
               {PASOS.map((p) => {
-                const listo = p.clave === 'pagos' ? pagos.conPlan > 0 && pagos.pendientes.length === 0 : pasos[p.clave].completo;
+                const listo = p.clave === 'pagos' ? pagos.conPlan > 0 && pagos.alDia === pagos.conPlan : pasos[p.clave].completo;
                 return (
                   <button key={p.clave} type="button" role="tab" aria-selected={paso === p.clave} className={`tb-tab${listo ? ' listo' : ''}`} onClick={() => setPaso(p.clave)}>
                     {listo ? '✓ ' : ''}{p.titulo}
@@ -230,7 +277,12 @@ const TableroComision = () => {
             <div className="tb-barra" aria-hidden="true"><b style={{ width: `${total ? (hechos / total) * 100 : 0}%` }} /></div>
             <p className="pf-tenue">{actualPaso?.porque}</p>
 
-            {pendientes.length === 0 ? (
+            {pagosPrivados && hechos < total ? (
+              <>
+                <p className="aviso">Faltan {total - hechos}. Por privacidad, los pagos se muestran solo en totales: cada familia ve los suyos en su cuponera.</p>
+                <a className="btn btn-sm" href={waLibre(recordatorioGrupal)} target="_blank" rel="noopener noreferrer">Mandar recordatorio al grupo</a>
+              </>
+            ) : pendientes.length === 0 ? (
               <p className="aviso exito">{total ? '¡Nadie pendiente en este paso! 🎉' : 'Todavía no hay familias en este paso.'}</p>
             ) : (
               <>
@@ -262,12 +314,12 @@ const TableroComision = () => {
             </section>
 
             <section className="pf-card" aria-labelledby="tb-link">
-              <h2 id="tb-link" className="pf-h2">Link para las familias</h2>
-              <p className="pf-tenue">Compártanlo en el grupo del curso: cada familia entra con el DNI del alumno.</p>
-              <code className="tb-link">{linkFamilias}</code>
+              <h2 id="tb-link" className="pf-h2">Cómo entran las familias</h2>
+              <p className="pf-tenue">{codigoPromo ? <>En <b>{portal}</b> (botón “Mi promo”) con el código:</> : 'Con este link y el DNI del alumno:'}</p>
+              <code className="tb-link">{codigoPromo || linkFamilias}</code>
               <div className="tb-botones">
-                <Copiar texto={linkFamilias} />
-                <a className="btn btn-sm" href={waLibre(`¡Hola familias de ${curso}! Este es el link para cargar los datos, talles y ver la cuponera de egresados (se entra con el DNI del alumno): ${linkFamilias}`)} target="_blank" rel="noopener noreferrer">Compartir por WhatsApp</a>
+                <Copiar texto={codigoPromo || linkFamilias}>{codigoPromo ? 'Copiar código' : 'Copiar link'}</Copiar>
+                <a className="btn btn-sm" href={waLibre(`¡Hola familias de ${curso}! Para cargar los datos, talles y ver la cuponera de egresados, ${comoEntrar}.`)} target="_blank" rel="noopener noreferrer">Compartir por WhatsApp</a>
               </div>
               <p className="pf-tenue">Paletta también les manda recordatorios por mail a las familias que ya cargaron su email.</p>
             </section>
@@ -277,16 +329,35 @@ const TableroComision = () => {
         <div className="tb-grilla tb-grilla-pareja">
           <section className="pf-card" aria-labelledby="tb-comision">
             <h2 id="tb-comision" className="pf-h2">La comisión</h2>
-            <Integrantes actuales={tablero.integrantes} guardar={(integrantes) => accion('put', '/integrantes', { integrantes })} />
+            {tablero.publico ? (
+              <>
+                {tablero.integrantes.length
+                  ? <ul className="tb-integrantes-lista">{tablero.integrantes.map((i) => <li key={i.nombre}>{i.nombre}</li>)}</ul>
+                  : <p className="pf-tenue">Todavía no cargaron quiénes son.</p>}
+                <ClaveComision codigo={codigoPromo} />
+              </>
+            ) : (
+              <Integrantes actuales={tablero.integrantes} guardar={(integrantes) => accion('put', '/integrantes', { integrantes })} />
+            )}
           </section>
           <section className="pf-card" aria-labelledby="tb-diseno">
             <h2 id="tb-diseno" className="pf-h2">Diseño final</h2>
-            <AprobarDiseno tablero={tablero} aprobar={(nombre) => accion('post', '/diseno', { nombre })} />
+            {tablero.publico && !promo.disenoAprobadoEl ? (
+              <p className="pf-tenue">
+                {tablero.puedeAprobarDiseno
+                  ? '¡Está todo cargado! La comisión ya puede aprobar el diseño final entrando con su clave.'
+                  : '🔒 Se desbloquea cuando todas las familias completan datos, prendas y la cuota 1. Lo aprueba la comisión con su clave.'}
+              </p>
+            ) : (
+              <AprobarDiseno tablero={tablero} aprobar={(nombre) => accion('post', '/diseno', { nombre })} />
+            )}
           </section>
         </div>
 
         <p className="pf-tenue pf-centro">
-          {sesion ? 'La clave es solo para la comisión: no la compartan en el grupo.' : 'Este link es solo para la comisión: no lo compartan en el grupo.'} ¿Dudas? <a href={linkWhatsApp(`¡Hola Paletta! Soy de la comisión de ${curso} (${promo.anio}). Tengo una consulta:`)} target="_blank" rel="noopener noreferrer">Escribinos por WhatsApp</a>.
+          {tablero.publico
+            ? 'Esto lo ve cualquier familia con el código de la promo.'
+            : sesion ? 'La clave es solo para la comisión: no la compartan en el grupo.' : 'Este link es solo para la comisión: no lo compartan en el grupo.'} ¿Dudas? <a href={linkWhatsApp(`¡Hola Paletta! Soy de la comisión de ${curso} (${promo.anio}). Tengo una consulta:`)} target="_blank" rel="noopener noreferrer">Escribinos por WhatsApp</a>.
         </p>
       </main>
     </>

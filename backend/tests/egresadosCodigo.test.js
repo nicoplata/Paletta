@@ -57,6 +57,38 @@ describe('Egresados: entrada con código de contrato y clave de la comisión', (
     assert.equal((await request(app).get(`/api/egresados/comision/${promo.linkComision.split('/').pop()}`)).status, 200);
   });
 
+  it('Mi curso se ve con solo el código, con los pagos en totales y sin datos de contacto', async () => {
+    // una familia completa todo y paga la cuota 1, para que haya pagos que ocultar
+    const prenda = (await request(app).post(`/api/admin/egresados/promos/${promo.id}/prendas`).set(headers.admin)
+      .send({ nombre: 'Buzo', precio: 30000, talles: ['M'] })).body;
+    await request(app).post(`/api/admin/egresados/promos/${promo.id}/alumnos`).set(headers.admin).send({ nombres: ['Bruno Gil'] });
+    const lista = (await request(app).get(`/api/egresados/promos/${promo.slug}`)).body.alumnos;
+    const bruno = lista.find((a) => a.nombre === 'Bruno Gil');
+    const ing = await request(app).post(`/api/egresados/promos/${promo.slug}/ingresar`).send({ alumnoId: bruno.id, dni: '40999888' });
+    const h = { Authorization: `Bearer ${ing.body.token}` };
+    await request(app).put('/api/egresados/mi-promo/datos').set(h).send({ nombre: 'Bruno Gil', dni: '40999888', responsableNombre: 'Papá Gil', responsableEmail: 'gil@mail.com', responsableTelefono: '11 4444-2222' });
+    await request(app).put('/api/egresados/mi-promo/prendas').set(h).send({ items: [{ prendaId: prenda.id, talle: 'M' }] });
+    await request(app).put('/api/egresados/mi-promo/plan').set(h).send({ plan: 3 });
+    await request(app).put('/api/egresados/comision/integrantes').set(tokenComision).send({ integrantes: [{ nombre: 'Mamá de Ana', telefono: '11 7777-0000' }] });
+
+    const res = await request(app).get(`/api/egresados/codigo/${encodeURIComponent(promo.codigo.toLowerCase())}/curso`);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.publico, true);
+    assert.equal(res.body.alumnos, 2);
+    assert.ok(res.body.pasos.datos.pendientes.some((p) => p.nombre === 'Ana Díaz'), 'los pendientes de datos siguen con nombre');
+    assert.deepEqual(res.body.pasos.sena.pendientes, [], 'la cuota 1 va solo en totales');
+    assert.equal(res.body.pasos.sena.total, 2);
+    assert.deepEqual(res.body.pagos.pendientes, []);
+    assert.deepEqual(res.body.integrantes, [{ nombre: 'Mamá de Ana' }], 'sin teléfonos de la comisión');
+    const texto = JSON.stringify(res.body);
+    for (const dato of ['40999888', 'gil@mail.com', '4444-2222', '7777-0000', promo.comisionClave]) assert.ok(!texto.includes(dato), `no expone ${dato}`);
+
+    // La comisión, con su clave, sigue viendo los nombres en los pagos
+    const conClave = await request(app).get('/api/egresados/comision').set(tokenComision);
+    assert.ok(conClave.body.pasos.sena.pendientes.some((p) => p.nombre === 'Bruno Gil'));
+    assert.equal((await request(app).get('/api/egresados/codigo/NOEXISTE1/curso')).status, 404);
+  });
+
   it('las sesiones de comisión, familia y panel no se mezclan', async () => {
     assert.equal((await request(app).get('/api/egresados/mi-promo').set(tokenComision)).status, 401);
     assert.equal((await request(app).get('/api/admin/egresados/promos').set(tokenComision)).status, 401);
