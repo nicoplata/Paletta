@@ -10,6 +10,12 @@ const PASOS = [
   { clave: 'cuponera', titulo: 'Cuponera', listo: (a) => a.progreso.sena },
 ];
 
+const ETAPA_PROMO = {
+  en_produccion: '🧵 Las prendas de la promo están en producción',
+  listo: '📦 ¡Las prendas están listas!',
+  entregado: '🎉 Prendas entregadas',
+};
+
 const primerPendiente = (alumno) => (PASOS.find((p) => !p.listo(alumno)) || PASOS[3]).clave;
 
 function mensajeAvance(alumno, listos) {
@@ -54,6 +60,32 @@ const PanelFamilia = ({ token, onSalir }) => {
     }
   }, [token, onSalir]);
 
+  const subirComprobante = useCallback(async (cuotaId, archivo) => {
+    const datos = new FormData();
+    datos.append('archivo', archivo);
+    try {
+      const { data } = await api.post(`/mi-promo/cuotas/${cuotaId}/comprobante`, datos, { ...conToken(token), timeout: 60000 });
+      setVista(data);
+      return '';
+    } catch (err) {
+      if (err?.response?.status === 401) onSalir();
+      return mensajeError(err, 'No pudimos subir el archivo. Probá de nuevo.');
+    }
+  }, [token, onSalir]);
+
+  // El archivo se pide con la sesión de la familia y se abre en una pestaña nueva
+  const verComprobante = useCallback(async (id) => {
+    const ventana = window.open('', '_blank');
+    try {
+      const { data } = await api.get(`/mi-promo/comprobantes/${id}/archivo`, { ...conToken(token), responseType: 'blob' });
+      const url = URL.createObjectURL(data);
+      if (ventana) ventana.location.href = url;
+      else window.location.assign(url);
+    } catch {
+      ventana?.close();
+    }
+  }, [token]);
+
   const salir = (
     <button type="button" className="btn btn-secundario btn-sm" onClick={onSalir}>Salir</button>
   );
@@ -78,7 +110,10 @@ const PanelFamilia = ({ token, onSalir }) => {
             <p className="eyebrow">Promo {promo.anio} · {promo.colegio} · {promo.curso}</p>
             <h1 id="pf-hola" className="pf-hero-titulo">Hola, familia de {nombreCorto}.</h1>
             <p className="pf-hero-texto">{mensajeAvance(alumno, listos)}</p>
-            {promo.fechaCierre && diasCierre !== null && (
+            {promo.estadoProduccion !== 'pendiente' && (
+              <p className="pf-cierre pf-etapa">{ETAPA_PROMO[promo.estadoProduccion]}{promo.estadoProduccion === 'listo' && promo.fechaEntrega ? ` · entrega ${fecha(promo.fechaEntrega)}` : ''}</p>
+            )}
+            {promo.estadoProduccion === 'pendiente' && promo.fechaCierre && diasCierre !== null && (
               <p className={`pf-cierre${diasCierre < 0 ? ' cerrado' : ''}`}>
                 {diasCierre < 0
                   ? `La carga cerró el ${fecha(promo.fechaCierre)}`
@@ -116,7 +151,7 @@ const PanelFamilia = ({ token, onSalir }) => {
           {paso === 'datos' && <PasoDatos alumno={alumno} guardar={guardar} />}
           {paso === 'prendas' && <PasoPrendas alumno={alumno} promo={promo} guardar={guardar} />}
           {paso === 'plan' && <PasoPlan alumno={alumno} promo={promo} guardar={guardar} irA={setPaso} />}
-          {paso === 'cuponera' && <PasoCuponera vista={vista} irA={setPaso} />}
+          {paso === 'cuponera' && <PasoCuponera vista={vista} irA={setPaso} subirComprobante={subirComprobante} verComprobante={verComprobante} />}
         </section>
 
         <p className="pf-tenue pf-centro">

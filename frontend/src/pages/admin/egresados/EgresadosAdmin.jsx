@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaPlus, FaCashRegister, FaEnvelope } from 'react-icons/fa';
+import { FaPlus, FaCashRegister, FaEnvelope, FaReceipt } from 'react-icons/fa';
 import api, { mensajeError } from '../../../lib/api';
 import useRecurso from '../../../hooks/useRecurso';
 import { useToast } from '../../../context/ToastContext';
@@ -135,6 +135,7 @@ const EgresadosAdmin = () => {
     }
   };
   const { data: promos, cargando, error } = useRecurso('/admin/egresados/promos', { porDefecto: [] });
+  const { data: porRevisar } = useRecurso('/admin/egresados/comprobantes?estado=pendiente', { porDefecto: [] });
   const [form, setForm] = useState(null);
   const [errorForm, setErrorForm] = useState('');
   const [guardando, setGuardando] = useState(false);
@@ -157,6 +158,9 @@ const EgresadosAdmin = () => {
       <Header>
         <Title>Egresados</Title>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button as={Link} to="/admin/dashboard/egresados/comprobantes" $primario={porRevisar.length > 0}>
+            <FaReceipt /> Comprobantes{porRevisar.length ? ` (${porRevisar.length} por revisar)` : ''}
+          </Button>
           <Button as={Link} to="/admin/dashboard/egresados/cobrar"><FaCashRegister /> Registrar pago</Button>
           <Button onClick={enviarRecordatorios} disabled={enviandoAvisos} title="Se envían solos cada hora; con este botón salen ahora"><FaEnvelope /> {enviandoAvisos ? 'Enviando...' : 'Enviar recordatorios'}</Button>
           {!form && <Button $primario onClick={() => setForm(VACIO_PROMO)}><FaPlus /> Nueva promo</Button>}

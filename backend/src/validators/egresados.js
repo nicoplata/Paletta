@@ -93,6 +93,9 @@ module.exports = {
     cobrarRecargo: Joi.boolean().default(true),
     nota: opcional(255),
   }),
+  aprobarComprobante: Joi.object({ fecha: fecha.allow(null, '') }),
+  rechazarComprobante: Joi.object({ motivo: texto(5, 200).required() }),
+  listarComprobantes: Joi.object({ estado: Joi.string().valid('pendiente', 'aprobado', 'rechazado').default('pendiente') }),
   buscar: Joi.object({ q: Joi.string().trim().min(2).max(60).required() }),
   cuenta: Joi.object({
     alias: opcional(60),

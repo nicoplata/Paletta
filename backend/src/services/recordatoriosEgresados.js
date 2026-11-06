@@ -2,32 +2,14 @@
 //  - cierre de la carga: 7 y 2 días antes, a quienes no terminaron (prendas o plan);
 //  - cuotas: hasta 3 días antes del vencimiento y una vez vencida (dentro de la semana).
 // Cada aviso se registra en EgrAvisos con una clave única: nunca se manda dos veces.
-const { Op, UniqueConstraintError } = require('sequelize');
-const { EgrPromo, EgrAlumno, EgrSeleccion, EgrCuota, EgrAviso } = require('../models');
+const { Op } = require('sequelize');
+const { EgrPromo, EgrAlumno, EgrSeleccion, EgrCuota } = require('../models');
 const ENV = require('../config/env');
 const { enviarMail, mailConfigurado } = require('./mail');
 const { hoyAR, progreso, serializarCuota } = require('./egresados');
-const { linkFamilias } = require('./tableroEgresados');
+const { armarMail, enviarUnaVez, fecha, pesos } = require('./mailsEgresados');
 
 const diasEntre = (desde, hasta) => Math.round((Date.parse(`${hasta}T12:00:00Z`) - Date.parse(`${desde}T12:00:00Z`)) / 86400000);
-const fecha = (iso) => iso.split('-').reverse().join('/');
-const pesos = (n) => n.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
-const escapar = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-
-function armarMail({ alumno, promo, titulo, parrafos, boton }) {
-  const link = linkFamilias(promo);
-  const saludo = `Hola${alumno.responsableNombre ? `, ${alumno.responsableNombre.split(' ')[0]}` : ''}:`;
-  const pie = `Paletta Egresados · ${promo.colegio} ${promo.curso} · Promo ${promo.anio}`;
-  return {
-    subject: titulo,
-    text: [saludo, '', ...parrafos, '', `${boton}: ${link}`, '', pie].join('\n'),
-    html: `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#0E0E12;max-width:560px">
-      <p style="font-size:20px;font-weight:800;margin:0 0 12px">Paletta <span style="color:#D6362A;font-size:12px;letter-spacing:1px">EGRESADOS</span></p>
-      <p>${escapar(saludo)}</p>${parrafos.map((p) => `<p>${escapar(p)}</p>`).join('')}
-      <p><a href="${link}" style="display:inline-block;background:#8F141B;color:#F5F1E8;padding:12px 22px;border-radius:999px;text-decoration:none;font-weight:700">${escapar(boton)}</a></p>
-      <p style="color:#55525B;font-size:13px">${escapar(pie)}</p></div>`,
-  };
-}
 
 function avisoCierre(alumno, promo, dias, p) {
   const falta = !p.prendas ? 'elegir las prendas y los talles' : 'elegir el plan de pago';
@@ -51,28 +33,10 @@ function avisoCuota(alumno, promo, cuota, vencida) {
     promo,
     titulo: vencida ? `La cuota ${cuota.numero} de ${alumno.nombre} está vencida` : `La cuota ${cuota.numero} vence el ${fecha(cuota.vencimiento)}`,
     parrafos: vencida
-      ? [`La cuota venció el ${fecha(cuota.vencimiento)} y todavía no figura como paga.`, ...datos, 'Si ya la pagaste, avisanos desde el portal con el botón “Avisar que pagué”.']
+      ? [`La cuota venció el ${fecha(cuota.vencimiento)} y todavía no figura como paga.`, ...datos, 'Si ya la pagaste por transferencia, subí el comprobante desde la cuponera del portal.']
       : [`Te recordamos que la cuota vence el ${fecha(cuota.vencimiento)}.`, ...datos, 'Podés pagar en efectivo en el local o por transferencia: los datos están en la cuponera.'],
     boton: 'Ver mi cuponera',
   });
-}
-
-// Registra el aviso y lo envía; si el envío falla, lo borra para reintentar en la próxima corrida.
-async function enviarUnaVez(alumno, clave, mail, enviar) {
-  let aviso;
-  try {
-    aviso = await EgrAviso.create({ alumnoId: alumno.id, clave, email: alumno.responsableEmail });
-  } catch (err) {
-    if (err instanceof UniqueConstraintError) return false;
-    throw err;
-  }
-  try {
-    await enviar({ to: alumno.responsableEmail, ...mail });
-    return true;
-  } catch (err) {
-    await aviso.destroy();
-    throw err;
-  }
 }
 
 async function ejecutarRecordatorios({ hoy = hoyAR(), enviar = enviarMail, forzar = false } = {}) {
@@ -100,7 +64,7 @@ async function ejecutarRecordatorios({ hoy = hoyAR(), enviar = enviarMail, forza
         tareas.push([clave, avisoCierre(alumno, promo, diasCierre, p)]);
       }
       for (const c of alumno.cuotas) {
-        if (c.estado === 'pagada') continue;
+        if (c.estado !== 'pendiente') continue; // pagada o con comprobante en revisión
         const d = diasEntre(hoy, c.vencimiento);
         const cuota = serializarCuota(promo, alumno, c, hoy);
         if (d >= 0 && d <= 3) tareas.push([`cuota-${c.id}-${c.vencimiento}-previo`, avisoCuota(alumno, promo, cuota, false)]);

@@ -1,7 +1,7 @@
 // Panel: gestión de promos de egresados, prendas, alumnos y cobranza.
 const express = require('express');
 const { Op } = require('sequelize');
-const { sequelize, EgrPromo, EgrPrenda, EgrAlumno, EgrSeleccion, EgrCuota } = require('../models');
+const { sequelize, EgrPromo, EgrPrenda, EgrAlumno, EgrSeleccion, EgrCuota, EgrComprobante } = require('../models');
 const { soloAdmin } = require('../middleware/auth');
 const validar = require('../middleware/validator');
 const v = require('../validators/egresados');
@@ -12,6 +12,9 @@ const { linkComision, tableroComision } = require('../services/tableroEgresados'
 const { ejecutarRecordatorios } = require('../services/recordatoriosEgresados');
 const { mailConfigurado } = require('../services/mail');
 const crypto = require('crypto');
+const { enviarComprobante } = require('../middleware/comprobante');
+const { generarCsv } = require('../utils/csv');
+const avisos = require('../services/mailsEgresados');
 
 const nuevoTokenComision = () => crypto.randomBytes(16).toString('base64url');
 
@@ -31,7 +34,7 @@ async function buscarOFallar(Modelo, id, mensaje, opciones = {}) {
 
 const includeAlumno = [
   { model: EgrSeleccion, as: 'selecciones', include: [{ model: EgrPrenda, as: 'prenda' }] },
-  { model: EgrCuota, as: 'cuotas' },
+  { model: EgrCuota, as: 'cuotas', include: [{ model: EgrComprobante, as: 'comprobantes' }] },
 ];
 
 // Resumen de una promo a partir de sus alumnos ya serializados
@@ -93,7 +96,11 @@ router.put('/promos/:id', conId, validar(v.promoEdicion), async (req, res) => {
   const { disenoAprobado, ...cambios } = req.body;
   if (disenoAprobado === true && !promo.disenoAprobadoEl) Object.assign(cambios, { disenoAprobadoEl: new Date(), disenoAprobadoPor: 'Paletta' });
   if (disenoAprobado === false) Object.assign(cambios, { disenoAprobadoEl: null, disenoAprobadoPor: null });
+  const estadoAnterior = promo.estadoProduccion;
   await promo.update(cambios);
+  if (cambios.estadoProduccion && cambios.estadoProduccion !== estadoAnterior) {
+    avisos.enSegundoPlano(avisos.avisarEtapa(promo.id, cambios.estadoProduccion), 'el aviso de etapa');
+  }
   // Si cambian el calendario o el descuento, se rearman las cuotas pendientes de quienes ya eligieron plan
   if (cambiaCalendario || cambiaDescuento) {
     const ids = (await EgrAlumno.findAll({ where: { promoId: promo.id, plan: { [Op.ne]: null } }, attributes: ['id'] })).map((a) => a.id);
@@ -209,18 +216,23 @@ router.delete('/alumnos/:id', conId, async (req, res) => {
 });
 
 // ---------- cobranza ----------
+async function registrarPago(cuotaId, { medio, fecha, cobrarRecargo, nota }, transaction) {
+  const cuota = await buscarOFallar(EgrCuota, cuotaId, 'Cuota no encontrada', { transaction, lock: transaction.LOCK.UPDATE });
+  if (cuota.estado === 'pagada') throw new AppError('Esa cuota ya figura como pagada', 409);
+  const alumno = await EgrAlumno.findByPk(cuota.alumnoId, { transaction });
+  const promo = await EgrPromo.findByPk(alumno.promoId, { transaction });
+  const dia = fecha || egr.hoyAR();
+  // El recargo se calcula como si estuviera pendiente al día del pago
+  const recargo = cobrarRecargo ? egr.recargoDe(promo, { ...cuota.get(), estado: 'pendiente' }, dia) : 0;
+  await cuota.update({ estado: 'pagada', pagadaEl: dia, medio, recargo, nota }, { transaction });
+  await EgrComprobante.update({ estado: 'aprobado', revisadoEl: new Date() }, { where: { cuotaId: cuota.id, estado: 'pendiente' }, transaction });
+  return cuota;
+}
+
 router.post('/cuotas/:id/pago', conId, validar(v.pago), async (req, res) => {
-  const alumnoId = await sequelize.transaction(async (transaction) => {
-    const cuota = await buscarOFallar(EgrCuota, req.params.id, 'Cuota no encontrada', { transaction, lock: transaction.LOCK.UPDATE });
-    if (cuota.estado === 'pagada') throw new AppError('Esa cuota ya figura como pagada', 409);
-    const alumno = await EgrAlumno.findByPk(cuota.alumnoId, { transaction });
-    const promo = await EgrPromo.findByPk(alumno.promoId, { transaction });
-    const fecha = req.body.fecha || egr.hoyAR();
-    const recargo = req.body.cobrarRecargo ? egr.recargoDe(promo, cuota, fecha) : 0;
-    await cuota.update({ estado: 'pagada', pagadaEl: fecha, medio: req.body.medio, recargo, nota: req.body.nota }, { transaction });
-    return alumno.id;
-  });
-  res.json(await detalleAlumno(alumnoId));
+  const cuota = await sequelize.transaction((transaction) => registrarPago(req.params.id, req.body, transaction));
+  avisos.enSegundoPlano(avisos.avisarPagoConfirmado(cuota.id), 'el aviso de pago');
+  res.json(await detalleAlumno(cuota.alumnoId));
 });
 
 router.delete('/cuotas/:id/pago', conId, async (req, res) => {
@@ -256,6 +268,148 @@ router.get('/buscar', validar(v.buscar, 'query'), async (req, res) => {
       promo: { id: a.promo.id, colegio: a.promo.colegio, curso: a.promo.curso, anio: a.promo.anio },
       cuotaBuscada: codigo && codigo[4] ? Number(codigo[4]) : null,
     })));
+});
+
+// ---------- comprobantes de transferencia ----------
+const fechaAR = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(d);
+
+router.get('/comprobantes', validar(v.listarComprobantes, 'query'), async (req, res) => {
+  const lista = await EgrComprobante.findAll({
+    where: { estado: req.query.estado },
+    include: [{
+      model: EgrCuota,
+      as: 'cuota',
+      include: [{ model: EgrAlumno, as: 'alumno', include: [{ model: EgrPromo, as: 'promo' }] }],
+    }],
+    order: [['createdAt', req.query.estado === 'pendiente' ? 'ASC' : 'DESC']],
+    limit: 200,
+  });
+  const hoy = egr.hoyAR();
+  res.json(lista.map((c) => {
+    const { cuota } = c;
+    const { alumno } = cuota;
+    const { promo } = alumno;
+    const subidoEl = fechaAR(c.createdAt);
+    return {
+      id: c.id,
+      estado: c.estado,
+      motivoRechazo: c.motivoRechazo,
+      tipo: c.tipo,
+      nombreOriginal: c.nombreOriginal,
+      subidoEl: c.createdAt,
+      revisadoEl: c.revisadoEl,
+      cuota: {
+        ...egr.serializarCuota(promo, alumno, cuota, hoy),
+        // lo que corresponde cobrar según el día en que subió el comprobante
+        recargoAlSubir: egr.recargoDe(promo, { ...cuota.get(), estado: 'pendiente' }, subidoEl),
+        estadoReal: cuota.estado,
+      },
+      subidoElDia: subidoEl,
+      alumno: { id: alumno.id, nombre: alumno.nombre, codigo: egr.codigoAlumno(promo, alumno) },
+      promo: { id: promo.id, colegio: promo.colegio, curso: promo.curso, anio: promo.anio },
+    };
+  }));
+});
+
+router.get('/comprobantes/:id/archivo', conId, async (req, res) => {
+  enviarComprobante(res, await buscarOFallar(EgrComprobante, req.params.id, 'Comprobante no encontrado'));
+});
+
+router.post('/comprobantes/:id/aprobar', conId, validar(v.aprobarComprobante), async (req, res) => {
+  const cuota = await sequelize.transaction(async (transaction) => {
+    const comp = await buscarOFallar(EgrComprobante, req.params.id, 'Comprobante no encontrado', { transaction, lock: transaction.LOCK.UPDATE });
+    if (comp.estado !== 'pendiente') throw new AppError('Ese comprobante ya fue revisado', 409);
+    // Por defecto, la fecha de pago es el día en que la familia subió el comprobante
+    return registrarPago(comp.cuotaId, { medio: 'transferencia', fecha: req.body.fecha || fechaAR(comp.createdAt), cobrarRecargo: true }, transaction);
+  });
+  avisos.enSegundoPlano(avisos.avisarPagoConfirmado(cuota.id), 'el aviso de pago');
+  res.json(await detalleAlumno(cuota.alumnoId));
+});
+
+router.post('/comprobantes/:id/rechazar', conId, validar(v.rechazarComprobante), async (req, res) => {
+  const comp = await sequelize.transaction(async (transaction) => {
+    const c = await buscarOFallar(EgrComprobante, req.params.id, 'Comprobante no encontrado', { transaction, lock: transaction.LOCK.UPDATE });
+    if (c.estado !== 'pendiente') throw new AppError('Ese comprobante ya fue revisado', 409);
+    await c.update({ estado: 'rechazado', motivoRechazo: req.body.motivo, revisadoEl: new Date() }, { transaction });
+    await EgrCuota.update({ estado: 'pendiente' }, { where: { id: c.cuotaId, estado: 'informada' }, transaction });
+    return c;
+  });
+  avisos.enSegundoPlano(avisos.avisarComprobanteRechazado(comp), 'el aviso de rechazo');
+  const cuota = await EgrCuota.findByPk(comp.cuotaId);
+  res.json(await detalleAlumno(cuota.alumnoId));
+});
+
+// ---------- planillas (CSV para Excel) ----------
+function enviarCsv(res, nombre, columnas, filas) {
+  res.set({
+    'Content-Type': 'text/csv; charset=utf-8',
+    'Content-Disposition': `attachment; filename="${nombre}"`,
+    'Cache-Control': 'no-store',
+  });
+  res.send(generarCsv(columnas, filas));
+}
+
+const nombreArchivo = (promo, tipo) => `egresados-${promo.anio}-${promo.colegio}-${promo.curso}-${tipo}.csv`
+  .normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9.-]+/g, '-').toLowerCase();
+
+router.get('/promos/:id/exportar/:tipo', conId, async (req, res) => {
+  const promo = await buscarOFallar(EgrPromo, req.params.id, 'Promo no encontrada');
+  const alumnos = await alumnosDe(promo);
+
+  if (req.params.tipo === 'prendas') {
+    // Una fila por prenda elegida: para producción (corte, bordado, embolsado)
+    const filas = alumnos.flatMap((a) => a.selecciones.map((s) => ({ a, s })));
+    return enviarCsv(res, nombreArchivo(promo, 'prendas'), [
+      { titulo: 'Alumno', valor: (f) => f.a.nombre },
+      { titulo: 'Código', valor: (f) => f.a.codigo },
+      { titulo: 'Prenda', valor: (f) => f.s.prenda },
+      { titulo: 'Talle', valor: (f) => f.s.talle },
+      { titulo: 'Bordado', valor: (f) => f.s.bordado || '' },
+      { titulo: 'Cantidad', valor: (f) => f.s.cantidad },
+      { titulo: 'Cuota 1 paga', valor: (f) => (f.a.progreso.sena ? 'Sí' : 'No') },
+    ], filas);
+  }
+  if (req.params.tipo === 'talles') {
+    // Resumen para cortar: cantidad por prenda y talle
+    const conteo = new Map();
+    alumnos.forEach((a) => a.selecciones.forEach((s) => {
+      const clave = `${s.prenda}\u0000${s.talle}`;
+      conteo.set(clave, (conteo.get(clave) || 0) + s.cantidad);
+    }));
+    const prendas = await EgrPrenda.findAll({ where: { promoId: promo.id } });
+    const ordenTalle = (prenda, talle) => {
+      const p = prendas.find((x) => x.nombre === prenda);
+      return p ? p.talles.indexOf(talle) : 999;
+    };
+    const filas = [...conteo.entries()].map(([k, cantidad]) => {
+      const [prenda, talle] = k.split('\u0000');
+      return { prenda, talle, cantidad };
+    }).sort((a, b) => a.prenda.localeCompare(b.prenda) || ordenTalle(a.prenda, a.talle) - ordenTalle(b.prenda, b.talle));
+    return enviarCsv(res, nombreArchivo(promo, 'talles'), [
+      { titulo: 'Prenda', valor: (f) => f.prenda },
+      { titulo: 'Talle', valor: (f) => f.talle },
+      { titulo: 'Cantidad', valor: (f) => f.cantidad },
+    ], filas);
+  }
+  if (req.params.tipo === 'cobranza') {
+    return enviarCsv(res, nombreArchivo(promo, 'cobranza'), [
+      { titulo: 'Alumno', valor: (a) => a.nombre },
+      { titulo: 'Código', valor: (a) => a.codigo },
+      { titulo: 'DNI', valor: (a) => a.dni || '' },
+      { titulo: 'Adulto responsable', valor: (a) => a.responsableNombre || '' },
+      { titulo: 'WhatsApp', valor: (a) => a.responsableTelefono || '' },
+      { titulo: 'Email', valor: (a) => a.responsableEmail || '' },
+      { titulo: 'Plan', valor: (a) => (a.plan ? (a.plan === 1 ? 'Contado' : `${a.plan} cuotas`) : 'Sin elegir') },
+      { titulo: 'Total', valor: (a) => (a.progreso.plan ? a.totales.total : null) },
+      { titulo: 'Pagado', valor: (a) => a.totales.pagado },
+      { titulo: 'Saldo', valor: (a) => (a.progreso.plan ? a.totales.saldo : null) },
+      { titulo: 'Cuotas pagas', valor: (a) => a.cuotas.filter((c) => c.estado === 'pagada').length },
+      { titulo: 'Cuotas vencidas', valor: (a) => a.cuotas.filter((c) => c.estado === 'vencida').length },
+      { titulo: 'Comprobantes en revisión', valor: (a) => a.cuotas.filter((c) => c.estado === 'informada').length },
+      { titulo: 'Pendiente', valor: (a) => a.pendientes.join(' · ') },
+    ], alumnos);
+  }
+  throw new AppError('Planilla desconocida (prendas, talles o cobranza)', 404);
 });
 
 // ---------- recordatorios por mail ----------

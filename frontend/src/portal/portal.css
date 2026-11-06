@@ -479,3 +479,19 @@ body { background: var(--color-fondo); }
   .tb-anillo b { font-size: 1.8rem; }
   .tb-quien { display: none; }
 }
+
+/* Comprobantes (entrega 3) */
+.pf-cupon.revision { border-color: #2D6CDF; background: #EEF3FD; }
+.pf-estado.revision { background: #2D6CDF; color: #fff; }
+.pf-cupon.revision .pf-cupon-importe { color: #2D6CDF; }
+.pf-cupon-acciones { display: grid; gap: 6px; justify-items: end; }
+.pf-subir { display: grid; gap: 4px; justify-items: end; }
+.pf-subir .btn { cursor: pointer; }
+.pf-subir .btn.deshabilitado { opacity: 0.6; pointer-events: none; }
+.pf-subir:focus-within .btn { outline: 3px solid var(--color-texto); outline-offset: 2px; }
+.pf-rechazo { color: var(--color-error); font-size: var(--texto-sm); font-weight: 600; }
+.pf-etapa { background: rgba(200, 245, 60, 0.18); color: #E4FFA0; }
+@media (max-width: 720px) {
+  .pf-cupon-acciones { grid-column: 1 / -1; justify-items: start; }
+  .pf-subir { justify-items: start; }
+}

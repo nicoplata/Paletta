@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { EGRESADOS, fecha, formatearDni, linkWhatsApp, nombrePlan, pesos, previsualizarPlan } from './utils';
+import { EGRESADOS, fecha, formatearDni, nombrePlan, pesos, previsualizarPlan } from './utils';
 
 const Aviso = ({ tipo = 'error', children }) => (children ? <p className={`aviso ${tipo}`} role={tipo === 'error' ? 'alert' : 'status'}>{children}</p> : null);
 
@@ -234,11 +234,39 @@ const Copiar = ({ texto, etiqueta }) => {
 
 const ESTADOS = {
   pagada: { texto: 'Pagada', clase: 'ok' },
+  informada: { texto: 'En revisión', clase: 'revision' },
   pendiente: { texto: 'Pendiente', clase: '' },
   vencida: { texto: 'Vencida', clase: 'vencida' },
 };
 
-export const PasoCuponera = ({ vista, irA }) => {
+const TIPOS_COMPROBANTE = 'application/pdf,image/jpeg,image/png,image/webp';
+
+const SubirComprobante = ({ cuota, subir }) => {
+  const [estado, setEstado] = useState({ subiendo: false, error: '' });
+  const elegir = async (e) => {
+    const archivo = e.target.files?.[0];
+    e.target.value = '';
+    if (!archivo) return;
+    if (archivo.size > 6 * 1024 * 1024) {
+      setEstado({ subiendo: false, error: 'El archivo supera los 6 MB. Probá con una captura de pantalla.' });
+      return;
+    }
+    setEstado({ subiendo: true, error: '' });
+    const error = await subir(cuota.id, archivo);
+    setEstado({ subiendo: false, error });
+  };
+  return (
+    <div className="pf-subir">
+      <label className={`btn btn-sm${estado.subiendo ? ' deshabilitado' : ''}`}>
+        {estado.subiendo ? 'Subiendo…' : 'Subir comprobante'}
+        <input type="file" accept={TIPOS_COMPROBANTE} onChange={elegir} disabled={estado.subiendo} className="sr-only" aria-label={`Subir comprobante de la cuota ${cuota.numero}`} />
+      </label>
+      {estado.error && <span className="pf-rechazo" role="alert">{estado.error}</span>}
+    </div>
+  );
+};
+
+export const PasoCuponera = ({ vista, irA, subirComprobante, verComprobante }) => {
   const { alumno, promo, cuenta } = vista;
   if (!alumno.cuotas.length) {
     return (
@@ -268,6 +296,7 @@ export const PasoCuponera = ({ vista, irA }) => {
       <ol className="pf-cupones">
         {alumno.cuotas.map((c) => {
           const e = ESTADOS[c.estado];
+          const rechazado = c.comprobante?.estado === 'rechazado' && c.estado !== 'pagada' && c.estado !== 'informada';
           return (
             <li key={c.id} className={`pf-cupon ${e.clase}`}>
               <div className="pf-cupon-n"><small>Cuota</small><b>{c.numero}</b><small>de {Math.max(alumno.plan, alumno.cuotas.length)}</small></div>
@@ -275,23 +304,22 @@ export const PasoCuponera = ({ vista, irA }) => {
                 <span className={`pf-estado ${e.clase}`}>{e.texto}</span>
                 <b className="pf-cupon-importe">{pesos(c.aPagar)}</b>
                 <span>
-                  {c.estado === 'pagada'
-                    ? `Pagada el ${fecha(c.pagadaEl)}${c.medio ? ` · ${c.medio}` : ''}`
-                    : `Vence el ${fecha(c.vencimiento)}`}
+                  {c.estado === 'pagada' && `Pagada el ${fecha(c.pagadaEl)}${c.medio ? ` · ${c.medio}` : ''}`}
+                  {c.estado === 'informada' && `Recibimos tu comprobante${c.comprobante ? ` el ${new Date(c.comprobante.subidoEl).toLocaleDateString('es-AR')}` : ''}: te avisamos cuando lo confirmemos.`}
+                  {(c.estado === 'pendiente' || c.estado === 'vencida') && `Vence el ${fecha(c.vencimiento)}`}
                   {c.recargo > 0 && c.estado !== 'pagada' ? ` · incluye ${pesos(c.recargo)} de recargo` : ''}
                 </span>
                 <span className="pf-codigo"><code>{c.codigo}</code>{c.estado !== 'pagada' && <Copiar texto={c.codigo} etiqueta={`código de la cuota ${c.numero}`} />}</span>
+                {rechazado && <span className="pf-rechazo" role="status">No pudimos confirmar el comprobante: {c.comprobante.motivoRechazo}. Subí uno nuevo.</span>}
               </div>
-              {c.estado !== 'pagada' && (
-                <a
-                  className="btn btn-secundario btn-sm pf-cupon-wa"
-                  href={linkWhatsApp(`¡Hola Paletta! Pagué la cuota ${c.numero} de ${alumno.nombre} (código ${c.codigo}). Te mando el comprobante:`)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Avisar que pagué
-                </a>
-              )}
+              <div className="pf-cupon-acciones">
+                {(c.estado === 'pendiente' || c.estado === 'vencida') && (
+                  <SubirComprobante cuota={c} subir={subirComprobante} />
+                )}
+                {c.comprobante && c.comprobante.estado !== 'rechazado' && (
+                  <button type="button" className="pf-link" onClick={() => verComprobante(c.comprobante.id)}>Ver comprobante</button>
+                )}
+              </div>
             </li>
           );
         })}
@@ -310,7 +338,7 @@ export const PasoCuponera = ({ vista, irA }) => {
               {cuenta.banco && <><dt>Banco</dt><dd>{cuenta.banco}</dd></>}
             </dl>
           ) : <p className="pf-tenue">Pedinos los datos por WhatsApp.</p>}
-          <p className="pf-tenue">Poné el <b>código de la cuota</b> en el concepto y avisanos con el botón “Avisar que pagué”.</p>
+          <p className="pf-tenue">Poné el <b>código de la cuota</b> en el concepto. Después, subí el comprobante con el botón de la cuota: lo revisamos y te avisamos por mail.</p>
         </div>
         <div className="pf-medio">
           <p className="eyebrow">Efectivo en el local</p>

@@ -8,3 +8,6 @@ logs
 # Archivos subidos por el admin (viven en el servidor, no en git)
 public/uploads/*
 !public/uploads/.gitkeep
+
+# Archivos privados (comprobantes de pago)
+private/

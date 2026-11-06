@@ -8,6 +8,7 @@ process.env.NODE_ENV = 'test';
 process.env.DB_NAME = process.env.TEST_DB_NAME || 'paletta_test';
 process.env.JWT_SECRET = 'secreto-de-tests-con-mas-de-32-caracteres!!';
 process.env.UPLOADS_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'paletta-uploads-'));
+process.env.PRIVADO_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'paletta-privado-'));
 delete process.env.MAIL_HOST; // nunca enviar mails desde los tests
 
 const request = require('supertest');
@@ -53,6 +54,7 @@ async function crearCatalogoBase() {
 async function cerrar() {
   await db.sequelize.close();
   fs.rmSync(process.env.UPLOADS_DIR, { recursive: true, force: true });
+  fs.rmSync(process.env.PRIVADO_DIR, { recursive: true, force: true });
 }
 
 // PNG mínimo válido (1x1) para probar subidas

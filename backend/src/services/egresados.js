@@ -1,6 +1,6 @@
 // Lógica del backoffice de egresados: totales, plan de cuotas, recargos, códigos y avance de cada alumno.
 const crypto = require('crypto');
-const { sequelize, Configuracion, EgrPromo, EgrPrenda, EgrAlumno, EgrSeleccion, EgrCuota } = require('../models');
+const { sequelize, Configuracion, EgrPromo, EgrPrenda, EgrAlumno, EgrSeleccion, EgrCuota, EgrComprobante } = require('../models');
 const { AppError } = require('../utils/errorHandler');
 
 const CLAVE_CUENTA = 'egresados.cuenta';
@@ -46,6 +46,7 @@ function totalesAlumno(promo, alumno, selecciones) {
 
 function recargoDe(promo, cuota, hoy = hoyAR()) {
   if (cuota.estado === 'pagada') return cuota.recargo || 0;
+  if (cuota.estado === 'informada') return 0; // se calcula con la fecha del comprobante al confirmarlo
   if (!(cuota.vencimiento < hoy) || !promo.recargoTipo || !promo.recargoValor) return 0;
   return promo.recargoTipo === 'porcentaje'
     ? redondear(cuota.importe * (promo.recargoValor / 100))
@@ -53,13 +54,17 @@ function recargoDe(promo, cuota, hoy = hoyAR()) {
 }
 
 const estadoCuota = (cuota, hoy = hoyAR()) => {
-  if (cuota.estado === 'pagada') return 'pagada';
+  if (cuota.estado === 'pagada' || cuota.estado === 'informada') return cuota.estado;
   return cuota.vencimiento < hoy ? 'vencida' : 'pendiente';
 };
 
 function serializarCuota(promo, alumno, cuota, hoy = hoyAR()) {
   const recargo = recargoDe(promo, cuota, hoy);
+  const ultimo = (cuota.comprobantes || []).slice().sort((a, b) => b.id - a.id)[0];
   return {
+    comprobante: ultimo ? {
+      id: ultimo.id, estado: ultimo.estado, motivoRechazo: ultimo.motivoRechazo, subidoEl: ultimo.createdAt, tipo: ultimo.tipo,
+    } : null,
     id: cuota.id,
     numero: cuota.numero,
     codigo: codigoCuota(promo, alumno, cuota.numero),
@@ -78,7 +83,8 @@ const datosCompletos = (a) => Boolean(a.dni && a.responsableNombre && a.responsa
 
 function bloqueos(promo, cuotas, hoy = hoyAR()) {
   const cerrado = Boolean(promo.fechaCierre && promo.fechaCierre < hoy);
-  const conPagos = cuotas.some((c) => c.estado === 'pagada');
+  // Con un pago (o un comprobante en revisión) el pedido queda confirmado
+  const conPagos = cuotas.some((c) => c.estado !== 'pendiente');
   const puedeEditarPedido = promo.activo && !cerrado && !conPagos;
   return { cerrado, conPagos, puedeEditarPedido };
 }
@@ -117,7 +123,8 @@ async function regenerarCuotas(alumnoId, { transaction, hoy = hoyAR() } = {}) {
   const promo = await EgrPromo.findByPk(alumno.promoId, { transaction });
   const selecciones = await EgrSeleccion.findAll({ where: { alumnoId }, transaction });
   const cuotas = await EgrCuota.findAll({ where: { alumnoId }, order: [['numero', 'ASC']], transaction });
-  const pagadas = cuotas.filter((c) => c.estado === 'pagada');
+  // Las cuotas pagadas o con comprobante en revisión no se tocan
+  const pagadas = cuotas.filter((c) => c.estado !== 'pendiente');
 
   await EgrCuota.destroy({ where: { alumnoId, estado: 'pendiente' }, transaction });
   if (!alumno.plan || selecciones.length === 0) return;
@@ -165,7 +172,7 @@ async function cargarAlumno(alumnoId, transaction) {
     include: [
       { model: EgrPromo, as: 'promo' },
       { model: EgrSeleccion, as: 'selecciones', include: [{ model: EgrPrenda, as: 'prenda' }] },
-      { model: EgrCuota, as: 'cuotas' },
+      { model: EgrCuota, as: 'cuotas', include: [{ model: EgrComprobante, as: 'comprobantes' }] },
     ],
     order: [[{ model: EgrSeleccion, as: 'selecciones' }, 'id', 'ASC'], [{ model: EgrCuota, as: 'cuotas' }, 'numero', 'ASC']],
     transaction,
@@ -224,6 +231,7 @@ const serializarPromoPublica = (promo, prendas = []) => ({
   primerVencimiento: promo.primerVencimiento,
   fechaCierre: promo.fechaCierre,
   estadoProduccion: promo.estadoProduccion,
+  fechaEntrega: promo.fechaEntrega,
   prendas: prendas.filter((p) => p.activo).sort((a, b) => a.orden - b.orden || a.id - b.id).map((p) => ({
     id: p.id, nombre: p.nombre, descripcion: p.descripcion, precio: p.precio, talles: p.talles, conBordado: p.conBordado,
   })),

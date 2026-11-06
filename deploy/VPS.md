@@ -235,6 +235,15 @@ cd /var/www/paletta/backend && npm run mail:prueba
 
 El comando muestra la configuración que lee, envía un mail de prueba a `CONTACT_TO` y, si falla, el motivo.
 
+**Comprobantes de transferencia:** las familias los suben desde la cuponera (PDF o imagen, hasta 6 MB) y se
+revisan en el panel → *Egresados* → *Comprobantes*. Se guardan en `backend/private/comprobantes`, que **no** se
+sirve como archivo público: solo se ven desde el panel o por la familia dueña. `deploy/backup.sh` los incluye
+(`privado_FECHA.tar.gz`). Para que entren archivos de hasta 6 MB, el bloque `/api/egresados/` del nginx de egresados
+tiene que tener `client_max_body_size 7m;` (está en `deploy/nginx-egresados.conf` del repo de egresados).
+
+**Avisos a las familias:** al pasar una promo a *En producción*, *Listo para entregar* o *Entregado*, y al confirmar
+o rechazar un pago, las familias con email reciben un mail (uno por evento, sin repetir).
+
 ## Actualizaciones
 
 ```bash

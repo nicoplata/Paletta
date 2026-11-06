@@ -67,6 +67,21 @@ const PromoEgresadosAdmin = () => {
     }
   };
 
+  const descargar = async (tipo) => {
+    try {
+      const { data, headers } = await api.get(`/admin/egresados/promos/${id}/exportar/${tipo}`, { responseType: 'blob' });
+      const nombre = /filename="([^"]+)"/.exec(headers['content-disposition'] || '')?.[1] || `egresados-${tipo}.csv`;
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombre;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      showToast(mensajeError(err, 'No se pudo descargar la planilla'), 'error');
+    }
+  };
+
   const regenerarComision = async () => {
     if (!window.confirm('¿Generar un link nuevo? El link actual de la comisión deja de funcionar.')) return;
     try {
@@ -189,6 +204,16 @@ const PromoEgresadosAdmin = () => {
         <div><span>Cobrado</span><b>{pesos(r.cobrado)}</b></div>
         <div><span>Total comprometido</span><b>{pesos(r.total)}</b></div>
       </Cifras>
+
+      <Seccion>
+        <h2>Planillas (Excel)</h2>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button type="button" onClick={() => descargar('talles')} title="Cantidad por prenda y talle, para cortar">Talles por prenda</Button>
+          <Button type="button" onClick={() => descargar('prendas')} title="Una fila por prenda con alumno, talle y bordado">Prendas y bordados por alumno</Button>
+          <Button type="button" onClick={() => descargar('cobranza')} title="Plan, pagado, saldo, cuotas vencidas y contacto de cada familia">Cobranza</Button>
+        </div>
+        <Hint style={{ marginTop: 8 }}>Al pasar la promo a “En producción”, “Listo para entregar” o “Entregado”, las familias con email reciben un aviso.</Hint>
+      </Seccion>
 
       <Seccion>
         <h2>Configuración</h2>

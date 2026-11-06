@@ -7,7 +7,8 @@ module.exports = (sequelize) => {
     numero: { type: DataTypes.INTEGER, allowNull: false },
     importe: dinero('importe', { allowNull: false }),
     vencimiento: { type: DataTypes.DATEONLY, allowNull: false },
-    estado: { type: DataTypes.ENUM('pendiente', 'pagada'), allowNull: false, defaultValue: 'pendiente' },
+    // informada = la familia subió un comprobante y Paletta lo está revisando
+    estado: { type: DataTypes.ENUM('pendiente', 'informada', 'pagada'), allowNull: false, defaultValue: 'pendiente' },
     pagadaEl: { type: DataTypes.DATEONLY },
     medio: { type: DataTypes.ENUM('efectivo', 'transferencia') },
     // Recargo efectivamente cobrado (se fija al registrar el pago)
@@ -17,6 +18,7 @@ module.exports = (sequelize) => {
 
   EgrCuota.associate = (m) => {
     EgrCuota.belongsTo(m.EgrAlumno, { foreignKey: 'alumnoId', as: 'alumno' });
+    EgrCuota.hasMany(m.EgrComprobante, { foreignKey: 'cuotaId', as: 'comprobantes' });
   };
   return EgrCuota;
 };

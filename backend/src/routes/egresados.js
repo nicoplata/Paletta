@@ -1,10 +1,12 @@
 // Portal de familias de egresados (egresados.paletta.com.ar/mi-promo/<slug>).
 const express = require('express');
 const { Op } = require('sequelize');
-const { sequelize, EgrPromo, EgrAlumno } = require('../models');
+const fs = require('fs');
+const { sequelize, EgrPromo, EgrAlumno, EgrCuota, EgrComprobante } = require('../models');
 const validar = require('../middleware/validator');
 const v = require('../validators/egresados');
-const { ingresoEgresadosLimiter } = require('../middleware/rateLimiter');
+const { ingresoEgresadosLimiter, comprobantesLimiter } = require('../middleware/rateLimiter');
+const { recibirComprobante, enviarComprobante } = require('../middleware/comprobante');
 const { firmarTokenFamilia, verificarFamilia } = require('../middleware/authFamilia');
 const { AppError } = require('../utils/errorHandler');
 const egr = require('../services/egresados');
@@ -134,6 +136,37 @@ router.put('/mi-promo/prendas', verificarFamilia, validar(v.prendas), async (req
 router.put('/mi-promo/plan', verificarFamilia, validar(v.plan), async (req, res) => {
   await egr.elegirPlan(req.alumno.id, req.body.plan);
   res.json(await egr.vistaFamilia(req.alumno.id));
+});
+
+// 🔐 Familia: subir el comprobante de una transferencia (la cuota queda "en revisión")
+router.post('/mi-promo/cuotas/:id/comprobante', verificarFamilia, comprobantesLimiter, validar(v.idParam, 'params'), recibirComprobante, async (req, res) => {
+  try {
+    await sequelize.transaction(async (transaction) => {
+      const cuota = await EgrCuota.findOne({ where: { id: req.params.id, alumnoId: req.alumno.id }, transaction, lock: transaction.LOCK.UPDATE });
+      if (!cuota) throw new AppError('No encontramos esa cuota', 404);
+      if (cuota.estado === 'pagada') throw new AppError('Esa cuota ya figura como paga.', 409);
+      if (cuota.estado === 'informada') throw new AppError('Ya hay un comprobante en revisión para esa cuota.', 409);
+      await EgrComprobante.create({
+        cuotaId: cuota.id,
+        archivo: req.file.filename,
+        nombreOriginal: req.file.originalname.slice(0, 200),
+        tipo: req.file.mimetype,
+        tamano: req.file.size,
+      }, { transaction });
+      await cuota.update({ estado: 'informada' }, { transaction });
+    });
+  } catch (err) {
+    fs.rmSync(req.file.path, { force: true });
+    throw err;
+  }
+  res.status(201).json(await egr.vistaFamilia(req.alumno.id));
+});
+
+// 🔐 Familia: ver un comprobante propio
+router.get('/mi-promo/comprobantes/:id/archivo', verificarFamilia, validar(v.idParam, 'params'), async (req, res) => {
+  const comprobante = await EgrComprobante.findByPk(req.params.id, { include: [{ model: EgrCuota, as: 'cuota', attributes: ['alumnoId'] }] });
+  if (!comprobante || comprobante.cuota.alumnoId !== req.alumno.id) throw new AppError('Comprobante no encontrado', 404);
+  enviarComprobante(res, comprobante);
 });
 
 module.exports = router;
