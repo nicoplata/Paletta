@@ -9,16 +9,15 @@ const Footer = () => (
       <div className="footer-marca">
         <Link to="/" className="footer-logo">
           <img src={isotipo} alt="" width="40" height="32" loading="lazy" />
-          Paletta
+          Paletta <span className="footer-tag">Uniformes</span>
         </Link>
-        <p>Uniformes escolares, egresados y empresas. Fabricación propia en Munro, Vicente López.</p>
+        <p>Uniformes escolares, institucionales y de empresa. Fabricación propia en Munro, Vicente López.</p>
       </div>
       <nav aria-label="Secciones">
         <h3>Navegá</h3>
         <ul>
           <li><Link to="/productos">Productos</Link></li>
           <li><Link to="/colegios">Colegios</Link></li>
-          <li><Link to="/egresados">Egresados</Link></li>
           <li><Link to="/contacto">Contacto</Link></li>
         </ul>
       </nav>
@@ -32,17 +31,18 @@ const Footer = () => (
         </address>
       </div>
       <div>
-        <h3>Redes</h3>
+        <h3>Seguinos</h3>
         <ul>
           <li><a href={CONTACTO.instagramUniformes} target="_blank" rel="noopener noreferrer">@paletta.uniformes</a></li>
-          <li><a href={CONTACTO.instagramEgresados} target="_blank" rel="noopener noreferrer">@paletta.egresados</a></li>
-          <li><a href={CONTACTO.sitioEgresados}>Paletta Egresados</a></li>
+        </ul>
+        <h3 className="footer-hermano">¿Sos de la promo?</h3>
+        <ul>
+          <li><a href={CONTACTO.sitioEgresados}>Paletta Egresados ↗</a></li>
         </ul>
       </div>
     </div>
     <div className="footer-legal">
-      <span>© {new Date().getFullYear()} Paletta. Hecho en Munro.</span>
-      <span>{CONTACTO.direccion}</span>
+      <span>© {new Date().getFullYear()} Paletta Uniformes. Hecho en Munro.</span>
     </div>
   </footer>
 );

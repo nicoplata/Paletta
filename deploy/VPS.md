@@ -179,6 +179,14 @@ location @spa {
 }
 ```
 
+Y para que la vieja página `/egresados` lleve al sitio de egresados (redirección permanente):
+
+```nginx
+location ~ ^/egresados/?$ {
+    return 301 https://egresados.paletta.com.ar/;
+}
+```
+
 Después: `sudo nginx -t && sudo systemctl reload nginx`. Si el backend se cae, esas páginas siguen funcionando
 con el `index.html` normal.
 

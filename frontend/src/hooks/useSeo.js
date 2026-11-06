@@ -4,9 +4,9 @@ import { useEffect } from 'react';
 export const SITE_URL = (import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/$/, '');
 
 export const SEO_DEFAULT = {
-  tituloSitio: 'Paletta',
-  titulo: 'Paletta - Uniformes Escolares y Egresados',
-  descripcion: 'Paletta - Indumentaria deportiva y urbana para egresados, colegios y empresas. Uniformes escolares, buzos y camperas de egresados en Munro, Buenos Aires.',
+  tituloSitio: 'Paletta Uniformes',
+  titulo: 'Paletta Uniformes - Uniformes escolares en Munro',
+  descripcion: 'Paletta Uniformes: uniformes escolares, institucionales y de empresa con fabricación propia en Munro, Vicente López. Elegí tu colegio y encontrá cada prenda.',
   imagen: '/img/og-paletta.jpg',
 };
 

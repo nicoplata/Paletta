@@ -208,11 +208,11 @@
   font-size: var(--texto-2xl);
 }
 
-/* --- Bloque Egresados (bordó) --- */
+/* --- Enlace al sitio de egresados (bordó, compacto) --- */
 .egresados {
   background: var(--color-primario);
   color: var(--color-sobre-primario);
-  padding: var(--esp-seccion) var(--gutter);
+  padding: clamp(36px, 5vw, 64px) var(--gutter);
 }
 
 .egresados-interior {
@@ -220,7 +220,7 @@
   margin: 0 auto;
   display: flex;
   flex-wrap: wrap;
-  gap: 24px 48px;
+  gap: 20px 48px;
   align-items: center;
   justify-content: space-between;
 }
@@ -229,76 +229,20 @@
   background: var(--color-sobre-primario);
 }
 
-.egresados h2,
-.egresados h1 {
-  font-size: var(--texto-2xl);
-  max-width: 14ch;
-  margin-top: var(--esp-3);
+.egresados h2 {
+  font-family: var(--fuente-display);
+  font-weight: 800;
+  font-stretch: 88%;
+  font-size: var(--texto-xl);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin-top: var(--esp-2);
 }
 
 .egresados p {
   max-width: 52ch;
-  margin-top: var(--esp-4);
-  font-size: var(--texto-lg);
+  margin-top: var(--esp-2);
   opacity: 0.92;
-}
-
-.egresados-acciones {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-/* En su propia página, el bloque arranca debajo del header */
-.pagina-egresados .egresados {
-  padding-top: calc(var(--header-alto) + var(--esp-seccion));
-}
-
-.egresados-lista {
-  max-width: calc(var(--ancho-max) + 2 * var(--gutter));
-  margin: 0 auto;
-  padding: var(--esp-seccion) var(--gutter) 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
-  gap: 20px;
-  list-style: none;
-}
-
-.egresados-lista li {
-  background: var(--color-superficie);
-  border: 1px solid var(--color-borde);
-  border-radius: var(--radio-lg);
-  padding: 24px;
-}
-
-.egresados-lista .numero {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--color-primario);
-  color: var(--color-sobre-primario);
-  font: 800 1.1rem var(--fuente-display);
-  margin-bottom: var(--esp-4);
-}
-
-.egresados-lista h3 {
-  font-family: var(--fuente-display);
-  font-weight: 800;
-  font-stretch: 88%;
-  font-size: 1.5rem;
-  letter-spacing: -0.03em;
-  margin-bottom: var(--esp-2);
-}
-
-.egresados-lista p {
-  color: var(--color-texto-tenue);
-}
-
-.egresados-cta {
-  text-align: center;
-  padding: var(--esp-12) var(--gutter) var(--esp-seccion);
 }
 
 /* --- Contacto --- */
@@ -447,6 +391,21 @@
   background: var(--hueso);
   border-radius: 10px;
   padding: 4px;
+}
+
+.footer-tag {
+  align-self: flex-end;
+  margin-bottom: 4px;
+  font-family: var(--fuente);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-primario-vivo);
+}
+
+.footer .footer-hermano {
+  margin-top: 22px;
 }
 
 .footer-marca p {

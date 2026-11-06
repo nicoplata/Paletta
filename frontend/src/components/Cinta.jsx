@@ -1,6 +1,6 @@
 import '../styles/Secciones.css';
 
-const ITEMS = ['Uniformes', 'Egresados', 'Hecho en Munro', 'Colegios', 'Empresas'];
+const ITEMS = ['Uniformes escolares', 'Hecho en Munro', 'Colegios', 'Instituciones', 'Empresas'];
 
 // Marquesina decorativa (se duplica el grupo para que el desplazamiento sea continuo)
 const Cinta = () => (

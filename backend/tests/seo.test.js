@@ -72,7 +72,7 @@ describe('SEO', () => {
     assert.equal(res.status, 200);
     assert.match(res.headers['content-type'], /html/);
     assert.equal(res.headers['content-security-policy'], undefined);
-    assert.match(res.text, /<title>Campera &lt;Egresados&gt; &quot;2026&quot; - San Martín \| Paletta<\/title>/);
+    assert.match(res.text, /<title>Campera &lt;Egresados&gt; &quot;2026&quot; - San Martín \| Paletta Uniformes<\/title>/);
     assert.match(meta(res.text, 'description'), /del San Martín\. Campera bordada/);
     assert.equal(meta(res.text, 'og:image'), 'https://www.paletta.com.ar/uploads/campera.jpg');
     assert.equal(meta(res.text, 'og:type'), 'product');
@@ -107,7 +107,7 @@ describe('SEO', () => {
   it('la página de colegio usa su nombre y sus productos', async () => {
     const res = await request(app).get(`/colegios/${colegio.id}/productos`);
     assert.equal(res.status, 200);
-    assert.match(res.text, /<title>Uniformes San Martín \| Paletta<\/title>/);
+    assert.match(res.text, /<title>Uniformes San Martín \| Paletta Uniformes<\/title>/);
     assert.match(meta(res.text, 'description'), /Campera/);
   });
 
