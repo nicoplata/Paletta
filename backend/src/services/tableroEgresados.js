@@ -1,6 +1,7 @@
 // Tablero de la comisión: etapas de la promo, avance, pendientes por alumno y logros.
 // Muestra nombres y estados, nunca DNI, datos de contacto ni montos de las familias.
-const { EgrAlumno, EgrSeleccion, EgrCuota } = require('../models');
+const { EgrAlumno, EgrSeleccion, EgrCuota, EgrDiseno } = require('../models');
+const { serializarDiseno } = require('./disenosEgresados');
 const ENV = require('../config/env');
 const { hoyAR, progreso, estadoCuota, datosCompletos } = require('./egresados');
 
@@ -147,6 +148,8 @@ async function tableroComision(promo, { hoy = hoyAR(), publico = false } = {}) {
     pagos: publico ? { ...pagos, pendientes: [] } : pagos,
     logros,
     puedeAprobarDiseno: cargaCompleta && !disenoAprobado,
+    // Diseños de la promo (armados en el diseñador): los ve la comisión al aprobar el diseño final
+    disenos: (await EgrDiseno.findAll({ where: { promoId: promo.id }, order: [['createdAt', 'DESC']], limit: 4 })).map(serializarDiseno),
   };
 }
 

@@ -1,7 +1,7 @@
 // Panel: gestión de promos de egresados, prendas, alumnos y cobranza.
 const express = require('express');
 const { Op } = require('sequelize');
-const { sequelize, EgrPromo, EgrPrenda, EgrAlumno, EgrSeleccion, EgrCuota, EgrComprobante } = require('../models');
+const { sequelize, EgrPromo, EgrPrenda, EgrAlumno, EgrSeleccion, EgrCuota, EgrComprobante, EgrDiseno, EgrPresupuesto } = require('../models');
 const { soloAdmin } = require('../middleware/auth');
 const validar = require('../middleware/validator');
 const v = require('../validators/egresados');
@@ -15,6 +15,7 @@ const crypto = require('crypto');
 const { enviarComprobante } = require('../middleware/comprobante');
 const { generarCsv } = require('../utils/csv');
 const avisos = require('../services/mailsEgresados');
+const { serializarDiseno } = require('../services/disenosEgresados');
 
 const nuevoTokenComision = () => crypto.randomBytes(16).toString('base64url');
 
@@ -84,13 +85,19 @@ router.get('/promos', async (req, res) => {
 router.post('/promos', validar(v.promoNueva), async (req, res) => {
   vacioANull(req.body, ['fechaCierre', 'fechaEntrega']);
   if (req.body.codigo) await codigoLibre(req.body.codigo);
+  const { presupuestoId, ...datosPromo } = req.body;
+  const presupuesto = presupuestoId ? await buscarOFallar(EgrPresupuesto, presupuestoId, 'Pedido de presupuesto no encontrado') : null;
   const promo = await EgrPromo.create({
-    ...req.body,
+    ...datosPromo,
     codigo: req.body.codigo || await egr.generarCodigo(req.body.anio),
     slug: egr.generarSlug(),
     comisionToken: nuevoTokenComision(),
     comisionClave: egr.generarClaveComision(),
   });
+  if (presupuesto) {
+    await presupuesto.update({ promoId: promo.id, estado: 'convertido' });
+    if (presupuesto.disenoId) await EgrDiseno.update({ promoId: promo.id }, { where: { id: presupuesto.disenoId } });
+  }
   res.status(201).json(conLinks(promo));
 });
 
@@ -99,7 +106,8 @@ router.get('/promos/:id', conId, async (req, res) => {
   const prendas = await EgrPrenda.findAll({ where: { promoId: promo.id }, order: [['orden', 'ASC'], ['id', 'ASC']] });
   const alumnos = await alumnosDe(promo);
   const tablero = await tableroComision(promo);
-  res.json({ ...conLinks(promo), prendas, alumnos, resumen: resumenPromo(alumnos), tablero: { porcentaje: tablero.porcentaje, etapas: tablero.etapas, mensaje: tablero.mensaje } });
+  const disenos = await EgrDiseno.findAll({ where: { promoId: promo.id }, order: [['createdAt', 'DESC']] });
+  res.json({ ...conLinks(promo), disenos: disenos.map(serializarDiseno), prendas, alumnos, resumen: resumenPromo(alumnos), tablero: { porcentaje: tablero.porcentaje, etapas: tablero.etapas, mensaje: tablero.mensaje } });
 });
 
 router.put('/promos/:id', conId, validar(v.promoEdicion), async (req, res) => {
@@ -432,6 +440,41 @@ router.get('/promos/:id/exportar/:tipo', conId, async (req, res) => {
     ], alumnos);
   }
   throw new AppError('Planilla desconocida (prendas, talles o cobranza)', 404);
+});
+
+// ---------- diseños y pedidos de presupuesto (diseñador de egresados) ----------
+const incluirPedido = [
+  { model: EgrDiseno, as: 'diseno' },
+  { model: EgrPromo, as: 'promo', attributes: ['id', 'codigo', 'colegio', 'curso', 'anio'] },
+];
+
+router.get('/presupuestos', validar(v.listarPresupuestos, 'query'), async (req, res) => {
+  const where = req.query.estado === 'todos' ? {} : { estado: req.query.estado };
+  const lista = await EgrPresupuesto.findAll({ where, include: incluirPedido, order: [['createdAt', 'DESC']], limit: 300 });
+  res.json(lista.map((p) => ({ ...p.toJSON(), diseno: p.diseno ? serializarDiseno(p.diseno) : null })));
+});
+
+router.patch('/presupuestos/:id', conId, validar(v.presupuestoAdmin), async (req, res) => {
+  const p = await buscarOFallar(EgrPresupuesto, req.params.id, 'Pedido de presupuesto no encontrado');
+  await p.update(req.body);
+  res.json(p);
+});
+
+// Adjunta a la promo un diseño guardado (por ejemplo, uno que mandaron por WhatsApp con su link)
+router.post('/promos/:id/disenos', conId, validar(v.adjuntarDiseno), async (req, res) => {
+  const promo = await buscarOFallar(EgrPromo, req.params.id, 'Promo no encontrada');
+  const codigo = req.body.codigo.trim().split('/').pop().toLowerCase();
+  const diseno = await EgrDiseno.findOne({ where: { codigo } });
+  if (!diseno) throw new AppError('No encontramos ese diseño. Pegá el link (…/d/xxxxxxxx) o su código.', 404);
+  await diseno.update({ promoId: promo.id });
+  res.status(201).json(serializarDiseno(diseno));
+});
+
+router.delete('/promos/:id/disenos/:codigo', conId, async (req, res) => {
+  const diseno = await EgrDiseno.findOne({ where: { codigo: String(req.params.codigo), promoId: req.params.id } });
+  if (!diseno) throw new AppError('Ese diseño no está en la promo', 404);
+  await diseno.update({ promoId: null });
+  res.json({ mensaje: 'Diseño quitado de la promo' });
 });
 
 // ---------- recordatorios por mail ----------

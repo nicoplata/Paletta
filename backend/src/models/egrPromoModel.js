@@ -54,6 +54,7 @@ module.exports = (sequelize) => {
   EgrPromo.associate = (m) => {
     EgrPromo.hasMany(m.EgrPrenda, { foreignKey: 'promoId', as: 'prendas' });
     EgrPromo.hasMany(m.EgrAlumno, { foreignKey: 'promoId', as: 'alumnos' });
+    EgrPromo.hasMany(m.EgrDiseno, { foreignKey: 'promoId', as: 'disenos' });
   };
   return EgrPromo;
 };

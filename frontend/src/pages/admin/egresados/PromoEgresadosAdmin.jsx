@@ -37,6 +37,7 @@ const PromoEgresadosAdmin = () => {
   const [errorPrenda, setErrorPrenda] = useState('');
   const [nombres, setNombres] = useState('');
   const [filtro, setFiltro] = useState('todos');
+  const [linkDiseno, setLinkDiseno] = useState('');
 
   const alumnos = useMemo(() => (promo ? promo.alumnos.filter(FILTROS[filtro].f) : []), [promo, filtro]);
 
@@ -88,6 +89,28 @@ const PromoEgresadosAdmin = () => {
       await navigator.clipboard.writeText(texto);
       showToast(ok, 'success');
     } catch { /* sin portapapeles */ }
+  };
+
+  const adjuntarDiseno = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post(`/admin/egresados/promos/${id}/disenos`, { codigo: linkDiseno });
+      setLinkDiseno('');
+      showToast('Diseño adjuntado a la promo', 'success');
+      recargar();
+    } catch (err) {
+      showToast(mensajeError(err), 'error', 6000);
+    }
+  };
+
+  const quitarDiseno = async (d) => {
+    if (!window.confirm('¿Quitar este diseño de la promo? El diseño no se borra.')) return;
+    try {
+      await api.delete(`/admin/egresados/promos/${id}/disenos/${d.codigo}`);
+      recargar();
+    } catch (err) {
+      showToast(mensajeError(err), 'error', 6000);
+    }
   };
 
   const regenerarClave = async () => {
@@ -246,6 +269,26 @@ const PromoEgresadosAdmin = () => {
         <div><span>Cobrado</span><b>{pesos(r.cobrado)}</b></div>
         <div><span>Total comprometido</span><b>{pesos(r.total)}</b></div>
       </Cifras>
+
+      <Seccion>
+        <h2>Diseños de la promo</h2>
+        {promo.disenos.length === 0 ? <Hint>Todavía no hay diseños adjuntos. Llegan solos cuando la comisión pide presupuesto desde el diseñador con el código de la promo.</Hint> : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+            {promo.disenos.map((d) => (
+              <figure key={d.codigo} style={{ margin: 0 }}>
+                <a href={d.link} target="_blank" rel="noopener noreferrer"><img src={d.imagen} alt={d.titulo || 'Diseño'} loading="lazy" style={{ width: '100%', borderRadius: 8, border: '1px solid #ddd' }} /></a>
+                <figcaption style={{ fontSize: '0.85rem', color: '#7f8c8d' }}>
+                  {d.titulo} · {new Date(d.creadoEl).toLocaleDateString('es-AR')} · <button type="button" onClick={() => quitarDiseno(d)} style={{ background: 'none', border: 0, color: '#c0392b', cursor: 'pointer', padding: 0 }}>quitar</button>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        )}
+        <form onSubmit={adjuntarDiseno} style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+          <Input aria-label="Link del diseño" value={linkDiseno} onChange={(e) => setLinkDiseno(e.target.value)} placeholder="Pegá el link de un diseño (…/d/xxxxxxxx) para adjuntarlo" style={{ flex: 1, minWidth: 240 }} />
+          <Button type="submit" disabled={linkDiseno.trim().length < 8}>Adjuntar</Button>
+        </form>
+      </Seccion>
 
       <Seccion>
         <h2>Planillas (Excel)</h2>

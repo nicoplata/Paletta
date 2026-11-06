@@ -251,6 +251,21 @@ tiene que tener `client_max_body_size 7m;` (está en `deploy/nginx-egresados.con
 **Avisos a las familias:** al pasar una promo a *En producción*, *Listo para entregar* o *Entregado*, y al confirmar
 o rechazar un pago, las familias con email reciben un mail (uno por evento, sin repetir).
 
+## 12. Diseñador de egresados: enviar por WhatsApp y pedir presupuesto
+
+En `egresados.paletta.com.ar/disena.html`:
+- **Enviar por WhatsApp** guarda una copia del diseño y comparte un link corto (`/d/<código>`). En el celular se
+  manda la imagen; en la compu, el link, y WhatsApp muestra el diseño como vista previa. Al abrir el link, el
+  diseño se carga en el diseñador para seguir editándolo.
+- **Pedir presupuesto con este diseño** abre un formulario: el pedido llega al panel → *Egresados* →
+  *Presupuestos* con el diseño adjunto (y un mail a `CONTACT_TO`). Si ponen el código de su promo, el diseño
+  queda también en la promo y la comisión lo ve en *Mi curso*. Desde el pedido podés escribirles por WhatsApp
+  o crear la promo (el diseño queda adjunto).
+- Las imágenes de los diseños se guardan en `backend/private/disenos` (el backup ya las incluye).
+
+Para el link corto, el nginx de egresados necesita el bloque `location ^~ /d/` de `deploy/nginx-egresados.conf`
+(repo de egresados). Sin él, el link `/d/…` da 404, aunque el resto funciona.
+
 ## Actualizaciones
 
 ```bash

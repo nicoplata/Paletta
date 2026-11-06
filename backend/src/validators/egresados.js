@@ -9,6 +9,7 @@ const telefono = Joi.string().trim().pattern(/^[+\d][\d\s()-]{7,28}$/).message('
 const plan = Joi.number().integer().valid(1, 2, 3, 4, 5, 6, 8, 10, 12);
 
 const promo = {
+  presupuestoId: Joi.number().integer().positive(),
   codigo: Joi.string().trim().pattern(/^[A-Za-z0-9][A-Za-z0-9 -]{3,18}$/).message('el código tiene que tener entre 4 y 19 letras, números o guiones'),
   colegio: texto(2, 150),
   curso: texto(1, 60),
@@ -102,6 +103,12 @@ module.exports = {
   aprobarComprobante: Joi.object({ fecha: fecha.allow(null, '') }),
   rechazarComprobante: Joi.object({ motivo: texto(5, 200).required() }),
   listarComprobantes: Joi.object({ estado: Joi.string().valid('pendiente', 'aprobado', 'rechazado').default('pendiente') }),
+  listarPresupuestos: Joi.object({ estado: Joi.string().valid('nuevo', 'contactado', 'convertido', 'descartado', 'todos').default('todos') }),
+  presupuestoAdmin: Joi.object({
+    estado: Joi.string().valid('nuevo', 'contactado', 'convertido', 'descartado'),
+    notas: Joi.string().trim().max(2000).allow('', null),
+  }).min(1),
+  adjuntarDiseno: Joi.object({ codigo: Joi.string().trim().min(8).max(200).required() }),
   buscar: Joi.object({ q: Joi.string().trim().min(2).max(60).required() }),
   cuenta: Joi.object({
     alias: opcional(60),
