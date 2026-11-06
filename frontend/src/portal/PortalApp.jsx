@@ -32,6 +32,7 @@ const Promo = () => {
 const PortalApp = () => (
   <Routes>
     <Route index element={<Inicio />} />
+    <Route path="/curso/:codigo" element={<TableroComision />} />
     <Route path="/comision" element={<TableroComision />} />
     <Route path="/comision/:token" element={<TableroComision />} />
     <Route path="/:slug" element={<Promo />} />

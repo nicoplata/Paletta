@@ -522,3 +522,10 @@ body { background: var(--color-fondo); }
 .pf-atajo span:first-child { display: grid; }
 .pf-atajo small { color: var(--color-texto-tenue); }
 .pf-volver { text-decoration: none; }
+
+/* Mi curso (vista pública) */
+.tb-integrantes-lista { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 16px; }
+.tb-integrantes-lista li { padding: 4px 12px; border-radius: var(--radio-pill); background: var(--color-fondo-alt); font-weight: 600; font-size: var(--texto-sm); }
+.tb-clave { padding-top: 14px; border-top: 1px solid var(--color-borde); }
+.tb-clave input { letter-spacing: 0.3em; font-weight: 800; max-width: 220px; }
+.tb-detalle .aviso:not(.error):not(.exito) { background: var(--color-aviso-suave); color: var(--color-aviso); }

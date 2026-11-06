@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Marca } from './PortalApp';
-import { api, leerSesionComision, guardarSesionComision, linkWhatsApp, mensajeError } from './utils';
+import { api, leerSesionComision, mensajeError } from './utils';
 
 const CLAVE_ULTIMO_CODIGO = 'egr_ultimo_codigo';
 const leer = (k) => { try { return localStorage.getItem(k) || ''; } catch { return ''; } };
@@ -12,8 +12,6 @@ const Inicio = () => {
   const navigate = useNavigate();
   const [codigo, setCodigo] = useState(leer(CLAVE_ULTIMO_CODIGO));
   const [promo, setPromo] = useState(null);
-  const [modoComision, setModoComision] = useState(false);
-  const [clave, setClave] = useState('');
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
   const sesionComision = leerSesionComision();
@@ -31,20 +29,6 @@ const Inicio = () => {
     } catch (err) {
       setError(mensajeError(err, 'No encontramos esa promo.'));
     } finally {
-      setEnviando(false);
-    }
-  };
-
-  const entrarComision = async (e) => {
-    e.preventDefault();
-    setError('');
-    setEnviando(true);
-    try {
-      const { data } = await api.post('/comision/ingresar', { codigo: promo.codigo, clave });
-      guardarSesionComision({ token: data.token, codigo: promo.codigo });
-      navigate('/comision');
-    } catch (err) {
-      setError(mensajeError(err));
       setEnviando(false);
     }
   };
@@ -91,46 +75,21 @@ const Inicio = () => {
                 <p className="eyebrow">Promo {promo.anio} · {promo.codigo}</p>
                 <h2 className="pf-h2">{promo.colegio} · {promo.curso}</h2>
               </div>
-              <button type="button" className="pf-link" onClick={() => { setPromo(null); setModoComision(false); setError(''); }}>Cambiar</button>
+              <button type="button" className="pf-link" onClick={() => { setPromo(null); setError(''); }}>Cambiar</button>
             </div>
 
-            {!modoComision ? (
-              <div className="pf-opciones">
-                <button type="button" className="pf-opcion" onClick={() => navigate(`/${promo.slug}`)}>
-                  <span className="pf-opcion-icono" aria-hidden="true">👤</span>
-                  <b>Mi pedido</b>
-                  <small>Datos, prendas y talles, plan de pago y cuponera. Se entra con el DNI del alumno.</small>
-                </button>
-                <button type="button" className="pf-opcion" onClick={() => { setModoComision(true); setError(''); }}>
-                  <span className="pf-opcion-icono" aria-hidden="true">👥</span>
-                  <b>Mi curso</b>
-                  <small>El avance de toda la promo, quién tiene pendientes y la aprobación del diseño. Se entra con la clave de la comisión.</small>
-                </button>
-              </div>
-            ) : (
-              <form className="pf-card pf-ingreso" onSubmit={entrarComision}>
-                <h2 className="pf-h2">Clave de la comisión</h2>
-                <label className="campo">
-                  <span className="sr-only">Clave de 6 números</span>
-                  <input
-                    value={clave}
-                    onChange={(e) => { setClave(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(''); }}
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    placeholder="6 números"
-                    required
-                    pattern="\d{6}"
-                    className="pf-codigo-input"
-                  />
-                </label>
-                <p className="pf-tenue">Son 6 números que les pasamos a la comisión. ¿No la tienen? <a href={linkWhatsApp(`¡Hola Paletta! Somos la comisión de ${promo.colegio} ${promo.curso} (${promo.codigo}) y necesitamos la clave de la comisión.`)} target="_blank" rel="noopener noreferrer">Pedila por WhatsApp</a>.</p>
-                {error && <p className="aviso error" role="alert">{error}</p>}
-                <div className="tb-botones">
-                  <button type="button" className="btn btn-secundario" onClick={() => { setModoComision(false); setError(''); }}>Volver</button>
-                  <button type="submit" className="btn" disabled={enviando || clave.length !== 6}>{enviando ? 'Entrando…' : 'Entrar al tablero'}</button>
-                </div>
-              </form>
-            )}
+            <div className="pf-opciones">
+              <button type="button" className="pf-opcion" onClick={() => navigate(`/${promo.slug}`)}>
+                <span className="pf-opcion-icono" aria-hidden="true">👤</span>
+                <b>Mi pedido</b>
+                <small>Datos, prendas y talles, plan de pago y cuponera. Se entra con el DNI del alumno.</small>
+              </button>
+              <button type="button" className="pf-opcion" onClick={() => navigate(`/curso/${encodeURIComponent(promo.codigo)}`)}>
+                <span className="pf-opcion-icono" aria-hidden="true">👥</span>
+                <b>Mi curso</b>
+                <small>El avance de toda la promo y quién tiene pendientes. La comisión, con su clave, aprueba el diseño.</small>
+              </button>
+            </div>
           </>
         )}
       </main>

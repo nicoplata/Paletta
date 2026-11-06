@@ -223,7 +223,9 @@ origen permitido para su API.
 
 **Entrada única:** familias y comisión entran por `egresados.paletta.com.ar/mi-promo/` (botón *Mi promo* del sitio)
 con el **código de la promo** (el del contrato, ej. `EGR27-K7M2`; se genera solo o lo cargás vos en el panel).
-Ahí eligen *Mi pedido* (familia: se identifica con el DNI del alumno) o *Mi curso* (comisión: clave de 6 números).
+Ahí eligen *Mi pedido* (familia: se identifica con el DNI del alumno) o *Mi curso* (el avance de todo el curso, que
+puede ver cualquiera con el código; los pagos se muestran solo en totales). La comisión usa su clave de 6 números solo
+para cargar sus integrantes y aprobar el diseño final; con la clave ve también los nombres en los pagos.
 El código y la clave están en el panel, en la promo, con botones para copiar el mensaje para cada uno. Si la clave
 se filtra, *Generar clave nueva* cierra las sesiones abiertas de la comisión. Los links directos anteriores siguen andando.
 

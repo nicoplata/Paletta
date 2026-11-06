@@ -197,11 +197,11 @@ const PromoEgresadosAdmin = () => {
           </div>
         </div>
         <Hint style={{ marginTop: 12 }}>
-          Todos entran por <strong>{promo.linkPortal}</strong> (botón “Mi promo” del sitio de egresados) con el código. Las familias eligen “Mi pedido” y se identifican con el DNI del alumno; la comisión elige “Mi curso” y pone la clave.
+          Todos entran por <strong>{promo.linkPortal}</strong> (botón “Mi promo” del sitio de egresados) con el código. Las familias eligen “Mi pedido” y se identifican con el DNI del alumno; “Mi curso” muestra el avance del curso (la comisión usa la clave solo para editar la comisión y aprobar el diseño).
         </Hint>
         <ButtonGroup style={{ justifyContent: 'flex-start', marginTop: 12 }}>
           <Button type="button" onClick={() => copiarMensaje(`¡Hola familias! Para cargar los datos, talles y ver la cuponera de egresados entren a ${promo.linkPortal} con el código ${promo.codigo} y elijan “Mi pedido” (se entra con el DNI del alumno).`, 'Mensaje para las familias copiado')}>Copiar mensaje para las familias</Button>
-          <Button type="button" onClick={() => copiarMensaje(`Comisión de ${promo.colegio} ${promo.curso}: entren a ${promo.linkPortal} con el código ${promo.codigo}, elijan “Mi curso” y pongan la clave ${promo.comisionClave}. No compartan la clave en el grupo.`, 'Mensaje para la comisión copiado')}>Copiar mensaje para la comisión</Button>
+          <Button type="button" onClick={() => copiarMensaje(`Comisión de ${promo.colegio} ${promo.curso}: entren a ${promo.linkPortal} con el código ${promo.codigo} y elijan “Mi curso” para ver el avance. Para cargar la comisión y aprobar el diseño, usen la clave ${promo.comisionClave} (no la compartan en el grupo).`, 'Mensaje para la comisión copiado')}>Copiar mensaje para la comisión</Button>
         </ButtonGroup>
         {!promo.activo && <Hint style={{ color: '#c0392b' }}>La promo está desactivada: no se puede entrar.</Hint>}
       </Seccion>

@@ -33,7 +33,8 @@ const ACCIONES = {
   sena: 'pagar la cuota 1',
 };
 
-async function tableroComision(promo, hoy = hoyAR()) {
+// publico = vista de "Mi curso" que abre cualquier familia con el código: los pagos van solo en totales
+async function tableroComision(promo, { hoy = hoyAR(), publico = false } = {}) {
   const alumnos = await EgrAlumno.findAll({
     where: { promoId: promo.id },
     include: [
@@ -136,13 +137,14 @@ async function tableroComision(promo, hoy = hoyAR()) {
       disenoAprobadoPor: promo.disenoAprobadoPor,
     },
     linkFamilias: linkFamilias(promo),
-    integrantes,
+    publico,
+    integrantes: publico ? integrantes.map((i) => ({ nombre: i.nombre })) : integrantes,
     alumnos: N,
     porcentaje,
     mensaje,
     etapas,
-    pasos,
-    pagos,
+    pasos: publico ? { ...pasos, sena: { ...pasos.sena, pendientes: [] } } : pasos,
+    pagos: publico ? { ...pagos, pendientes: [] } : pagos,
     logros,
     puedeAprobarDiseno: cargaCompleta && !disenoAprobado,
   };
