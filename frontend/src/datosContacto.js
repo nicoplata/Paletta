@@ -1,8 +1,8 @@
-// Datos de contacto del local (mismos que egresados.paletta.com.ar → js/config.js).
+// Datos de contacto de Paletta Uniformes (egresados tiene su propio teléfono en su js/config.js).
 export const CONTACTO = {
-  whatsapp: '5491173574623',
-  telefono: '(011) 7357-4623',
-  telefonoLink: '+5491173574623',
+  whatsapp: '5491164949021',
+  telefono: '(011) 6494-9021',
+  telefonoLink: '+5491164949021',
   email: 'info@paletta.com.ar',
   direccion: 'Av. Vélez Sarsfield 4270, Munro, Vicente López, Buenos Aires',
   horarios: 'Lun a vie de 9 a 13 y de 16 a 19:30 · Sáb de 9 a 13',
