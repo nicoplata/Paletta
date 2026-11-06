@@ -50,4 +50,20 @@ const codigoPromoLimiter = rateLimit({
   message: { error: 'Probaste muchos códigos. Esperá unos minutos y revisá el código con la comisión.' },
 });
 
-module.exports = { apiLimiter, loginLimiter, contactoLimiter, ingresoEgresadosLimiter, comprobantesLimiter, codigoPromoLimiter };
+// Diseñador de egresados: diseños guardados y pedidos de presupuesto
+const disenosLimiter = rateLimit({
+  ...base,
+  windowMs: 60 * 60 * 1000,
+  limit: Number(process.env.EGR_DISENOS_POR_HORA) || 40,
+  message: { error: 'Guardaste muchos diseños seguidos. Probá de nuevo en un rato.' },
+});
+const presupuestosLimiter = rateLimit({
+  ...base,
+  windowMs: 60 * 60 * 1000,
+  limit: Number(process.env.EGR_PRESUPUESTOS_POR_HORA) || 6,
+  message: { error: 'Ya recibimos varios pedidos tuyos. Si es urgente, escribinos por WhatsApp.' },
+});
+
+module.exports = {
+  apiLimiter, loginLimiter, contactoLimiter, ingresoEgresadosLimiter, comprobantesLimiter, codigoPromoLimiter, disenosLimiter, presupuestosLimiter,
+};

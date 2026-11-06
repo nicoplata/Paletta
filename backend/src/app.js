@@ -63,6 +63,7 @@ app.use('/api/contacto', require('./routes/contacto'));
 app.use('/api/admin/pedidos', require('./routes/pedidosAdmin'));
 app.use('/api/admin/egresados', require('./routes/egresadosAdmin'));
 app.use('/api/egresados', require('./routes/egresados'));
+app.use('/api/egresados', require('./routes/disenosEgresados'));
 app.use('/api/admin', require('./routes/tiendaAdmin'));
 app.use('/api', require('./routes/tienda'));
 

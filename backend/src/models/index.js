@@ -38,6 +38,8 @@ const db = {
   EgrCuota: require('./egrCuotaModel')(sequelize),
   EgrAviso: require('./egrAvisoModel')(sequelize),
   EgrComprobante: require('./egrComprobanteModel')(sequelize),
+  EgrDiseno: require('./egrDisenoModel')(sequelize),
+  EgrPresupuesto: require('./egrPresupuestoModel')(sequelize),
 };
 
 Object.values(db).forEach((model) => {

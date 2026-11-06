@@ -342,6 +342,21 @@ const TableroComision = () => {
           </section>
           <section className="pf-card" aria-labelledby="tb-diseno">
             <h2 id="tb-diseno" className="pf-h2">Diseño final</h2>
+            {tablero.disenos?.length > 0 && (
+              <div className="tb-disenos">
+                {tablero.disenos.map((d) => (
+                  <a key={d.codigo} href={d.link} target="_blank" rel="noopener noreferrer" className="tb-diseno">
+                    <img src={d.imagen} alt={d.titulo || 'Diseño propuesto'} loading="lazy" />
+                    <span>{d.titulo} · {new Date(d.creadoEl).toLocaleDateString('es-AR')}</span>
+                  </a>
+                ))}
+              </div>
+            )}
+            {codigoPromo && !promo.disenoAprobadoEl && (
+              <a className="btn btn-secundario btn-sm tb-proponer" href={`${EGRESADOS.sitio}/disena.html?promo=${encodeURIComponent(codigoPromo)}`}>
+                {tablero.disenos?.length ? 'Proponer otro diseño' : 'Armar el diseño en el diseñador'}
+              </a>
+            )}
             {tablero.publico && !promo.disenoAprobadoEl ? (
               <p className="pf-tenue">
                 {tablero.puedeAprobarDiseno
