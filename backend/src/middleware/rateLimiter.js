@@ -24,4 +24,13 @@ const contactoLimiter = rateLimit({
   message: { error: 'Ya recibimos varios mensajes tuyos. Intentá nuevamente más tarde.' },
 });
 
-module.exports = { apiLimiter, loginLimiter, contactoLimiter };
+// Ingreso de familias de egresados (link + DNI): limita los intentos fallidos
+const ingresoEgresadosLimiter = rateLimit({
+  ...base,
+  windowMs: 15 * 60 * 1000,
+  limit: Number(process.env.EGR_INGRESOS_POR_15MIN) || 10,
+  skipSuccessfulRequests: true,
+  message: { error: 'Demasiados intentos. Esperá 15 minutos y volvé a probar, o escribinos por WhatsApp.' },
+});
+
+module.exports = { apiLimiter, loginLimiter, contactoLimiter, ingresoEgresadosLimiter };
