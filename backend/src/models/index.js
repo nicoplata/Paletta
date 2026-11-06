@@ -36,6 +36,7 @@ const db = {
   EgrAlumno: require('./egrAlumnoModel')(sequelize),
   EgrSeleccion: require('./egrSeleccionModel')(sequelize),
   EgrCuota: require('./egrCuotaModel')(sequelize),
+  EgrAviso: require('./egrAvisoModel')(sequelize),
 };
 
 Object.values(db).forEach((model) => {

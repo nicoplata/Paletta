@@ -24,6 +24,11 @@ module.exports = (sequelize) => {
     fechaCierre: { type: DataTypes.DATEONLY },
     estadoProduccion: { type: DataTypes.ENUM(...ESTADOS_PRODUCCION), allowNull: false, defaultValue: 'pendiente' },
     disenoAprobadoEl: { type: DataTypes.DATE },
+    disenoAprobadoPor: { type: DataTypes.STRING(120) },
+    // Link secreto del tablero de la comisión (egresados.paletta.com.ar/mi-promo/comision/<token>)
+    comisionToken: { type: DataTypes.STRING(32), allowNull: false, unique: true },
+    // [{ nombre, telefono }] — quienes forman la comisión (los cargan ellos en el tablero)
+    comisionIntegrantes: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
     fechaEntrega: { type: DataTypes.DATEONLY },
     notas: { type: DataTypes.TEXT },
     activo: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },

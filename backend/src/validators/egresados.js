@@ -22,6 +22,7 @@ const promo = {
   fechaEntrega: fecha.allow(null, ''),
   notas: opcional(2000),
   activo: Joi.boolean(),
+  disenoAprobado: Joi.boolean(),
 };
 
 const prenda = {
@@ -38,6 +39,16 @@ const requeridos = (obj, campos) => Object.fromEntries(Object.entries(obj).map((
 
 module.exports = {
   slugParam: Joi.object({ slug: Joi.string().pattern(/^[A-Za-z0-9_-]{6,24}$/).required() }),
+  tokenParam: Joi.object({ token: Joi.string().pattern(/^[A-Za-z0-9_-]{16,32}$/).required() }),
+
+  // Comisión
+  integrantes: Joi.object({
+    integrantes: Joi.array().max(8).items(Joi.object({
+      nombre: texto(3, 80).required(),
+      telefono: Joi.string().trim().pattern(/^[+\d][\d\s()-]{7,28}$/).message('teléfono inválido').allow('', null).empty('').default(null),
+    })).required(),
+  }),
+  aprobarDiseno: Joi.object({ nombre: texto(3, 80).required() }),
   idParam: Joi.object({ id: id.required() }).unknown(true),
 
   // Familias

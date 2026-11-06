@@ -67,6 +67,17 @@ const PromoEgresadosAdmin = () => {
     }
   };
 
+  const regenerarComision = async () => {
+    if (!window.confirm('¿Generar un link nuevo? El link actual de la comisión deja de funcionar.')) return;
+    try {
+      await api.post(`/admin/egresados/promos/${id}/comision/regenerar`);
+      showToast('Link nuevo generado', 'success');
+      recargar();
+    } catch (err) {
+      showToast(mensajeError(err), 'error', 6000);
+    }
+  };
+
   const eliminarPromo = async () => {
     if (!window.confirm(`¿Eliminar la promo ${promo.colegio} ${promo.curso} ${promo.anio}? Se borran sus alumnos y prendas.`)) return;
     try {
@@ -138,10 +149,34 @@ const PromoEgresadosAdmin = () => {
       </Header>
 
       <Seccion>
-        <h2>Link para la comisión</h2>
+        <h2>Link para las familias</h2>
         <LinkCopiable url={promo.link} onCopiado={() => showToast('Link copiado', 'success')} />
-        <Hint>Mandalo al grupo de WhatsApp del curso: cada familia entra, busca a su hijo/a y se identifica con el DNI.</Hint>
-        {!promo.activo && <Hint style={{ color: '#c0392b' }}>La promo está desactivada: el link no funciona.</Hint>}
+        <Hint>Va al grupo de WhatsApp del curso: cada familia entra, busca a su hijo/a y se identifica con el DNI.</Hint>
+        {!promo.activo && <Hint style={{ color: '#c0392b' }}>La promo está desactivada: los links no funcionan.</Hint>}
+      </Seccion>
+
+      <Seccion>
+        <h2>Tablero de la comisión · {promo.tablero.porcentaje}%</h2>
+        <p style={{ marginTop: 0 }}>{promo.tablero.mensaje}</p>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+          {promo.tablero.etapas.map((e) => (
+            <Tag key={e.clave} $color={{ completa: '#27ae60', actual: '#d35400', pendiente: '#95a5a6', bloqueada: '#bdc3c7' }[e.estado]}>
+              {e.estado === 'completa' ? '✓ ' : e.estado === 'bloqueada' ? '🔒 ' : ''}{e.titulo}
+            </Tag>
+          ))}
+        </div>
+        <LinkCopiable url={promo.linkComision} onCopiado={() => showToast('Link de la comisión copiado', 'success')} />
+        <Hint>Este link es solo para la comisión: ven el avance y los pendientes por alumno, sin DNI, contactos ni montos.</Hint>
+        <p style={{ margin: '12px 0 0' }}>
+          Comisión: {promo.comisionIntegrantes.length ? promo.comisionIntegrantes.map((i) => `${i.nombre}${i.telefono ? ` (${i.telefono})` : ''}`).join(' · ') : <em>todavía no cargaron sus nombres</em>}
+          <br />Diseño final: {promo.disenoAprobadoEl ? <strong>aprobado por {promo.disenoAprobadoPor} el {new Date(promo.disenoAprobadoEl).toLocaleDateString('es-AR')}</strong> : 'sin aprobar'}
+        </p>
+        <ButtonGroup style={{ justifyContent: 'flex-start', marginTop: 12, flexWrap: 'wrap' }}>
+          {promo.disenoAprobadoEl
+            ? <Button onClick={() => window.confirm('¿Quitar la aprobación del diseño?') && cambiarCampo({ disenoAprobado: false }, 'Aprobación quitada')}>Quitar aprobación del diseño</Button>
+            : <Button onClick={() => window.confirm('¿Marcar el diseño como aprobado (sin esperar a la comisión)?') && cambiarCampo({ disenoAprobado: true }, 'Diseño marcado como aprobado')}>Marcar diseño aprobado</Button>}
+          <Button onClick={regenerarComision}>Generar link nuevo para la comisión</Button>
+        </ButtonGroup>
       </Seccion>
 
       <Cifras>

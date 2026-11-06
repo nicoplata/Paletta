@@ -9,7 +9,8 @@
     "db:migrate": "node scripts/migrate.js",
     "seed": "node scripts/seed.js",
     "test": "node --test --test-concurrency=1 \"tests/**/*.test.js\"",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "mail:prueba": "node scripts/probar-mail.js"
   },
   "license": "UNLICENSED",
   "dependencies": {

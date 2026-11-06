@@ -24,6 +24,9 @@ async function iniciar() {
   }, 5 * 60 * 1000);
   tareaVencimientos.unref();
 
+  // Recordatorios por mail a las familias de egresados (cierre de carga y cuotas)
+  require('./services/recordatoriosEgresados').programarRecordatorios();
+
   const server = app.listen(ENV.PORT, () => {
     console.log(`Paletta API escuchando en el puerto ${ENV.PORT} (${ENV.NODE_ENV})`);
   });

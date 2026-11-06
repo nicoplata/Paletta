@@ -221,6 +221,20 @@ Vos lo manejás desde el panel → *Egresados*. El portal es un build aparte (`f
 `EGRESADOS_URL` (opcional, por defecto `https://egresados.paletta.com.ar`) define los links del portal y el
 origen permitido para su API.
 
+**Tablero de la comisión:** cada promo tiene un segundo link (`/mi-promo/comision/<token>`), que se copia en el
+panel. La comisión ve las etapas, el avance y qué le falta a cada alumno (sin DNI, contactos ni montos), manda
+recordatorios por WhatsApp y aprueba el diseño final. Si el link se filtra, en el panel se genera uno nuevo.
+
+**Recordatorios por mail:** la API manda sola, cada hora entre las 9 y las 21, avisos a las familias que cargaron
+su email: 7 y 2 días antes del cierre de la carga (si les falta algo) y antes y después de cada vencimiento.
+Nunca repite un aviso. Necesita el correo configurado (`MAIL_*`); para probarlo:
+
+```bash
+cd /var/www/paletta/backend && npm run mail:prueba
+```
+
+El comando muestra la configuración que lee, envía un mail de prueba a `CONTACT_TO` y, si falla, el motivo.
+
 ## Actualizaciones
 
 ```bash

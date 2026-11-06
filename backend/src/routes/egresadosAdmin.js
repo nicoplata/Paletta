@@ -8,12 +8,19 @@ const v = require('../validators/egresados');
 const { AppError } = require('../utils/errorHandler');
 const ENV = require('../config/env');
 const egr = require('../services/egresados');
+const { linkComision, tableroComision } = require('../services/tableroEgresados');
+const { ejecutarRecordatorios } = require('../services/recordatoriosEgresados');
+const { mailConfigurado } = require('../services/mail');
+const crypto = require('crypto');
+
+const nuevoTokenComision = () => crypto.randomBytes(16).toString('base64url');
 
 const router = express.Router();
 router.use(soloAdmin);
 const conId = validar(v.idParam, 'params');
 
 const linkPromo = (promo) => `${ENV.EGRESADOS_URL}/mi-promo/${promo.slug}`;
+const conLinks = (promo) => ({ ...promo.toJSON(), link: linkPromo(promo), linkComision: linkComision(promo) });
 const vacioANull = (obj, campos) => campos.forEach((c) => { if (obj[c] === '') obj[c] = null; });
 
 async function buscarOFallar(Modelo, id, mensaje, opciones = {}) {
@@ -59,22 +66,23 @@ router.get('/promos', async (req, res) => {
   const promos = await EgrPromo.findAll({ order: [['anio', 'DESC'], ['colegio', 'ASC'], ['curso', 'ASC']] });
   const salida = [];
   for (const promo of promos) {
-    salida.push({ ...promo.toJSON(), link: linkPromo(promo), resumen: resumenPromo(await alumnosDe(promo)) });
+    salida.push({ ...conLinks(promo), resumen: resumenPromo(await alumnosDe(promo)) });
   }
   res.json(salida);
 });
 
 router.post('/promos', validar(v.promoNueva), async (req, res) => {
   vacioANull(req.body, ['fechaCierre', 'fechaEntrega']);
-  const promo = await EgrPromo.create({ ...req.body, slug: egr.generarSlug() });
-  res.status(201).json({ ...promo.toJSON(), link: linkPromo(promo) });
+  const promo = await EgrPromo.create({ ...req.body, slug: egr.generarSlug(), comisionToken: nuevoTokenComision() });
+  res.status(201).json(conLinks(promo));
 });
 
 router.get('/promos/:id', conId, async (req, res) => {
   const promo = await buscarOFallar(EgrPromo, req.params.id, 'Promo no encontrada');
   const prendas = await EgrPrenda.findAll({ where: { promoId: promo.id }, order: [['orden', 'ASC'], ['id', 'ASC']] });
   const alumnos = await alumnosDe(promo);
-  res.json({ ...promo.toJSON(), link: linkPromo(promo), prendas, alumnos, resumen: resumenPromo(alumnos) });
+  const tablero = await tableroComision(promo);
+  res.json({ ...conLinks(promo), prendas, alumnos, resumen: resumenPromo(alumnos), tablero: { porcentaje: tablero.porcentaje, etapas: tablero.etapas, mensaje: tablero.mensaje } });
 });
 
 router.put('/promos/:id', conId, validar(v.promoEdicion), async (req, res) => {
@@ -82,7 +90,10 @@ router.put('/promos/:id', conId, validar(v.promoEdicion), async (req, res) => {
   vacioANull(req.body, ['fechaCierre', 'fechaEntrega']);
   const cambiaCalendario = req.body.primerVencimiento && req.body.primerVencimiento !== promo.primerVencimiento;
   const cambiaDescuento = req.body.descuentoContado !== undefined && Number(req.body.descuentoContado) !== promo.descuentoContado;
-  await promo.update(req.body);
+  const { disenoAprobado, ...cambios } = req.body;
+  if (disenoAprobado === true && !promo.disenoAprobadoEl) Object.assign(cambios, { disenoAprobadoEl: new Date(), disenoAprobadoPor: 'Paletta' });
+  if (disenoAprobado === false) Object.assign(cambios, { disenoAprobadoEl: null, disenoAprobadoPor: null });
+  await promo.update(cambios);
   // Si cambian el calendario o el descuento, se rearman las cuotas pendientes de quienes ya eligieron plan
   if (cambiaCalendario || cambiaDescuento) {
     const ids = (await EgrAlumno.findAll({ where: { promoId: promo.id, plan: { [Op.ne]: null } }, attributes: ['id'] })).map((a) => a.id);
@@ -90,7 +101,14 @@ router.put('/promos/:id', conId, validar(v.promoEdicion), async (req, res) => {
       await sequelize.transaction((transaction) => egr.regenerarCuotas(id, { transaction }));
     }
   }
-  res.json({ ...promo.toJSON(), link: linkPromo(promo) });
+  res.json(conLinks(promo));
+});
+
+// Genera un link nuevo para la comisión (el anterior deja de funcionar)
+router.post('/promos/:id/comision/regenerar', conId, async (req, res) => {
+  const promo = await buscarOFallar(EgrPromo, req.params.id, 'Promo no encontrada');
+  await promo.update({ comisionToken: nuevoTokenComision() });
+  res.json(conLinks(promo));
 });
 
 router.delete('/promos/:id', conId, async (req, res) => {
@@ -238,6 +256,12 @@ router.get('/buscar', validar(v.buscar, 'query'), async (req, res) => {
       promo: { id: a.promo.id, colegio: a.promo.colegio, curso: a.promo.curso, anio: a.promo.anio },
       cuotaBuscada: codigo && codigo[4] ? Number(codigo[4]) : null,
     })));
+});
+
+// ---------- recordatorios por mail ----------
+router.post('/recordatorios', async (req, res) => {
+  if (!mailConfigurado()) throw new AppError('El correo no está configurado (MAIL_* en backend/.env): no se pueden enviar recordatorios.', 409);
+  res.json(await ejecutarRecordatorios());
 });
 
 // ---------- cuenta para transferencias ----------
