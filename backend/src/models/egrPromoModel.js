@@ -2,11 +2,26 @@ const { DataTypes } = require('sequelize');
 const { dinero } = require('./_dinero');
 
 const ESTADOS_PRODUCCION = ['pendiente', 'en_produccion', 'listo', 'entregado'];
+const EgrPromoNormalizar = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
 module.exports = (sequelize) => {
   const EgrPromo = sequelize.define('EgrPromo', {
     // Identificador aleatorio del link que comparte la comisión (egresados.paletta.com.ar/mi-promo/<slug>)
     slug: { type: DataTypes.STRING(24), allowNull: false, unique: true },
+    // Código de contrato que cargan familias y comisión en egresados.paletta.com.ar/mi-promo (ej.: EGR27-K7M2)
+    codigo: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      set(v) {
+        const codigo = String(v).trim().toUpperCase().replace(/\s+/g, '');
+        this.setDataValue('codigo', codigo);
+        this.setDataValue('codigoBusqueda', EgrPromoNormalizar(codigo));
+      },
+    },
+    // El mismo código sin guiones ni espacios: así "egr27 k7m2" encuentra "EGR27-K7M2"
+    codigoBusqueda: { type: DataTypes.STRING(20), allowNull: false, unique: true },
+    // Clave numérica de 6 dígitos con la que entra la comisión
+    comisionClave: { type: DataTypes.STRING(6), allowNull: false },
     colegio: { type: DataTypes.STRING, allowNull: false },
     curso: { type: DataTypes.STRING(60), allowNull: false },
     anio: { type: DataTypes.INTEGER, allowNull: false },
@@ -35,6 +50,7 @@ module.exports = (sequelize) => {
   }, { tableName: 'EgrPromos' });
 
   EgrPromo.ESTADOS_PRODUCCION = ESTADOS_PRODUCCION;
+  EgrPromo.normalizarCodigo = EgrPromoNormalizar;
   EgrPromo.associate = (m) => {
     EgrPromo.hasMany(m.EgrPrenda, { foreignKey: 'promoId', as: 'prendas' });
     EgrPromo.hasMany(m.EgrAlumno, { foreignKey: 'promoId', as: 'alumnos' });

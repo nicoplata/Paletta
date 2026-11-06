@@ -221,9 +221,14 @@ Vos lo manejás desde el panel → *Egresados*. El portal es un build aparte (`f
 `EGRESADOS_URL` (opcional, por defecto `https://egresados.paletta.com.ar`) define los links del portal y el
 origen permitido para su API.
 
-**Tablero de la comisión:** cada promo tiene un segundo link (`/mi-promo/comision/<token>`), que se copia en el
-panel. La comisión ve las etapas, el avance y qué le falta a cada alumno (sin DNI, contactos ni montos), manda
-recordatorios por WhatsApp y aprueba el diseño final. Si el link se filtra, en el panel se genera uno nuevo.
+**Entrada única:** familias y comisión entran por `egresados.paletta.com.ar/mi-promo/` (botón *Mi promo* del sitio)
+con el **código de la promo** (el del contrato, ej. `EGR27-K7M2`; se genera solo o lo cargás vos en el panel).
+Ahí eligen *Mi pedido* (familia: se identifica con el DNI del alumno) o *Mi curso* (comisión: clave de 6 números).
+El código y la clave están en el panel, en la promo, con botones para copiar el mensaje para cada uno. Si la clave
+se filtra, *Generar clave nueva* cierra las sesiones abiertas de la comisión. Los links directos anteriores siguen andando.
+
+**Tablero de la comisión:** muestra las etapas, el avance y qué le falta a cada alumno (sin DNI, contactos ni montos);
+desde ahí la comisión manda recordatorios por WhatsApp y aprueba el diseño final.
 
 **Recordatorios por mail:** la API manda sola, cada hora entre las 9 y las 21, avisos a las familias que cargaron
 su email: 7 y 2 días antes del cierre de la carga (si les falta algo) y antes y después de cada vencimiento.

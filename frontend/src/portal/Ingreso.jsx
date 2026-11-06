@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Marca } from './PortalApp';
 import { EGRESADOS, api, linkWhatsApp, mensajeError } from './utils';
 
@@ -61,6 +62,7 @@ const Ingreso = ({ slug, onIngreso }) => {
     <>
       <Marca />
       <main className="pf-main pf-angosto">
+        <Link to="/" className="pf-link pf-volver">← Cambiar de promo</Link>
         <p className="eyebrow">Promo {promo.anio} · {promo.colegio} · {promo.curso}</p>
         <h1 className="pf-titulo">¡Hola! Entrá para armar el pedido de tu hijo/a.</h1>
         <p className="lead">Vas a cargar sus datos, elegir prendas y talles, el plan de pago y ver la cuponera. Te lleva unos 5 minutos.</p>

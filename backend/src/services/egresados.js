@@ -35,6 +35,21 @@ const REGEX_CODIGO = /^EGR-(\d{2})-(\d{1,6})-(\d{1,4})(?:-(\d{1,2}))?$/i;
 
 const generarSlug = () => crypto.randomBytes(9).toString('base64url');
 
+// Código de contrato legible: EGR27-K7M2 (sin 0/O ni 1/I/L para que no se confundan al dictarlo)
+const ALFABETO_CODIGO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+async function generarCodigo(anio) {
+  for (let intento = 0; intento < 20; intento += 1) {
+    let sufijo = '';
+    for (let i = 0; i < 4; i += 1) sufijo += ALFABETO_CODIGO[crypto.randomInt(ALFABETO_CODIGO.length)];
+    const codigo = `EGR${String(anio).slice(-2)}-${sufijo}`;
+    if (!(await EgrPromo.findOne({ where: { codigoBusqueda: EgrPromo.normalizarCodigo(codigo) } }))) return codigo;
+  }
+  throw new AppError('No se pudo generar un código de promo. Probá de nuevo.', 500);
+}
+
+// Clave de la comisión: 6 números, fácil de recordar y de pasar por WhatsApp
+const generarClaveComision = () => String(crypto.randomInt(100000, 1000000));
+
 // ---------- montos ----------
 function totalesAlumno(promo, alumno, selecciones) {
   const subtotal = selecciones.reduce((a, s) => a + s.precioUnitario * s.cantidad, 0);
@@ -307,6 +322,8 @@ module.exports = {
   codigoCuota,
   REGEX_CODIGO,
   generarSlug,
+  generarCodigo,
+  generarClaveComision,
   totalesAlumno,
   recargoDe,
   estadoCuota,

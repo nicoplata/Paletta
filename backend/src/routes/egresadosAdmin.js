@@ -18,12 +18,19 @@ const avisos = require('../services/mailsEgresados');
 
 const nuevoTokenComision = () => crypto.randomBytes(16).toString('base64url');
 
+async function codigoLibre(codigo, idActual) {
+  const otra = await EgrPromo.findOne({ where: { codigoBusqueda: EgrPromo.normalizarCodigo(codigo) } });
+  if (otra && otra.id !== Number(idActual)) throw new AppError(`El código ${codigo} ya lo usa otra promo (${otra.colegio} ${otra.curso} ${otra.anio}).`, 409);
+}
+
 const router = express.Router();
 router.use(soloAdmin);
 const conId = validar(v.idParam, 'params');
 
 const linkPromo = (promo) => `${ENV.EGRESADOS_URL}/mi-promo/${promo.slug}`;
-const conLinks = (promo) => ({ ...promo.toJSON(), link: linkPromo(promo), linkComision: linkComision(promo) });
+const conLinks = (promo) => ({
+  ...promo.toJSON(), link: linkPromo(promo), linkComision: linkComision(promo), linkPortal: `${ENV.EGRESADOS_URL}/mi-promo/`,
+});
 const vacioANull = (obj, campos) => campos.forEach((c) => { if (obj[c] === '') obj[c] = null; });
 
 async function buscarOFallar(Modelo, id, mensaje, opciones = {}) {
@@ -76,7 +83,14 @@ router.get('/promos', async (req, res) => {
 
 router.post('/promos', validar(v.promoNueva), async (req, res) => {
   vacioANull(req.body, ['fechaCierre', 'fechaEntrega']);
-  const promo = await EgrPromo.create({ ...req.body, slug: egr.generarSlug(), comisionToken: nuevoTokenComision() });
+  if (req.body.codigo) await codigoLibre(req.body.codigo);
+  const promo = await EgrPromo.create({
+    ...req.body,
+    codigo: req.body.codigo || await egr.generarCodigo(req.body.anio),
+    slug: egr.generarSlug(),
+    comisionToken: nuevoTokenComision(),
+    comisionClave: egr.generarClaveComision(),
+  });
   res.status(201).json(conLinks(promo));
 });
 
@@ -94,6 +108,7 @@ router.put('/promos/:id', conId, validar(v.promoEdicion), async (req, res) => {
   const cambiaCalendario = req.body.primerVencimiento && req.body.primerVencimiento !== promo.primerVencimiento;
   const cambiaDescuento = req.body.descuentoContado !== undefined && Number(req.body.descuentoContado) !== promo.descuentoContado;
   const { disenoAprobado, ...cambios } = req.body;
+  if (cambios.codigo) await codigoLibre(cambios.codigo, promo.id);
   if (disenoAprobado === true && !promo.disenoAprobadoEl) Object.assign(cambios, { disenoAprobadoEl: new Date(), disenoAprobadoPor: 'Paletta' });
   if (disenoAprobado === false) Object.assign(cambios, { disenoAprobadoEl: null, disenoAprobadoPor: null });
   const estadoAnterior = promo.estadoProduccion;
@@ -108,6 +123,13 @@ router.put('/promos/:id', conId, validar(v.promoEdicion), async (req, res) => {
       await sequelize.transaction((transaction) => egr.regenerarCuotas(id, { transaction }));
     }
   }
+  res.json(conLinks(promo));
+});
+
+// Genera una clave nueva para la comisión (las sesiones abiertas con la anterior se cierran)
+router.post('/promos/:id/comision/clave', conId, async (req, res) => {
+  const promo = await buscarOFallar(EgrPromo, req.params.id, 'Promo no encontrada');
+  await promo.update({ comisionClave: egr.generarClaveComision() });
   res.json(conLinks(promo));
 });
 

@@ -5,7 +5,8 @@ const fs = require('fs');
 const { sequelize, EgrPromo, EgrAlumno, EgrCuota, EgrComprobante } = require('../models');
 const validar = require('../middleware/validator');
 const v = require('../validators/egresados');
-const { ingresoEgresadosLimiter, comprobantesLimiter } = require('../middleware/rateLimiter');
+const { ingresoEgresadosLimiter, comprobantesLimiter, codigoPromoLimiter } = require('../middleware/rateLimiter');
+const { firmarTokenComision, verificarComision } = require('../middleware/authComision');
 const { recibirComprobante, enviarComprobante } = require('../middleware/comprobante');
 const { firmarTokenFamilia, verificarFamilia } = require('../middleware/authFamilia');
 const { AppError } = require('../utils/errorHandler');
@@ -82,25 +83,35 @@ router.post('/promos/:slug/alumnos', ingresoEgresadosLimiter, validar(v.slugPara
   });
 });
 
-// 🔑 Comisión: tablero de la promo con el link secreto de la comisión
+// 🔓 Entrada única (egresados.paletta.com.ar/mi-promo): el código de contrato lleva a la promo
+router.get('/codigo/:codigo', codigoPromoLimiter, validar(v.codigoParam, 'params'), async (req, res) => {
+  const promo = await EgrPromo.findOne({ where: { codigoBusqueda: EgrPromo.normalizarCodigo(req.params.codigo), activo: true } });
+  if (!promo) throw new AppError('No encontramos una promo con ese código. Revisalo en el contrato o pedíselo a la comisión.', 404);
+  res.json({ codigo: promo.codigo, slug: promo.slug, colegio: promo.colegio, curso: promo.curso, anio: promo.anio, cerrada: promoCerrada(promo) });
+});
+
+// 🔑 Comisión: entra con el código de la promo + su clave de 6 números
+router.post('/comision/ingresar', ingresoEgresadosLimiter, validar(v.ingresoComision), async (req, res) => {
+  const promo = await EgrPromo.findOne({ where: { codigoBusqueda: EgrPromo.normalizarCodigo(req.body.codigo), activo: true } });
+  if (!promo || promo.comisionClave !== req.body.clave) {
+    throw new AppError('El código o la clave de la comisión no son correctos. La clave te la pasa Paletta.', 401);
+  }
+  res.json({ token: firmarTokenComision(promo) });
+});
+
+// Tablero, integrantes y aprobación del diseño (con la sesión de la comisión o con el link secreto anterior)
 async function promoPorToken(token) {
   const promo = await EgrPromo.findOne({ where: { comisionToken: token, activo: true } });
-  if (!promo) throw new AppError('Este link de la comisión no es válido. Pedile el link nuevo a Paletta.', 404);
+  if (!promo) throw new AppError('Este link de la comisión no es válido. Entrá desde egresados.paletta.com.ar/mi-promo con el código y la clave.', 404);
   return promo;
 }
 
-router.get('/comision/:token', validar(v.tokenParam, 'params'), async (req, res) => {
-  res.json(await tableroComision(await promoPorToken(req.params.token)));
-});
+const guardarIntegrantes = async (promo, integrantes) => {
+  await promo.update({ comisionIntegrantes: integrantes });
+  return tableroComision(promo);
+};
 
-router.put('/comision/:token/integrantes', validar(v.tokenParam, 'params'), validar(v.integrantes), async (req, res) => {
-  const promo = await promoPorToken(req.params.token);
-  await promo.update({ comisionIntegrantes: req.body.integrantes });
-  res.json(await tableroComision(promo));
-});
-
-router.post('/comision/:token/diseno', validar(v.tokenParam, 'params'), validar(v.aprobarDiseno), async (req, res) => {
-  const promo = await promoPorToken(req.params.token);
+async function aprobarDiseno(promo, nombre) {
   if (promo.disenoAprobadoEl) throw new AppError('El diseño ya está aprobado.', 409);
   const tablero = await tableroComision(promo);
   if (!tablero.puedeAprobarDiseno) {
@@ -108,8 +119,22 @@ router.post('/comision/:token/diseno', validar(v.tokenParam, 'params'), validar(
       .map((k) => ({ datos: 'datos', prendas: 'prendas y talles', sena: 'cuota 1' }[k]));
     throw new AppError(`Para aprobar el diseño tiene que estar completa toda la promo (falta: ${faltan.join(', ')}).`, 409);
   }
-  await promo.update({ disenoAprobadoEl: new Date(), disenoAprobadoPor: req.body.nombre });
-  res.json(await tableroComision(promo));
+  await promo.update({ disenoAprobadoEl: new Date(), disenoAprobadoPor: nombre });
+  return tableroComision(promo);
+}
+
+router.get('/comision', verificarComision, async (req, res) => res.json(await tableroComision(req.promo)));
+router.put('/comision/integrantes', verificarComision, validar(v.integrantes), async (req, res) => res.json(await guardarIntegrantes(req.promo, req.body.integrantes)));
+router.post('/comision/diseno', verificarComision, validar(v.aprobarDiseno), async (req, res) => res.json(await aprobarDiseno(req.promo, req.body.nombre)));
+
+router.get('/comision/:token', validar(v.tokenParam, 'params'), async (req, res) => {
+  res.json(await tableroComision(await promoPorToken(req.params.token)));
+});
+router.put('/comision/:token/integrantes', validar(v.tokenParam, 'params'), validar(v.integrantes), async (req, res) => {
+  res.json(await guardarIntegrantes(await promoPorToken(req.params.token), req.body.integrantes));
+});
+router.post('/comision/:token/diseno', validar(v.tokenParam, 'params'), validar(v.aprobarDiseno), async (req, res) => {
+  res.json(await aprobarDiseno(await promoPorToken(req.params.token), req.body.nombre));
 });
 
 // 🔐 Familia: todo lo del alumno (datos, prendas, plan, cuponera)

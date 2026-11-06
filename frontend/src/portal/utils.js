@@ -23,6 +23,17 @@ export const guardarToken = (slug, token) => {
   } catch { /* modo privado: la sesión dura lo que la pestaña */ }
 };
 
+const CLAVE_COMISION = 'egr_comision';
+export const leerSesionComision = () => {
+  try { return JSON.parse(localStorage.getItem(CLAVE_COMISION)) || null; } catch { return null; }
+};
+export const guardarSesionComision = (sesion) => {
+  try {
+    if (sesion) localStorage.setItem(CLAVE_COMISION, JSON.stringify(sesion));
+    else localStorage.removeItem(CLAVE_COMISION);
+  } catch { /* modo privado */ }
+};
+
 export const api = axios.create({ baseURL: `${API_URL}/api/egresados`, timeout: 20000 });
 export const conToken = (token) => ({ headers: { Authorization: `Bearer ${token}` } });
 

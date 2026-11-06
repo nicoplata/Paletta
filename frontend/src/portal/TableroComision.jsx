@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Marca } from './PortalApp';
-import { api, diasHasta, fecha, linkWhatsApp, mensajeError } from './utils';
+import { api, conToken, diasHasta, fecha, guardarSesionComision, leerSesionComision, linkWhatsApp, mensajeError } from './utils';
 
 const waLibre = (texto) => `https://wa.me/?text=${encodeURIComponent(texto)}`;
 
@@ -104,24 +104,39 @@ const AprobarDiseno = ({ tablero, aprobar }) => {
 
 const TableroComision = () => {
   const { token } = useParams();
+  const navigate = useNavigate();
+  // Con el link secreto anterior (/comision/<token>) o con la sesión de la clave (/comision)
+  const sesion = token ? null : leerSesionComision();
+  const base = token ? `/comision/${token}` : '/comision';
+  const opciones = sesion ? conToken(sesion.token) : {};
+  const salir = useCallback(() => {
+    guardarSesionComision(null);
+    navigate('/');
+  }, [navigate]);
   const [tablero, setTablero] = useState(null);
   const [error, setError] = useState('');
   const [paso, setPaso] = useState(null);
 
   const cargar = useCallback(async () => {
+    if (!token && !sesion) {
+      navigate('/', { replace: true });
+      return;
+    }
     try {
-      const { data } = await api.get(`/comision/${token}`);
+      const { data } = await api.get(base, opciones);
       setTablero(data);
       setPaso((p) => p || (PASOS.find((x) => x.clave !== 'pagos' && !data.pasos[x.clave].completo)?.clave || 'pagos'));
     } catch (err) {
-      setError(mensajeError(err, 'No pudimos cargar el tablero.'));
+      if (err?.response?.status === 401) salir();
+      else setError(mensajeError(err, 'No pudimos cargar el tablero.'));
     }
-  }, [token]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, sesion?.token]);
   useEffect(() => { cargar(); }, [cargar]);
 
   const accion = async (metodo, ruta, datos) => {
     try {
-      const { data } = await api[metodo](`/comision/${token}${ruta}`, datos);
+      const { data } = await api[metodo](`${base}${ruta}`, datos, opciones);
       setTablero(data);
       return '';
     } catch (err) {
@@ -167,7 +182,10 @@ const TableroComision = () => {
 
   return (
     <>
-      <Marca><span className="tb-quien">Comisión · {promo.curso} · {promo.anio}</span></Marca>
+      <Marca>
+        <span className="tb-quien">Comisión · {promo.curso} · {promo.anio}</span>
+        {sesion && <button type="button" className="btn btn-secundario btn-sm" onClick={salir}>Salir</button>}
+      </Marca>
       <main className="pf-main tb-main">
         <section className="pf-hero" aria-labelledby="tb-titulo">
           <div>
@@ -268,7 +286,7 @@ const TableroComision = () => {
         </div>
 
         <p className="pf-tenue pf-centro">
-          Este link es solo para la comisión: no lo compartan en el grupo. ¿Dudas? <a href={linkWhatsApp(`¡Hola Paletta! Soy de la comisión de ${curso} (${promo.anio}). Tengo una consulta:`)} target="_blank" rel="noopener noreferrer">Escribinos por WhatsApp</a>.
+          {sesion ? 'La clave es solo para la comisión: no la compartan en el grupo.' : 'Este link es solo para la comisión: no lo compartan en el grupo.'} ¿Dudas? <a href={linkWhatsApp(`¡Hola Paletta! Soy de la comisión de ${curso} (${promo.anio}). Tengo una consulta:`)} target="_blank" rel="noopener noreferrer">Escribinos por WhatsApp</a>.
         </p>
       </main>
     </>

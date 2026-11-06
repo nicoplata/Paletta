@@ -13,6 +13,7 @@ import { Cifras, ESTADOS_PRODUCCION, LinkCopiable, Puntos, Seccion, Tabla, Tabla
 const PRENDA_VACIA = { nombre: '', descripcion: '', precio: '', talles: '4, 6, 8, 10, 12, 14, 16, S, M, L, XL, XXL', conBordado: false, orden: '0', activo: true };
 
 const aFormPromo = (p) => ({
+  codigo: p.codigo,
   colegio: p.colegio, curso: p.curso, anio: String(p.anio), planes: p.planes, descuentoContado: String(p.descuentoContado),
   recargoTipo: p.recargoTipo || '', recargoValor: p.recargoValor != null ? String(p.recargoValor) : '',
   primerVencimiento: p.primerVencimiento, fechaCierre: p.fechaCierre || '', notas: p.notas || '',
@@ -79,6 +80,24 @@ const PromoEgresadosAdmin = () => {
       URL.revokeObjectURL(url);
     } catch (err) {
       showToast(mensajeError(err, 'No se pudo descargar la planilla'), 'error');
+    }
+  };
+
+  const copiarMensaje = async (texto, ok) => {
+    try {
+      await navigator.clipboard.writeText(texto);
+      showToast(ok, 'success');
+    } catch { /* sin portapapeles */ }
+  };
+
+  const regenerarClave = async () => {
+    if (!window.confirm('¿Generar una clave nueva? La comisión va a tener que entrar con la nueva.')) return;
+    try {
+      await api.post(`/admin/egresados/promos/${id}/comision/clave`);
+      showToast('Clave nueva generada', 'success');
+      recargar();
+    } catch (err) {
+      showToast(mensajeError(err), 'error', 6000);
     }
   };
 
@@ -164,10 +183,27 @@ const PromoEgresadosAdmin = () => {
       </Header>
 
       <Seccion>
-        <h2>Link para las familias</h2>
-        <LinkCopiable url={promo.link} onCopiado={() => showToast('Link copiado', 'success')} />
-        <Hint>Va al grupo de WhatsApp del curso: cada familia entra, busca a su hijo/a y se identifica con el DNI.</Hint>
-        {!promo.activo && <Hint style={{ color: '#c0392b' }}>La promo está desactivada: los links no funcionan.</Hint>}
+        <h2>Acceso al portal</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+          <div>
+            <Hint>Código de la promo (familias y comisión)</Hint>
+            <p style={{ margin: '4px 0', fontSize: '1.8rem', fontWeight: 800, letterSpacing: '0.06em' }}>{promo.codigo}</p>
+            <Button type="button" onClick={async () => { try { await navigator.clipboard.writeText(promo.codigo); showToast('Código copiado', 'success'); } catch { /* sin portapapeles */ } }} style={{ padding: '0.35rem 0.8rem' }}>Copiar</Button>
+          </div>
+          <div>
+            <Hint>Clave de la comisión</Hint>
+            <p style={{ margin: '4px 0', fontSize: '1.8rem', fontWeight: 800, letterSpacing: '0.2em' }}>{promo.comisionClave}</p>
+            <Button type="button" onClick={regenerarClave} style={{ padding: '0.35rem 0.8rem' }}>Generar clave nueva</Button>
+          </div>
+        </div>
+        <Hint style={{ marginTop: 12 }}>
+          Todos entran por <strong>{promo.linkPortal}</strong> (botón “Mi promo” del sitio de egresados) con el código. Las familias eligen “Mi pedido” y se identifican con el DNI del alumno; la comisión elige “Mi curso” y pone la clave.
+        </Hint>
+        <ButtonGroup style={{ justifyContent: 'flex-start', marginTop: 12 }}>
+          <Button type="button" onClick={() => copiarMensaje(`¡Hola familias! Para cargar los datos, talles y ver la cuponera de egresados entren a ${promo.linkPortal} con el código ${promo.codigo} y elijan “Mi pedido” (se entra con el DNI del alumno).`, 'Mensaje para las familias copiado')}>Copiar mensaje para las familias</Button>
+          <Button type="button" onClick={() => copiarMensaje(`Comisión de ${promo.colegio} ${promo.curso}: entren a ${promo.linkPortal} con el código ${promo.codigo}, elijan “Mi curso” y pongan la clave ${promo.comisionClave}. No compartan la clave en el grupo.`, 'Mensaje para la comisión copiado')}>Copiar mensaje para la comisión</Button>
+        </ButtonGroup>
+        {!promo.activo && <Hint style={{ color: '#c0392b' }}>La promo está desactivada: no se puede entrar.</Hint>}
       </Seccion>
 
       <Seccion>
@@ -180,8 +216,14 @@ const PromoEgresadosAdmin = () => {
             </Tag>
           ))}
         </div>
-        <LinkCopiable url={promo.linkComision} onCopiado={() => showToast('Link de la comisión copiado', 'success')} />
-        <Hint>Este link es solo para la comisión: ven el avance y los pendientes por alumno, sin DNI, contactos ni montos.</Hint>
+        <Hint>La comisión ve el avance y los pendientes por alumno, sin DNI, contactos ni montos.</Hint>
+        <details style={{ marginTop: 8 }}>
+          <summary style={{ cursor: 'pointer', color: '#7f8c8d' }}>Links directos (opcional)</summary>
+          <p style={{ margin: '8px 0 4px' }}>Familias:</p>
+          <LinkCopiable url={promo.link} onCopiado={() => showToast('Link copiado', 'success')} />
+          <p style={{ margin: '8px 0 4px' }}>Comisión (sin clave; si se filtra, generá uno nuevo):</p>
+          <LinkCopiable url={promo.linkComision} onCopiado={() => showToast('Link de la comisión copiado', 'success')} />
+        </details>
         <p style={{ margin: '12px 0 0' }}>
           Comisión: {promo.comisionIntegrantes.length ? promo.comisionIntegrantes.map((i) => `${i.nombre}${i.telefono ? ` (${i.telefono})` : ''}`).join(' · ') : <em>todavía no cargaron sus nombres</em>}
           <br />Diseño final: {promo.disenoAprobadoEl ? <strong>aprobado por {promo.disenoAprobadoPor} el {new Date(promo.disenoAprobadoEl).toLocaleDateString('es-AR')}</strong> : 'sin aprobar'}
@@ -190,7 +232,7 @@ const PromoEgresadosAdmin = () => {
           {promo.disenoAprobadoEl
             ? <Button onClick={() => window.confirm('¿Quitar la aprobación del diseño?') && cambiarCampo({ disenoAprobado: false }, 'Aprobación quitada')}>Quitar aprobación del diseño</Button>
             : <Button onClick={() => window.confirm('¿Marcar el diseño como aprobado (sin esperar a la comisión)?') && cambiarCampo({ disenoAprobado: true }, 'Diseño marcado como aprobado')}>Marcar diseño aprobado</Button>}
-          <Button onClick={regenerarComision}>Generar link nuevo para la comisión</Button>
+          <Button onClick={regenerarComision}>Generar link directo nuevo</Button>
         </ButtonGroup>
       </Seccion>
 
