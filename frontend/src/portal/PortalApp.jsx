@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Route, Routes, useParams } from 'react-router-dom';
 import Ingreso from './Ingreso';
 import PanelFamilia from './PanelFamilia';
+import TableroComision from './TableroComision';
 import { EGRESADOS, guardarToken, leerToken } from './utils';
 import logo from '../assets/img/isotipo.png';
 
@@ -40,6 +41,7 @@ const SinLink = () => (
 
 const PortalApp = () => (
   <Routes>
+    <Route path="/comision/:token" element={<TableroComision />} />
     <Route path="/:slug" element={<Promo />} />
     <Route path="*" element={<SinLink />} />
   </Routes>

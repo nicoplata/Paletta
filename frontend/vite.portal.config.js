@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
     root: resolve(__dirname, 'portal'),
     base: '/mi-promo/',
     publicDir: false,
+    cacheDir: resolve(__dirname, 'node_modules/.vite-portal'),
     envDir: __dirname,
     plugins: [react()],
     server: {

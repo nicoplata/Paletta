@@ -35,6 +35,7 @@ Panel de administración: `http://localhost:5173/admin`.
 | Dónde | Comando | Qué hace |
 |---|---|---|
 | backend | `npm run db:migrate` | Aplica migraciones pendientes (`-- status` / `-- down`) |
+| backend | `npm run mail:prueba` | Prueba el envío de mails con la configuración de `.env` y muestra el error si falla |
 | backend | `npm run seed` | Crea/actualiza el admin (`ADMIN_EMAIL`, `ADMIN_PASSWORD`) y categorías base |
 | frontend | `npm run lint` | ESLint |
 | backend | `npm test` / `npm run lint` | Tests de integración (node:test + supertest) / ESLint |
@@ -86,6 +87,6 @@ Tienda (pública): `GET /api/tienda/config`, `POST /api/pedidos`, `GET /api/pedi
 
 Tienda (pública, extra): `POST /api/cupones/validar`, `GET /api/envio/cotizar?cp=`.
 
-Egresados (portal de familias, `egresados.paletta.com.ar/mi-promo/<slug>`): `GET /api/egresados/promos/:slug`, `POST /api/egresados/promos/:slug/ingresar` (alumno + DNI), `POST /api/egresados/promos/:slug/alumnos`, y con el token de la familia `GET /api/egresados/mi-promo`, `PUT /api/egresados/mi-promo/{datos,prendas,plan}`.
+Egresados (portal de familias, `egresados.paletta.com.ar/mi-promo/<slug>`): `GET /api/egresados/promos/:slug`, `POST /api/egresados/promos/:slug/ingresar` (alumno + DNI), `POST /api/egresados/promos/:slug/alumnos`, y con el token de la familia `GET /api/egresados/mi-promo`, `PUT /api/egresados/mi-promo/{datos,prendas,plan}`. Tablero de la comisión (link secreto): `GET /api/egresados/comision/:token`, `PUT .../integrantes`, `POST .../diseno`.
 
 Solo administradores (`Authorization: Bearer <token>`): `/api/admin/egresados` (promos, prendas, alumnos, cuotas y pagos, búsqueda por código/DNI, cuenta para transferencias) y `/api/admin/pedidos` (listado, resumen, detalle, cambio de estado, notas, `exportar` a CSV), `/api/admin/cupones`, `/api/admin/zonas-envio` y: CRUD de `/api/productos`, `/api/categorias`, `/api/colegios` (`/api/colegios/admin` lista también los inactivos), `/api/usuarios`, `/api/imagenes`, y la bandeja de `/api/contacto`.

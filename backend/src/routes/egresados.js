@@ -8,6 +8,7 @@ const { ingresoEgresadosLimiter } = require('../middleware/rateLimiter');
 const { firmarTokenFamilia, verificarFamilia } = require('../middleware/authFamilia');
 const { AppError } = require('../utils/errorHandler');
 const egr = require('../services/egresados');
+const { tableroComision } = require('../services/tableroEgresados');
 
 const router = express.Router();
 
@@ -77,6 +78,36 @@ router.post('/promos/:slug/alumnos', ingresoEgresadosLimiter, validar(v.slugPara
     res.status(201);
     await registrarIngreso(alumno, res, transaction);
   });
+});
+
+// 🔑 Comisión: tablero de la promo con el link secreto de la comisión
+async function promoPorToken(token) {
+  const promo = await EgrPromo.findOne({ where: { comisionToken: token, activo: true } });
+  if (!promo) throw new AppError('Este link de la comisión no es válido. Pedile el link nuevo a Paletta.', 404);
+  return promo;
+}
+
+router.get('/comision/:token', validar(v.tokenParam, 'params'), async (req, res) => {
+  res.json(await tableroComision(await promoPorToken(req.params.token)));
+});
+
+router.put('/comision/:token/integrantes', validar(v.tokenParam, 'params'), validar(v.integrantes), async (req, res) => {
+  const promo = await promoPorToken(req.params.token);
+  await promo.update({ comisionIntegrantes: req.body.integrantes });
+  res.json(await tableroComision(promo));
+});
+
+router.post('/comision/:token/diseno', validar(v.tokenParam, 'params'), validar(v.aprobarDiseno), async (req, res) => {
+  const promo = await promoPorToken(req.params.token);
+  if (promo.disenoAprobadoEl) throw new AppError('El diseño ya está aprobado.', 409);
+  const tablero = await tableroComision(promo);
+  if (!tablero.puedeAprobarDiseno) {
+    const faltan = ['datos', 'prendas', 'sena'].filter((k) => !tablero.pasos[k].completo)
+      .map((k) => ({ datos: 'datos', prendas: 'prendas y talles', sena: 'cuota 1' }[k]));
+    throw new AppError(`Para aprobar el diseño tiene que estar completa toda la promo (falta: ${faltan.join(', ')}).`, 409);
+  }
+  await promo.update({ disenoAprobadoEl: new Date(), disenoAprobadoPor: req.body.nombre });
+  res.json(await tableroComision(promo));
 });
 
 // 🔐 Familia: todo lo del alumno (datos, prendas, plan, cuponera)
