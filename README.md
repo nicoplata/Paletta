@@ -2,7 +2,7 @@
 
 Sitio de Paletta (uniformes escolares e indumentaria de egresados): catálogo público por colegio, tienda online (carrito, Mercado Pago y transferencia, cupones, envío por zona) y panel de administración. El sitio de egresados con el diseñador de buzos vive aparte en https://egresados.paletta.com.ar (repo `nicoplata/paletta-egresados`) y comparte la misma estética.
 
-- **frontend/**: React 18 + Vite. Sitio público y panel `/admin`.
+- **frontend/**: React 18 + Vite. Sitio público y panel `/admin`. Aparte, el portal de familias de egresados (`portal/`, `npm run dev:portal`, build en `dist-portal/`).
 - **backend/**: Node 20+ con Express 5, Sequelize y PostgreSQL. API REST en `/api`.
 - **deploy/**: configuración de ejemplo para la VPS (nginx y pm2).
 
@@ -86,4 +86,6 @@ Tienda (pública): `GET /api/tienda/config`, `POST /api/pedidos`, `GET /api/pedi
 
 Tienda (pública, extra): `POST /api/cupones/validar`, `GET /api/envio/cotizar?cp=`.
 
-Solo administradores (`Authorization: Bearer <token>`): `/api/admin/pedidos` (listado, resumen, detalle, cambio de estado, notas, `exportar` a CSV), `/api/admin/cupones`, `/api/admin/zonas-envio` y: CRUD de `/api/productos`, `/api/categorias`, `/api/colegios` (`/api/colegios/admin` lista también los inactivos), `/api/usuarios`, `/api/imagenes`, y la bandeja de `/api/contacto`.
+Egresados (portal de familias, `egresados.paletta.com.ar/mi-promo/<slug>`): `GET /api/egresados/promos/:slug`, `POST /api/egresados/promos/:slug/ingresar` (alumno + DNI), `POST /api/egresados/promos/:slug/alumnos`, y con el token de la familia `GET /api/egresados/mi-promo`, `PUT /api/egresados/mi-promo/{datos,prendas,plan}`.
+
+Solo administradores (`Authorization: Bearer <token>`): `/api/admin/egresados` (promos, prendas, alumnos, cuotas y pagos, búsqueda por código/DNI, cuenta para transferencias) y `/api/admin/pedidos` (listado, resumen, detalle, cambio de estado, notas, `exportar` a CSV), `/api/admin/cupones`, `/api/admin/zonas-envio` y: CRUD de `/api/productos`, `/api/categorias`, `/api/colegios` (`/api/colegios/admin` lista también los inactivos), `/api/usuarios`, `/api/imagenes`, y la bandeja de `/api/contacto`.

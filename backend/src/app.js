@@ -18,9 +18,12 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
+// El portal de familias se sirve desde el sitio de egresados (mismo backend vía nginx)
+const origenesPermitidos = [...ENV.CORS_ORIGINS, ENV.EGRESADOS_URL];
+
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || ENV.CORS_ORIGINS.includes(origin)) return callback(null, true);
+    if (!origin || origenesPermitidos.includes(origin)) return callback(null, true);
     callback(new Error('No permitido por CORS'));
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
@@ -58,6 +61,8 @@ app.use('/api/imagenes', require('./routes/imagenes'));
 app.use('/api/usuarios', require('./routes/usuarios'));
 app.use('/api/contacto', require('./routes/contacto'));
 app.use('/api/admin/pedidos', require('./routes/pedidosAdmin'));
+app.use('/api/admin/egresados', require('./routes/egresadosAdmin'));
+app.use('/api/egresados', require('./routes/egresados'));
 app.use('/api/admin', require('./routes/tiendaAdmin'));
 app.use('/api', require('./routes/tienda'));
 

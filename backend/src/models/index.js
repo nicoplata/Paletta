@@ -30,6 +30,12 @@ const db = {
   PedidoItem: require('./pedidoItemModel')(sequelize),
   Cupon: require('./cuponModel')(sequelize),
   ZonaEnvio: require('./zonaEnvioModel')(sequelize),
+  Configuracion: require('./configuracionModel')(sequelize),
+  EgrPromo: require('./egrPromoModel')(sequelize),
+  EgrPrenda: require('./egrPrendaModel')(sequelize),
+  EgrAlumno: require('./egrAlumnoModel')(sequelize),
+  EgrSeleccion: require('./egrSeleccionModel')(sequelize),
+  EgrCuota: require('./egrCuotaModel')(sequelize),
 };
 
 Object.values(db).forEach((model) => {

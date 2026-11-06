@@ -201,6 +201,26 @@ Recomendado: dar de alta el sitio en [Google Search Console](https://search.goog
 enviar `https://www.paletta.com.ar/sitemap.xml` y probar un link de producto en el
 [depurador de Facebook](https://developers.facebook.com/tools/debug/) (refresca la vista previa que también usa WhatsApp).
 
+## 11. Portal de egresados (egresados.paletta.com.ar/mi-promo)
+
+Las familias de cada promo cargan los datos del alumno, eligen prendas, talles y plan, y ven su cuponera.
+Vos lo manejás desde el panel → *Egresados*. El portal es un build aparte (`frontend/dist-portal`, lo arma
+`deploy.sh`) y lo sirve el nginx del sitio de egresados junto con `/api/egresados/`.
+
+1. Actualizar la configuración de nginx de egresados con la del repo `paletta-egresados`
+   (`deploy/nginx-egresados.conf`, bloques `/mi-promo/` y `/api/egresados/`), conservando tus rutas del certificado.
+2. Para que los límites de intentos (DNI, login, contacto) cuenten por visitante y no por servidor de
+   Cloudflare, generá la lista de IPs de Cloudflare para nginx (una vez, y cada tanto):
+
+   ```bash
+   sudo /var/www/paletta/deploy/cloudflare-real-ip.sh
+   ```
+3. En el panel → *Egresados*, cargá la cuenta para transferencias de egresados y creá la primera promo.
+   El link que se copia ahí es el que la comisión comparte en el grupo del curso.
+
+`EGRESADOS_URL` (opcional, por defecto `https://egresados.paletta.com.ar`) define los links del portal y el
+origen permitido para su API.
+
 ## Actualizaciones
 
 ```bash

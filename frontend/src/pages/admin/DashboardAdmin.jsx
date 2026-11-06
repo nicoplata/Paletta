@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaBars, FaTimes, FaBox, FaTags, FaSchool, FaUsers, FaSignOutAlt, FaEnvelope, FaExternalLinkAlt, FaShoppingBag, FaTicketAlt, FaTruck } from 'react-icons/fa';
+import { FaBars, FaTimes, FaBox, FaTags, FaSchool, FaUsers, FaSignOutAlt, FaEnvelope, FaExternalLinkAlt, FaShoppingBag, FaTicketAlt, FaTruck, FaGraduationCap } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { AdminGlobalStyles } from '../../styles/AdminStyles';
 
@@ -143,6 +143,10 @@ const DashboardAdmin = () => {
             <StyledNavLink to="/admin/dashboard/pedidos" $isCollapsed={isCollapsed}>
               <FaShoppingBag />
               <span>Pedidos</span>
+            </StyledNavLink>
+            <StyledNavLink to="/admin/dashboard/egresados" $isCollapsed={isCollapsed}>
+              <FaGraduationCap />
+              <span>Egresados</span>
             </StyledNavLink>
             <StyledNavLink to="/admin/dashboard/cupones" $isCollapsed={isCollapsed}>
               <FaTicketAlt />
