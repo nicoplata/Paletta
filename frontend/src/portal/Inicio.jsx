@@ -98,12 +98,12 @@ const Inicio = () => {
               <div className="pf-opciones">
                 <button type="button" className="pf-opcion" onClick={() => navigate(`/${promo.slug}`)}>
                   <span className="pf-opcion-icono" aria-hidden="true">👤</span>
-                  <b>Individual: soy familia de un alumno</b>
+                  <b>Mi pedido</b>
                   <small>Datos, prendas y talles, plan de pago y cuponera. Se entra con el DNI del alumno.</small>
                 </button>
                 <button type="button" className="pf-opcion" onClick={() => { setModoComision(true); setError(''); }}>
                   <span className="pf-opcion-icono" aria-hidden="true">👥</span>
-                  <b>Curso: soy de la comisión</b>
+                  <b>Mi curso</b>
                   <small>El avance de toda la promo, quién tiene pendientes y la aprobación del diseño. Se entra con la clave de la comisión.</small>
                 </button>
               </div>
