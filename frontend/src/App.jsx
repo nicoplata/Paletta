@@ -13,7 +13,7 @@ const ProductListPage = lazy(() => import('./pages/ProductListPage'));
 const SelectorColegios = lazy(() => import('./pages/SelectorColegios'));
 const ProductosPorColegio = lazy(() => import('./pages/ProductosPorColegio'));
 const DetalleProducto = lazy(() => import('./pages/DetalleProducto'));
-const EgresadosPage = lazy(() => import('./pages/EgresadosPage'));
+const IrAEgresados = lazy(() => import('./components/IrAEgresados'));
 const ContactoPage = lazy(() => import('./pages/ContactoPage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Carrito = lazy(() => import('./pages/Carrito'));
@@ -50,7 +50,7 @@ const App = () => (
               <Route path="colegios" element={<SelectorColegios />} />
               <Route path="colegios/:id/productos" element={<ProductosPorColegio />} />
               <Route path="producto/:id" element={<DetalleProducto />} />
-              <Route path="egresados" element={<EgresadosPage />} />
+              <Route path="egresados" element={<IrAEgresados />} />
               <Route path="contacto" element={<ContactoPage />} />
               <Route path="carrito" element={<Carrito />} />
               <Route path="checkout" element={<Checkout />} />

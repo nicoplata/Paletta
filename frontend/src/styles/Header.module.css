@@ -43,6 +43,70 @@
   height: auto;
 }
 
+.logoTag {
+  display: none;
+  align-self: flex-end;
+  margin-left: -4px;
+  font-family: var(--fuente);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primario-vivo);
+}
+
+/* Selector Uniformes | Egresados (igual en los dos sitios) */
+.marcas {
+  display: inline-flex;
+  padding: 3px;
+  border: 1.5px solid var(--color-borde);
+  border-radius: var(--radio-pill);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.marcas a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radio-pill);
+  text-decoration: none;
+  transition: background-color 0.25s, color 0.25s;
+}
+
+.marcas a:hover {
+  background: var(--color-fondo-alt);
+}
+
+.marcas a[aria-current] {
+  background: var(--tinta);
+  color: var(--hueso);
+}
+
+.marcasMenu {
+  justify-self: start;
+  margin-bottom: 8px;
+  border-color: rgba(245, 241, 232, 0.25);
+}
+
+.marcasMenu a {
+  min-height: 44px;
+  padding: 0 16px;
+  font-size: 0.95rem;
+}
+
+.marcasMenu a:hover {
+  background: rgba(245, 241, 232, 0.1);
+}
+
+.marcasMenu a[aria-current] {
+  background: var(--hueso);
+  color: var(--tinta);
+}
+
 .nav {
   display: flex;
   align-items: center;
@@ -167,14 +231,14 @@
   line-height: 1;
 }
 
-.menu nav {
+.menu nav:not(.marcas) {
   display: grid;
   gap: 4px;
   margin-block: auto;
   padding-block: 24px;
 }
 
-.menu nav a {
+.menu nav:not(.marcas) a {
   font-family: var(--fuente-display);
   font-weight: 800;
   font-stretch: 84%;
@@ -185,8 +249,8 @@
   transition: color 0.2s;
 }
 
-.menu nav a:hover,
-.menu nav a[aria-current='page'] {
+.menu nav:not(.marcas) a:hover,
+.menu nav:not(.marcas) a[aria-current='page'] {
   color: var(--color-primario-vivo);
 }
 
@@ -202,8 +266,13 @@
 
 @media (max-width: 1023px) {
   .nav,
-  .ctaEscritorio {
+  .ctaEscritorio,
+  .marcasHeader {
     display: none;
+  }
+
+  .logoTag {
+    display: inline;
   }
 
   .acciones {

@@ -6,13 +6,13 @@ const Hero = () => (
   <section className="hero puntos" aria-labelledby="hero-titulo">
     <div className="hero-grilla">
       <div className="hero-texto">
-        <p className="eyebrow">Uniformes escolares y egresados · Munro</p>
+        <p className="eyebrow">Paletta Uniformes · Munro</p>
         <h1 id="hero-titulo" className="display">
           Tu colegio, <span className="marca">tu uniforme.</span>
           <span className="subtitulo">Hecho en Munro.</span>
         </h1>
         <p className="lead">
-          Indumentaria deportiva y urbana para egresados, colegios y empresas. Calidad, diseño y comodidad en cada prenda.
+          Uniformes para colegios, instituciones y empresas, con fabricación propia. Elegí tu colegio y encontrá cada prenda en su talle.
         </p>
         <div className="hero-ctas">
           <Link to="/colegios" className="btn">Elegí tu colegio</Link>

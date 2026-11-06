@@ -10,9 +10,16 @@ import { CONTACTO, linkWhatsApp } from '../datosContacto';
 const LINKS = [
   { to: '/productos', texto: 'Productos' },
   { to: '/colegios', texto: 'Colegios' },
-  { to: '/egresados', texto: 'Egresados' },
   { to: '/contacto', texto: 'Contacto' },
 ];
+
+// Selector entre los dos sitios de Paletta (el mismo que tiene egresados.paletta.com.ar)
+const Marcas = ({ className = '', tabIndex }) => (
+  <nav className={`${styles.marcas} ${className}`} aria-label="Sitios de Paletta">
+    <a href="/" aria-current="true" tabIndex={tabIndex}>Uniformes</a>
+    <a href={CONTACTO.sitioEgresados} tabIndex={tabIndex}>Egresados <span aria-hidden="true">↗</span></a>
+  </nav>
+);
 
 const Header = () => {
   const location = useLocation();
@@ -46,10 +53,12 @@ const Header = () => {
     <>
       <header className={`${styles.header} ${scrolleado ? styles.conBorde : ''}`}>
         <div className={styles.interior}>
-          <Link to="/" className={styles.logo} aria-label="Paletta, ir al inicio">
+          <Link to="/" className={styles.logo} aria-label="Paletta Uniformes, ir al inicio">
             <img src={isotipo} alt="" width="34" height="27" />
             Paletta
+            <span className={styles.logoTag}>Uniformes</span>
           </Link>
+          <Marcas className={styles.marcasHeader} />
 
           <nav className={styles.nav} aria-label="Principal">
             {LINKS.map((l) => (
@@ -97,6 +106,7 @@ const Header = () => {
           <Link to="/" className={styles.logo} tabIndex={menuAbierto ? 0 : -1}>
             <img src={isotipo} alt="" width="34" height="27" />
             Paletta
+            <span className={styles.logoTag}>Uniformes</span>
           </Link>
           <button type="button" className={styles.hamburguesa} onClick={() => setMenuAbierto(false)} aria-label="Cerrar menú" tabIndex={menuAbierto ? 0 : -1}>
             ✕
@@ -108,7 +118,8 @@ const Header = () => {
           ))}
         </nav>
         <div className={styles.menuPie}>
-          <a href={presupuesto} className="btn btn-claro" target="_blank" rel="noopener noreferrer" tabIndex={menuAbierto ? 0 : -1}>
+          <Marcas className={styles.marcasMenu} tabIndex={menuAbierto ? 0 : -1} />
+          <a href={presupuesto} className="btn" target="_blank" rel="noopener noreferrer" tabIndex={menuAbierto ? 0 : -1}>
             <FaWhatsapp aria-hidden="true" /> Pedí tu presupuesto
           </a>
           <a href={`tel:${CONTACTO.telefonoLink}`} className={`btn btn-secundario ${styles.llamar}`} tabIndex={menuAbierto ? 0 : -1}>

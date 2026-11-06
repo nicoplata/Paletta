@@ -14,7 +14,7 @@ describe('useSeo', () => {
       jsonLd: { '@type': 'Product', name: 'Campera' },
     }));
 
-    expect(document.title).toBe('Campera egresados | Paletta');
+    expect(document.title).toBe('Campera egresados | Paletta Uniformes');
     expect(meta('meta[name="description"]')).toBe('Campera bordada');
     expect(meta('meta[property="og:image"]')).toMatch(/\/uploads\/a\.jpg$/);
     expect(meta('meta[property="og:type"]')).toBe('product');

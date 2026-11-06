@@ -14,7 +14,7 @@ const ProductListPage = () => {
 
   useSeo({
     titulo: 'Productos',
-    descripcion: 'Uniformes escolares, buzos, camperas y ropa de egresados. Filtrá por colegio y tipo de prenda en el catálogo de Paletta.',
+    descripcion: 'Uniformes escolares: chombas, buzos, camperas, pantalones y más. Filtrá por colegio y tipo de prenda en el catálogo de Paletta Uniformes.',
     ruta: '/productos',
   });
 

@@ -8,7 +8,7 @@ const path = require('path');
 const ENV = require('../config/env');
 const { Producto, Colegio, Categoria, Imagen, Variante } = require('../models');
 
-const PAGINAS_FIJAS = ['/', '/productos', '/colegios', '/egresados', '/contacto'];
+const PAGINAS_FIJAS = ['/', '/productos', '/colegios', '/contacto'];
 
 const escHtml = (s = '') =>
   String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -102,8 +102,8 @@ async function metadatosProducto(id) {
   if (!p || p.colegio?.activo === false) return null;
 
   const url = `${ENV.SITE_URL}/producto/${p.id}`;
-  const titulo = `${p.nombre}${p.colegio ? ` - ${p.colegio.nombre}` : ''} | Paletta`;
-  const descripcion = resumir(`${p.nombre}${p.colegio ? ` del ${p.colegio.nombre}` : ''}. ${p.descripcion || 'Uniformes e indumentaria de Paletta.'}`);
+  const titulo = `${p.nombre}${p.colegio ? ` - ${p.colegio.nombre}` : ''} | Paletta Uniformes`;
+  const descripcion = resumir(`${p.nombre}${p.colegio ? ` del ${p.colegio.nombre}` : ''}. ${p.descripcion || 'Uniformes escolares hechos en Munro por Paletta Uniformes.'}`);
   const imagenes = (p.imagenes || []).map((i) => absoluta(i.url));
   const stock = (p.variantes || []).filter((v) => v.activo).reduce((a, v) => a + v.stock, 0);
 
@@ -139,8 +139,8 @@ async function metadatosColegio(id) {
   const productos = await Producto.findAll({ where: { colegioId: c.id, activo: true }, attributes: ['nombre'], limit: 5, order: [['nombre', 'ASC']] });
   const lista = productos.map((p) => p.nombre).join(', ');
   return {
-    titulo: `Uniformes ${c.nombre} | Paletta`,
-    descripcion: resumir(`Uniformes y prendas de ${c.nombre}${c.ciudad ? ` (${c.ciudad})` : ''}${lista ? `: ${lista}` : ''}. Paletta, Munro.`),
+    titulo: `Uniformes ${c.nombre} | Paletta Uniformes`,
+    descripcion: resumir(`Uniformes y prendas de ${c.nombre}${c.ciudad ? ` (${c.ciudad})` : ''}${lista ? `: ${lista}` : ''}. Paletta Uniformes, Munro.`),
     url: `${ENV.SITE_URL}/colegios/${c.id}/productos`,
     imagen: c.imagenes?.[0] ? absoluta(c.imagenes[0].url) : undefined,
   };
