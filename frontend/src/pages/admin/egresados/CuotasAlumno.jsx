@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import api, { mensajeError } from '../../../lib/api';
 import { useToast } from '../../../context/ToastContext';
 import { Button, CheckLabel, Select, Tag } from '../adminUI';
@@ -48,7 +49,8 @@ const CuotasAlumno = ({ alumno, onCambio, resaltar }) => {
               <td><code>{c.codigo}</code></td>
               <td>{fecha(c.vencimiento)}</td>
               <td>
-                <Tag $color={COLOR_CUOTA[c.estado]}>{c.estado}</Tag>
+                <Tag $color={COLOR_CUOTA[c.estado]}>{c.estado === 'informada' ? 'comprobante en revisión' : c.estado}</Tag>
+                {c.estado === 'informada' && <Link to="/admin/dashboard/egresados/comprobantes">Revisar</Link>}
                 {c.estado === 'pagada' && <small>{fecha(c.pagadaEl)} · {c.medio}</small>}
               </td>
               <td className="num">{pesos(c.importe)}</td>

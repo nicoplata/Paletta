@@ -33,4 +33,12 @@ const ingresoEgresadosLimiter = rateLimit({
   message: { error: 'Demasiados intentos. Esperá 15 minutos y volvé a probar, o escribinos por WhatsApp.' },
 });
 
-module.exports = { apiLimiter, loginLimiter, contactoLimiter, ingresoEgresadosLimiter };
+// Subida de comprobantes desde el portal de familias
+const comprobantesLimiter = rateLimit({
+  ...base,
+  windowMs: 60 * 60 * 1000,
+  limit: Number(process.env.EGR_COMPROBANTES_POR_HORA) || 20,
+  message: { error: 'Subiste muchos archivos seguidos. Probá de nuevo en un rato o escribinos por WhatsApp.' },
+});
+
+module.exports = { apiLimiter, loginLimiter, contactoLimiter, ingresoEgresadosLimiter, comprobantesLimiter };

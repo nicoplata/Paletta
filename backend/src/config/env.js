@@ -47,6 +47,8 @@ const ENV = {
 
   UPLOAD_MAX_MB: Number(process.env.UPLOAD_MAX_MB) || 5,
   UPLOADS_DIR: path.resolve(process.env.UPLOADS_DIR || path.join(__dirname, '..', '..', 'public', 'uploads')),
+  // Archivos privados (comprobantes de pago): nunca se sirven como estáticos
+  PRIVADO_DIR: path.resolve(process.env.PRIVADO_DIR || path.join(__dirname, '..', '..', 'private')),
 
   // Mail (opcional): si no se configura, los mensajes de contacto solo se guardan en la base.
   MAIL_HOST: process.env.MAIL_HOST,

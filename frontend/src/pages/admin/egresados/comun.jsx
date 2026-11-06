@@ -69,7 +69,7 @@ export const Puntos = ({ progreso }) => {
   );
 };
 
-export const COLOR_CUOTA = { pagada: '#27ae60', pendiente: '#7f8c8d', vencida: '#c0392b' };
+export const COLOR_CUOTA = { pagada: '#27ae60', pendiente: '#7f8c8d', vencida: '#c0392b', informada: '#2980b9' };
 
 export const LinkCopiable = ({ url, onCopiado }) => (
   <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
