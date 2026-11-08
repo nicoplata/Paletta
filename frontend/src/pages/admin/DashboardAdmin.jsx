@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FaBars, FaTimes, FaBox, FaTags, FaSchool, FaUsers, FaSignOutAlt, FaEnvelope, FaExternalLinkAlt, FaShoppingBag, FaTicketAlt, FaTruck, FaGraduationCap } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
@@ -11,15 +11,60 @@ const DashboardContainer = styled.div`
   background: var(--color-fondo);
 `;
 
-const Sidebar = styled.div`
+const MOVIL = '(max-width: 768px)';
+
+const Sidebar = styled.nav`
   width: ${props => props.$isCollapsed ? '80px' : '280px'};
   background: var(--color-superficie);
   height: 100vh;
+  height: 100dvh;
   position: fixed;
-  transition: all 0.3s ease;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  transition: width 0.3s ease, transform 0.3s ease;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
+
+  /* En el celular es un panel que entra desde la izquierda y se oculta */
+  @media ${MOVIL} {
+    width: min(280px, 85vw);
+    transform: translateX(${({ $abierto }) => ($abierto ? '0' : '-105%')});
+    visibility: ${({ $abierto }) => ($abierto ? 'visible' : 'hidden')};
+    transition: transform 0.3s ease, visibility 0.3s;
+  }
+`;
+
+const Fondo = styled.div`
+  display: none;
+  @media ${MOVIL} {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: rgba(14, 14, 18, 0.45);
+    opacity: ${({ $abierto }) => ($abierto ? 1 : 0)};
+    pointer-events: ${({ $abierto }) => ($abierto ? 'auto' : 'none')};
+    transition: opacity 0.3s ease;
+  }
+`;
+
+const BarraMovil = styled.header`
+  display: none;
+  @media ${MOVIL} {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 900;
+    padding: 0.5rem 0.75rem;
+    background: var(--color-superficie);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    font-weight: 700;
+    color: #2c3e50;
+  }
 `;
 
 const SidebarHeader = styled.div`
@@ -60,6 +105,16 @@ const NavMenu = styled.div`
   flex-direction: column;
   padding: 1rem;
   flex: 1;
+  /* min-height: 0 deja que el menú se achique dentro del panel y muestre la barra de desplazamiento */
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #c9c9c9 transparent;
+
+  &::-webkit-scrollbar { width: 8px; }
+  &::-webkit-scrollbar-thumb { background: #c9c9c9; border-radius: 8px; }
+  &::-webkit-scrollbar-track { background: transparent; }
 `;
 
 const StyledNavLink = styled(NavLink)`
@@ -82,6 +137,10 @@ const StyledNavLink = styled(NavLink)`
     display: ${({ $isCollapsed }) => ($isCollapsed ? 'none' : 'block')};
   }
 
+  @media ${MOVIL} {
+    span { display: block; }
+  }
+
   &:hover {
     background: var(--color-primario-suave);
     color: var(--color-primario);
@@ -97,7 +156,13 @@ const Content = styled.main`
   margin-left: ${props => props.$isCollapsed ? '80px' : '280px'};
   padding: 2rem;
   flex: 1;
-  transition: all 0.3s ease;
+  min-width: 0;
+  transition: margin-left 0.3s ease;
+
+  @media ${MOVIL} {
+    margin-left: 0;
+    padding: 0.75rem;
+  }
 `;
 
 const ContentArea = styled.div`
@@ -105,10 +170,27 @@ const ContentArea = styled.div`
   border-radius: 15px;
   padding: 2rem;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+
+  @media ${MOVIL} {
+    padding: 1rem;
+  }
+`;
+
+const Columna = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 `;
 
 const LogoutButton = styled(StyledNavLink)`
   margin-top: auto;
+  flex: none;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
   color: var(--color-primario);
   
   &:hover {
@@ -119,8 +201,33 @@ const LogoutButton = styled(StyledNavLink)`
 
 const DashboardAdmin = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [abierto, setAbierto] = useState(false); // panel en el celular
+  const [esMovil, setEsMovil] = useState(() => window.matchMedia(MOVIL).matches);
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { logout } = useAuth();
+
+  useEffect(() => {
+    const mq = window.matchMedia(MOVIL);
+    const alCambiar = (e) => { setEsMovil(e.matches); if (!e.matches) setAbierto(false); };
+    mq.addEventListener('change', alCambiar);
+    return () => mq.removeEventListener('change', alCambiar);
+  }, []);
+
+  // Al navegar se cierra el panel del celular
+  useEffect(() => { setAbierto(false); }, [pathname]);
+
+  // Escape cierra el panel y, mientras está abierto, la página de atrás no se desplaza
+  useEffect(() => {
+    if (!abierto) return undefined;
+    const alTeclear = (e) => { if (e.key === 'Escape') setAbierto(false); };
+    document.addEventListener('keydown', alTeclear);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.removeEventListener('keydown', alTeclear); document.body.style.overflow = overflow; };
+  }, [abierto]);
+
+  const colapsado = isCollapsed && !esMovil;
 
   const handleLogout = () => {
     logout();
@@ -131,68 +238,79 @@ const DashboardAdmin = () => {
     <>
       <AdminGlobalStyles />
       <DashboardContainer>
-        <Sidebar $isCollapsed={isCollapsed}>
-          <SidebarHeader $isCollapsed={isCollapsed}>
-            <Title $isCollapsed={isCollapsed}>Panel Admin</Title>
-            <ToggleButton onClick={() => setIsCollapsed(!isCollapsed)} aria-label={isCollapsed ? 'Expandir menú' : 'Colapsar menú'}>
-              {isCollapsed ? <FaBars /> : <FaTimes />}
-            </ToggleButton>
+        <Fondo $abierto={abierto} onClick={() => setAbierto(false)} aria-hidden="true" />
+        <Sidebar id="admin-menu" aria-label="Menú del panel" $isCollapsed={colapsado} $abierto={abierto}>
+          <SidebarHeader $isCollapsed={colapsado}>
+            <Title $isCollapsed={colapsado}>Panel Admin</Title>
+            {esMovil ? (
+              <ToggleButton type="button" onClick={() => setAbierto(false)} aria-label="Cerrar menú"><FaTimes /></ToggleButton>
+            ) : (
+              <ToggleButton type="button" onClick={() => setIsCollapsed(!isCollapsed)} aria-label={isCollapsed ? 'Expandir menú' : 'Colapsar menú'}>
+                {isCollapsed ? <FaBars /> : <FaTimes />}
+              </ToggleButton>
+            )}
           </SidebarHeader>
 
           <NavMenu>
-            <StyledNavLink to="/admin/dashboard/pedidos" $isCollapsed={isCollapsed}>
+            <StyledNavLink to="/admin/dashboard/pedidos" $isCollapsed={colapsado}>
               <FaShoppingBag />
               <span>Pedidos</span>
             </StyledNavLink>
-            <StyledNavLink to="/admin/dashboard/egresados" $isCollapsed={isCollapsed}>
+            <StyledNavLink to="/admin/dashboard/egresados" $isCollapsed={colapsado}>
               <FaGraduationCap />
               <span>Egresados</span>
             </StyledNavLink>
-            <StyledNavLink to="/admin/dashboard/cupones" $isCollapsed={isCollapsed}>
+            <StyledNavLink to="/admin/dashboard/cupones" $isCollapsed={colapsado}>
               <FaTicketAlt />
               <span>Cupones</span>
             </StyledNavLink>
-            <StyledNavLink to="/admin/dashboard/envios" $isCollapsed={isCollapsed}>
+            <StyledNavLink to="/admin/dashboard/envios" $isCollapsed={colapsado}>
               <FaTruck />
               <span>Envíos</span>
             </StyledNavLink>
-            <StyledNavLink to="/admin/dashboard/productos" $isCollapsed={isCollapsed}>
+            <StyledNavLink to="/admin/dashboard/productos" $isCollapsed={colapsado}>
               <FaBox />
               <span>Productos</span>
             </StyledNavLink>
-            <StyledNavLink to="/admin/dashboard/categorias" $isCollapsed={isCollapsed}>
+            <StyledNavLink to="/admin/dashboard/categorias" $isCollapsed={colapsado}>
               <FaTags />
               <span>Categorías</span>
             </StyledNavLink>
-            <StyledNavLink to="/admin/dashboard/colegios" $isCollapsed={isCollapsed}>
+            <StyledNavLink to="/admin/dashboard/colegios" $isCollapsed={colapsado}>
               <FaSchool />
               <span>Colegios</span>
             </StyledNavLink>
-            <StyledNavLink to="/admin/dashboard/usuarios" $isCollapsed={isCollapsed}>
+            <StyledNavLink to="/admin/dashboard/usuarios" $isCollapsed={colapsado}>
               <FaUsers />
               <span>Usuarios</span>
             </StyledNavLink>
-            <StyledNavLink to="/admin/dashboard/mensajes" $isCollapsed={isCollapsed}>
+            <StyledNavLink to="/admin/dashboard/mensajes" $isCollapsed={colapsado}>
               <FaEnvelope />
               <span>Mensajes</span>
             </StyledNavLink>
-            <StyledNavLink as="a" href="/" target="_blank" rel="noopener noreferrer" $isCollapsed={isCollapsed}>
+            <StyledNavLink as="a" href="/" target="_blank" rel="noopener noreferrer" $isCollapsed={colapsado}>
               <FaExternalLinkAlt />
               <span>Ver sitio</span>
             </StyledNavLink>
             
-            <LogoutButton as="button" onClick={handleLogout} $isCollapsed={isCollapsed}>
+            <LogoutButton as="button" onClick={handleLogout} $isCollapsed={colapsado}>
               <FaSignOutAlt />
               <span>Cerrar Sesión</span>
             </LogoutButton>
           </NavMenu>
         </Sidebar>
 
-        <Content $isCollapsed={isCollapsed}>
-          <ContentArea>
-            <Outlet />
-          </ContentArea>
-        </Content>
+        <Columna>
+          <BarraMovil>
+            <ToggleButton type="button" onClick={() => setAbierto(true)} aria-label="Abrir menú" aria-expanded={abierto} aria-controls="admin-menu"><FaBars /></ToggleButton>
+            Panel Admin
+          </BarraMovil>
+          <Content $isCollapsed={colapsado}>
+            <ContentArea>
+              <Outlet />
+            </ContentArea>
+          </Content>
+        </Columna>
       </DashboardContainer>
     </>
   );
