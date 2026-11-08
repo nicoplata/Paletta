@@ -1,0 +1,31 @@
+/* Fichas de producción: se ven en el panel y se imprimen en A4 sin el menú del admin */
+.ficha { background: #fff; color: #111; border: 1px solid #ddd; border-radius: 10px; padding: 24px; margin-bottom: 24px; font-size: 14px; }
+.ficha h2 { margin: 0 0 4px; font-size: 1.35rem; }
+.ficha h3 { margin: 18px 0 8px; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; color: #555; }
+.ficha-cabecera { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; border-bottom: 2px solid #111; padding-bottom: 10px; margin-bottom: 8px; }
+.ficha-cabecera small { color: #555; }
+.ficha-tipo { font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; font-size: 0.75rem; color: #8f141b; }
+.ficha table { width: 100%; border-collapse: collapse; }
+.ficha th, .ficha td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; vertical-align: top; }
+.ficha th { background: #f3f3f3; font-weight: 700; }
+.ficha td.num, .ficha th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.ficha .total td { font-weight: 800; background: #fafafa; }
+.ficha-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+.ficha-diseno { width: 100%; border: 1px solid #ddd; border-radius: 8px; }
+.ficha-check { width: 18px; height: 18px; border: 1.5px solid #333; display: inline-block; border-radius: 3px; }
+.ficha-firmas { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 32px; }
+.ficha-firmas div { border-top: 1px solid #333; padding-top: 6px; font-size: 12px; color: #444; }
+.ficha-aviso { background: #fff5e6; border: 1px solid #f0c27a; border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
+.ficha-pasos { white-space: pre-wrap; }
+@media (max-width: 700px) { .ficha-grid { grid-template-columns: 1fr; } .ficha { padding: 14px; } }
+
+@media print {
+  @page { size: A4; margin: 12mm; }
+  body { background: #fff !important; }
+  #admin-menu, .no-print, header { display: none !important; }
+  main { margin: 0 !important; padding: 0 !important; }
+  main > div { box-shadow: none !important; padding: 0 !important; background: #fff !important; }
+  .ficha { border: 0; padding: 0; margin: 0; break-after: page; }
+  .ficha:last-child { break-after: auto; }
+  .ficha tr, .ficha img { break-inside: avoid; }
+}

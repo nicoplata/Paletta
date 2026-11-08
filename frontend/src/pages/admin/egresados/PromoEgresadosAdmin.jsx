@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { FaArrowLeft, FaEdit, FaPlus, FaTrash } from 'react-icons/fa';
+import { FaArrowLeft, FaCut, FaEdit, FaPlus, FaTrash } from 'react-icons/fa';
 import api, { mensajeError } from '../../../lib/api';
 import useRecurso from '../../../hooks/useRecurso';
 import { useToast } from '../../../context/ToastContext';
@@ -10,7 +10,44 @@ import {
 import { FormPromo, aPayloadPromo } from './EgresadosAdmin';
 import { Cifras, ESTADOS_PRODUCCION, LinkCopiable, Puntos, Seccion, Tabla, TablaScroll, fecha, nombrePlan, pesos } from './comun';
 
-const PRENDA_VACIA = { nombre: '', descripcion: '', precio: '', talles: '4, 6, 8, 10, 12, 14, 16, S, M, L, XL, XXL', conBordado: false, orden: '0', activo: true };
+// Ficha técnica y materiales de una prenda (para la calculadora y las fichas de producción)
+const ProduccionPrenda = ({ prenda, setPrenda, modelos, materiales }) => {
+  const modelo = modelos.find((m) => m.id === Number(prenda.modeloId));
+  const opciones = (tipo) => materiales.filter((m) => m.tipo === tipo && (m.activo || Object.values(prenda.materiales).map(Number).includes(m.id)));
+  const elegir = (rol, valor) => setPrenda({ ...prenda, materiales: { ...prenda.materiales, [rol]: valor } });
+  const fila = (rol, tipo) => (
+    <FormGroup key={rol}>
+      <Label htmlFor={`mat-${rol}`}>{rol}</Label>
+      <Select id={`mat-${rol}`} value={prenda.materiales[rol] || ''} onChange={(e) => elegir(rol, e.target.value)}>
+        <option value="">Elegir {tipo === 'tela' ? 'tela' : 'insumo'}…</option>
+        {opciones(tipo).map((m) => <option key={m.id} value={m.id}>{m.nombre}{m.color ? ` · ${m.color}` : ''}{m.proveedor ? ` (${m.proveedor})` : ''}</option>)}
+      </Select>
+    </FormGroup>
+  );
+  return (
+    <fieldset style={{ border: '1px solid #e3e3e3', borderRadius: 10, padding: '12px 14px', margin: '8px 0' }}>
+      <legend style={{ fontWeight: 700, padding: '0 6px' }}>Producción</legend>
+      <FormGroup>
+        <Label htmlFor="p-modelo">Ficha técnica</Label>
+        <Select id="p-modelo" value={prenda.modeloId || ''} onChange={(e) => setPrenda({ ...prenda, modeloId: e.target.value })}>
+          <option value="">Sin ficha técnica</option>
+          {modelos.filter((m) => m.activo || m.id === Number(prenda.modeloId)).map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+        </Select>
+      </FormGroup>
+      {modelos.length === 0 && <Hint>Todavía no hay fichas técnicas: cargalas en <Link to="/admin/dashboard/produccion">Producción</Link>.</Hint>}
+      {modelo && (
+        <>
+          {modelo.piezas.length > 0 && <Row style={{ flexWrap: 'wrap' }}>{modelo.piezas.map((p) => fila(p.rol, 'tela'))}</Row>}
+          {modelo.insumos.length > 0 && <Row style={{ flexWrap: 'wrap' }}>{modelo.insumos.map((p) => fila(p.rol, 'insumo'))}</Row>}
+          {materiales.length === 0 && <Hint>Cargá las telas e insumos en <Link to="/admin/dashboard/produccion?tab=materiales">Producción → Materiales</Link>.</Hint>}
+        </>
+      )}
+      <FormGroup><Label htmlFor="p-ficha">Indicaciones para la ficha de producto (opcional)</Label><TextArea id="p-ficha" rows={2} value={prenda.fichaNotas} onChange={(e) => setPrenda({ ...prenda, fichaNotas: e.target.value })} placeholder="Bordado en la espalda, tipografía, ubicación del escudo…" /></FormGroup>
+    </fieldset>
+  );
+};
+
+const PRENDA_VACIA = { nombre: '', descripcion: '', precio: '', talles: '4, 6, 8, 10, 12, 14, 16, S, M, L, XL, XXL', conBordado: false, orden: '0', activo: true, modeloId: '', materiales: {}, fichaNotas: '' };
 
 const aFormPromo = (p) => ({
   codigo: p.codigo,
@@ -31,6 +68,8 @@ const PromoEgresadosAdmin = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { data: promo, cargando, error, recargar } = useRecurso(`/admin/egresados/promos/${id}`);
+  const { data: modelos } = useRecurso('/admin/produccion/modelos', { porDefecto: [] });
+  const { data: materiales } = useRecurso('/admin/produccion/materiales', { porDefecto: [] });
   const [editando, setEditando] = useState(null);
   const [errorPromo, setErrorPromo] = useState('');
   const [prenda, setPrenda] = useState(null);
@@ -149,11 +188,16 @@ const PromoEgresadosAdmin = () => {
     e.preventDefault();
     setErrorPrenda('');
     const { id: prendaId, ...f } = prenda;
+    const modelo = modelos.find((m) => m.id === Number(f.modeloId));
+    const roles = modelo ? [...modelo.piezas, ...modelo.insumos].map((x) => x.rol) : [];
     const payload = {
-      ...f,
+      nombre: f.nombre, descripcion: f.descripcion, conBordado: f.conBordado, activo: f.activo,
       precio: Number(f.precio),
       orden: Number(f.orden || 0),
       talles: f.talles.split(',').map((t) => t.trim()).filter(Boolean),
+      modeloId: modelo ? modelo.id : null,
+      materiales: Object.fromEntries(roles.map((r) => [r, f.materiales[r] ? Number(f.materiales[r]) : null])),
+      fichaNotas: f.fichaNotas,
     };
     try {
       if (prendaId) await api.put(`/admin/egresados/prendas/${prendaId}`, payload);
@@ -291,6 +335,12 @@ const PromoEgresadosAdmin = () => {
       </Seccion>
 
       <Seccion>
+        <h2>Producción</h2>
+        <Hint style={{ marginBottom: 10 }}>Calculadora de tela e insumos, costo por prenda, fichas de producto y de corte para imprimir y lista de compras. Cada prenda necesita su ficha técnica y sus materiales (se eligen al editarla).</Hint>
+        <Button as={Link} to={`/admin/dashboard/egresados/${promo.id}/produccion`} $primario style={{ textDecoration: 'none' }}><FaCut /> Abrir producción</Button>
+      </Seccion>
+
+      <Seccion>
         <h2>Planillas (Excel)</h2>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <Button type="button" onClick={() => descargar('talles')} title="Cantidad por prenda y talle, para cortar">Talles por prenda</Button>
@@ -332,6 +382,7 @@ const PromoEgresadosAdmin = () => {
               <CheckLabel><input type="checkbox" checked={prenda.conBordado} onChange={(e) => setPrenda({ ...prenda, conBordado: e.target.checked })} /> Lleva nombre o apodo bordado</CheckLabel>
               <CheckLabel><input type="checkbox" checked={prenda.activo} onChange={(e) => setPrenda({ ...prenda, activo: e.target.checked })} /> Disponible</CheckLabel>
             </div>
+            <ProduccionPrenda prenda={prenda} setPrenda={setPrenda} modelos={modelos} materiales={materiales} />
             <ButtonGroup><Button type="button" onClick={() => setPrenda(null)}>Cancelar</Button><Button type="submit" $primario>Guardar prenda</Button></ButtonGroup>
           </Form>
         ) : (
@@ -348,7 +399,7 @@ const PromoEgresadosAdmin = () => {
                         <td>{p.conBordado ? 'Sí' : 'No'}</td>
                         <td className="num">{pesos(p.precio)}</td>
                         <td className="num">
-                          <IconButton onClick={() => setPrenda({ ...p, precio: String(p.precio), orden: String(p.orden), talles: p.talles.join(', '), descripcion: p.descripcion || '' })} aria-label={`Editar ${p.nombre}`}><FaEdit /></IconButton>
+                          <IconButton onClick={() => setPrenda({ ...p, precio: String(p.precio), orden: String(p.orden), talles: p.talles.join(', '), descripcion: p.descripcion || '', modeloId: p.modeloId || '', materiales: p.materiales || {}, fichaNotas: p.fichaNotas || '' })} aria-label={`Editar ${p.nombre}`}><FaEdit /></IconButton>
                           <IconButton $peligro onClick={() => eliminarPrenda(p)} aria-label={`Eliminar ${p.nombre}`}><FaTrash /></IconButton>
                         </td>
                       </tr>

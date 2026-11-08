@@ -42,6 +42,8 @@ const AlumnoEgresadosAdmin = lazy(() => import('./pages/admin/egresados/AlumnoEg
 const CobranzaEgresadosAdmin = lazy(() => import('./pages/admin/egresados/CobranzaEgresadosAdmin'));
 const ComprobantesEgresadosAdmin = lazy(() => import('./pages/admin/egresados/ComprobantesEgresadosAdmin'));
 const PresupuestosEgresadosAdmin = lazy(() => import('./pages/admin/egresados/PresupuestosEgresadosAdmin'));
+const ProduccionAdmin = lazy(() => import('./pages/admin/produccion/ProduccionAdmin'));
+const ProduccionPromoAdmin = lazy(() => import('./pages/admin/produccion/ProduccionPromoAdmin'));
 
 const App = () => (
   <AuthProvider>
@@ -100,6 +102,8 @@ const App = () => (
               <Route path="egresados/presupuestos" element={<PresupuestosEgresadosAdmin />} />
               <Route path="egresados/alumnos/:id" element={<AlumnoEgresadosAdmin />} />
               <Route path="egresados/:id" element={<PromoEgresadosAdmin />} />
+              <Route path="egresados/:id/produccion" element={<ProduccionPromoAdmin />} />
+              <Route path="produccion" element={<ProduccionAdmin />} />
             </Route>
           </Routes>
         </Suspense>

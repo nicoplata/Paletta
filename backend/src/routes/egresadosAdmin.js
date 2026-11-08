@@ -1,7 +1,7 @@
 // Panel: gestión de promos de egresados, prendas, alumnos y cobranza.
 const express = require('express');
 const { Op } = require('sequelize');
-const { sequelize, EgrPromo, EgrPrenda, EgrAlumno, EgrSeleccion, EgrCuota, EgrComprobante, EgrDiseno, EgrPresupuesto } = require('../models');
+const { sequelize, EgrPromo, EgrPrenda, EgrAlumno, EgrSeleccion, EgrCuota, EgrComprobante, EgrDiseno, EgrPresupuesto, ProdModelo, ProdMaterial } = require('../models');
 const { soloAdmin } = require('../middleware/auth');
 const validar = require('../middleware/validator');
 const v = require('../validators/egresados');
@@ -161,14 +161,25 @@ router.delete('/promos/:id', conId, async (req, res) => {
 });
 
 // ---------- prendas ----------
+// Verifica la ficha técnica y los materiales elegidos para producción (y descarta los vacíos)
+async function datosProduccion(datos) {
+  if (datos.modeloId) await buscarOFallar(ProdModelo, datos.modeloId, 'La ficha técnica no existe');
+  if (datos.materiales) {
+    datos.materiales = Object.fromEntries(Object.entries(datos.materiales).filter(([, idMat]) => idMat));
+    const ids = [...new Set(Object.values(datos.materiales))];
+    if (ids.length && await ProdMaterial.count({ where: { id: ids } }) !== ids.length) throw new AppError('Alguno de los materiales elegidos no existe', 400);
+  }
+  return datos;
+}
+
 router.post('/promos/:id/prendas', conId, validar(v.prendaNueva), async (req, res) => {
   const promo = await buscarOFallar(EgrPromo, req.params.id, 'Promo no encontrada');
-  res.status(201).json(await EgrPrenda.create({ ...req.body, promoId: promo.id }));
+  res.status(201).json(await EgrPrenda.create({ ...await datosProduccion(req.body), promoId: promo.id }));
 });
 
 router.put('/prendas/:id', conId, validar(v.prendaEdicion), async (req, res) => {
   const prenda = await buscarOFallar(EgrPrenda, req.params.id, 'Prenda no encontrada');
-  await prenda.update(req.body);
+  await prenda.update(await datosProduccion(req.body));
   res.json(prenda);
 });
 
