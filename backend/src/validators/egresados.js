@@ -35,6 +35,10 @@ const prenda = {
   conBordado: Joi.boolean(),
   orden: Joi.number().integer().min(0).max(999),
   activo: Joi.boolean(),
+  // Producción: ficha técnica y material elegido para cada pieza o insumo de la ficha
+  modeloId: id.allow(null),
+  materiales: Joi.object().pattern(Joi.string().trim().min(1).max(60), id.allow(null)),
+  fichaNotas: opcional(3000),
 };
 
 const requeridos = (obj, campos) => Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, campos.includes(k) ? v.required() : v]));

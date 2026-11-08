@@ -40,6 +40,8 @@ const db = {
   EgrComprobante: require('./egrComprobanteModel')(sequelize),
   EgrDiseno: require('./egrDisenoModel')(sequelize),
   EgrPresupuesto: require('./egrPresupuestoModel')(sequelize),
+  ProdMaterial: require('./prodMaterialModel')(sequelize),
+  ProdModelo: require('./prodModeloModel')(sequelize),
 };
 
 Object.values(db).forEach((model) => {
