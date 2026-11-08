@@ -320,7 +320,7 @@
   position: relative;
 }
 
-.contacto-form h3 {
+.contacto-form .contacto-form-titulo {
   font-family: var(--fuente-display);
   font-weight: 800;
   font-size: 1.6rem;
@@ -404,7 +404,7 @@
   color: var(--color-primario-vivo);
 }
 
-.footer .footer-hermano {
+.footer h2.footer-hermano {
   margin-top: 22px;
 }
 
@@ -413,7 +413,7 @@
   max-width: 34ch;
 }
 
-.footer h3 {
+.footer h2 {
   font-size: 0.78rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
