@@ -58,12 +58,16 @@ async function crearPreferencia(pedido, items) {
     items: itemsParaMp(pedido, items),
     payer: { name: pedido.nombre, email: pedido.email },
     back_urls: { success: urlPedido, pending: urlPedido, failure: urlPedido },
-    auto_return: 'approved',
-    notification_url: `${ENV.SITE_URL}/api/pagos/webhook`,
     statement_descriptor: 'PALETTA',
     expires: true,
     expiration_date_to: new Date(pedido.venceAt).toISOString(),
   };
+  // Mercado Pago rechaza notification_url y auto_return con URLs locales (http://localhost).
+  // En local el pago se confirma igual al volver a la página del pedido (verificar-pago).
+  if (ENV.SITE_URL.startsWith('https://')) {
+    preferencia.auto_return = 'approved';
+    preferencia.notification_url = `${ENV.SITE_URL}/api/pagos/webhook`;
+  }
   if (pedido.costoEnvio > 0) {
     preferencia.items.push({ id: 'envio', title: 'Envío a domicilio', quantity: 1, unit_price: pedido.costoEnvio, currency_id: 'ARS' });
   }

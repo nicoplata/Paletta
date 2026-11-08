@@ -54,6 +54,23 @@ Panel de administración: `http://localhost:5173/admin`.
 - Tienda: `TIENDA_HABILITADA`, Mercado Pago (`MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET`), transferencia (`TRANSFERENCIA_*`), envío (`ENVIO_*`). Ver `deploy/VPS.md` §9.
 - `frontend/.env.example`: `VITE_API_URL` (vacío si front y API comparten dominio) y `VITE_MOSTRAR_PRECIOS` (`false` = modo catálogo, `true` = muestra precios y stock).
 
+### Probar la tienda con Mercado Pago (modo prueba)
+
+1. En https://www.mercadopago.com.ar/developers/panel/app entrá a tu aplicación → **Credenciales de prueba** y copiá el **Access Token** (empieza con `TEST-` o `APP_USR-` de un usuario de prueba). No uses el de producción.
+2. En **Cuentas de prueba** creá dos usuarios: un *vendedor* (sus credenciales son las del paso 1 si querés aislarlo) y un *comprador*. Para pagar vas a iniciar sesión en Mercado Pago con el comprador.
+3. En `backend/.env`:
+   ```
+   TIENDA_HABILITADA=true
+   SITE_URL=http://localhost:5173
+   MP_ACCESS_TOKEN=TEST-xxxxxxxx
+   ```
+   y reiniciá la API. Cargá al menos un producto activo con stock y precio desde el panel.
+4. Comprá desde http://localhost:5173: al volver de Mercado Pago, la página del pedido verifica el pago (en local no hay webhook: Mercado Pago no acepta `localhost` como `notification_url`).
+5. Tarjetas de prueba: https://www.mercadopago.com.ar/developers/es/docs/checkout-pro/additional-content/your-integrations/test/cards. El **nombre del titular** define el resultado: `APRO` aprobado, `OTHE` rechazado, `CONT` pendiente. CVV `123`, vencimiento `11/30`, DNI `12345678`.
+6. Qué revisar: al crear el pedido el stock queda reservado (baja); si el pago se aprueba el pedido pasa a *pagado* y el stock queda descontado; si se rechaza o vence, el stock vuelve.
+
+Para probar el webhook (y que el estado cambie sin volver a la página) hace falta una URL pública con https, por ejemplo un túnel (`cloudflared tunnel --url http://localhost:5173`, el servidor de Vite reenvía `/api` a la API) puesto en `SITE_URL`.
+
 ## Tests y CI
 
 ```bash
