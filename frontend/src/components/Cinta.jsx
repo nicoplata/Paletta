@@ -9,7 +9,7 @@ const Cinta = () => (
       {[0, 1].map((g) => (
         <div className="cinta-grupo" key={g}>
           {ITEMS.map((t, i) => (
-            <span key={t} className={`cinta-item${i % 2 ? ' hueca' : ''}`}>{t} ★</span>
+            <span key={t} className={`cinta-item${i % 2 ? ' acento' : ''}`}>{t} ★</span>
           ))}
         </div>
       ))}

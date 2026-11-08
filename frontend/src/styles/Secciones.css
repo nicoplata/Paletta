@@ -185,29 +185,10 @@
   white-space: nowrap;
 }
 
-/* Contorno: la tipografía variable tiene contornos superpuestos y con -webkit-text-stroke se
-   ven líneas dentro de la H, la E… El contorno se arma con sombras alrededor de la letra
-   (que solo siguen su silueta) y el relleno es del color de la cinta. */
-.cinta-item.hueca {
-  color: var(--color-primario);
-  letter-spacing: 0.02em;
-  text-shadow:
-    1.6px 0.0px 0 var(--color-sobre-primario),
-    1.48px 0.61px 0 var(--color-sobre-primario),
-    1.13px 1.13px 0 var(--color-sobre-primario),
-    0.61px 1.48px 0 var(--color-sobre-primario),
-    0.0px 1.6px 0 var(--color-sobre-primario),
-    -0.61px 1.48px 0 var(--color-sobre-primario),
-    -1.13px 1.13px 0 var(--color-sobre-primario),
-    -1.48px 0.61px 0 var(--color-sobre-primario),
-    -1.6px 0.0px 0 var(--color-sobre-primario),
-    -1.48px -0.61px 0 var(--color-sobre-primario),
-    -1.13px -1.13px 0 var(--color-sobre-primario),
-    -0.61px -1.48px 0 var(--color-sobre-primario),
-    -0.0px -1.6px 0 var(--color-sobre-primario),
-    0.61px -1.48px 0 var(--color-sobre-primario),
-    1.13px -1.13px 0 var(--color-sobre-primario),
-    1.48px -0.61px 0 var(--color-sobre-primario);
+/* Ítems alternados en el amarillo de los stickers: el contorno hueco no se veía bien con
+   esta tipografía variable (contornos superpuestos), así que se usa un relleno de acento. */
+.cinta-item.acento {
+  color: var(--acento-amarillo);
 }
 
 @keyframes desplazar {
