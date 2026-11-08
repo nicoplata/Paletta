@@ -28,6 +28,7 @@ const SelectorColegios = () => {
       <h1 className="pagina-titulo">Elegí tu colegio</h1>
       {loading && <LoadingSpinner />}
       {errorMensaje && <p className="aviso error">{errorMensaje}</p>}
+      <h2 className="sr-only">Colegios</h2>
       <div className="grid-colegios">
         {colegios.map((colegio) => (
           <TarjetaColegio key={colegio.id} colegio={colegio} onSelect={handleSelect} conInfo />

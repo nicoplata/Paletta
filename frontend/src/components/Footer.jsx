@@ -14,7 +14,7 @@ const Footer = () => (
         <p>Uniformes escolares, institucionales y de empresa. Fabricación propia en Munro, Vicente López.</p>
       </div>
       <nav aria-label="Secciones">
-        <h3>Navegá</h3>
+        <h2>Navegá</h2>
         <ul>
           <li><Link to="/productos">Productos</Link></li>
           <li><Link to="/colegios">Colegios</Link></li>
@@ -22,7 +22,7 @@ const Footer = () => (
         </ul>
       </nav>
       <div>
-        <h3>Contacto</h3>
+        <h2>Contacto</h2>
         <address>
           <a href={linkWhatsApp()} target="_blank" rel="noopener noreferrer">WhatsApp {CONTACTO.telefono}</a>
           <a href={`mailto:${CONTACTO.email}`}>{CONTACTO.email}</a>
@@ -31,11 +31,11 @@ const Footer = () => (
         </address>
       </div>
       <div>
-        <h3>Seguinos</h3>
+        <h2>Seguinos</h2>
         <ul>
           <li><a href={CONTACTO.instagramUniformes} target="_blank" rel="noopener noreferrer">@paletta.uniformes</a></li>
         </ul>
-        <h3 className="footer-hermano">¿Sos de la promo?</h3>
+        <h2 className="footer-hermano">¿Sos de la promo?</h2>
         <ul>
           <li><a href={CONTACTO.sitioEgresados}>Paletta Egresados ↗</a></li>
         </ul>

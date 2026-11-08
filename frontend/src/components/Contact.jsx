@@ -7,6 +7,8 @@ import '../styles/Secciones.css';
 const VACIO = { nombre: '', email: '', mensaje: '', sitio: '' }; // "sitio" es un honeypot anti-spam
 
 const Contact = ({ titulo: Titulo = 'h2' }) => {
+  // El subtítulo del formulario queda un nivel debajo del título de la sección
+  const Subtitulo = Titulo === 'h1' ? 'h2' : 'h3';
   const [formData, setFormData] = useState(VACIO);
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
@@ -60,7 +62,7 @@ const Contact = ({ titulo: Titulo = 'h2' }) => {
         </div>
 
         <form className="contacto-form tarjeta" onSubmit={handleSubmit}>
-          <h3>Dejanos tu consulta</h3>
+          <Subtitulo className="contacto-form-titulo">Dejanos tu consulta</Subtitulo>
           <label className="campo" htmlFor="nombre">
             Nombre
             <input type="text" id="nombre" name="nombre" value={formData.nombre} onChange={handleChange} required minLength={2} maxLength={100} autoComplete="name" />

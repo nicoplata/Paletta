@@ -25,6 +25,7 @@ const ProductosPorColegio = () => {
     <div className="pagina">
       <Link to="/colegios" className="volver">← Ver todos los colegios</Link>
       <h1 className="pagina-titulo">{colegio ? `Uniformes de ${colegio.nombre}` : 'Productos'}</h1>
+      <h2 className="sr-only">Prendas del colegio</h2>
       <ProductList productos={productos} loading={loading} error={errorMensaje} mostrarColegio={false} />
     </div>
   );

@@ -40,6 +40,7 @@ const ProductListPage = () => {
 
         <div className="productContainer productos">
           <div className="productGridWrapper">
+            <h2 className="sr-only">Listado de productos</h2>
             <ProductList productos={paginados} loading={loading} error={errorMensaje} />
           </div>
 
