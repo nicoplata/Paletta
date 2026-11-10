@@ -15,11 +15,15 @@ module.exports = (sequelize) => {
     modeloId: { type: DataTypes.INTEGER },
     materiales: { type: DataTypes.JSONB, allowNull: false, defaultValue: {} },
     fichaNotas: { type: DataTypes.TEXT },
+    // Seguimiento interno: etapa actual y fecha en que llegó a cada etapa ({ cortado: '2027-05-02' })
+    etapa: { type: DataTypes.STRING(20), allowNull: false, defaultValue: 'pendiente' },
+    seguimiento: { type: DataTypes.JSONB, allowNull: false, defaultValue: {} },
   }, { tableName: 'EgrPrendas' });
 
   EgrPrenda.associate = (m) => {
     EgrPrenda.belongsTo(m.EgrPromo, { foreignKey: 'promoId', as: 'promo' });
     EgrPrenda.belongsTo(m.ProdModelo, { foreignKey: 'modeloId', as: 'modelo' });
+    EgrPrenda.hasMany(m.ProdOrden, { foreignKey: 'prendaId', as: 'ordenes' });
   };
   return EgrPrenda;
 };

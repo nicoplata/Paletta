@@ -535,3 +535,8 @@ body { background: var(--color-fondo); }
 .tb-diseno { display: grid; gap: 4px; text-decoration: none; color: var(--color-texto-tenue); font-size: var(--texto-sm); }
 .tb-diseno img { width: 100%; border-radius: 14px; border: 1px solid var(--color-borde); background: var(--hueso); }
 .tb-proponer { justify-self: start; margin-bottom: 12px; }
+
+/* Contrato firmado de la promo */
+.pf-contrato { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.pf-contrato .pf-h2 { margin-bottom: 2px; }
+.pf-contrato p { margin: 0; }

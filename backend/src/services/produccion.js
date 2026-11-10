@@ -1,10 +1,26 @@
 // Producción de egresados: curva de talles, consumo de tela e insumos, costos y lista de compras.
 // Las funciones de cálculo son puras (reciben los datos ya cargados) para poder testearlas.
-const { EgrPromo, EgrPrenda, EgrAlumno, EgrSeleccion, EgrCuota, EgrComprobante, EgrDiseno, ProdMaterial, ProdModelo } = require('../models');
+const { EgrPromo, EgrPrenda, EgrAlumno, EgrSeleccion, EgrCuota, EgrComprobante, EgrDiseno, ProdMaterial, ProdModelo, ProdOrden, ProdTaller } = require('../models');
 const egr = require('./egresados');
 const { serializarDiseno } = require('./disenosEgresados');
 
 const r2 = (n) => Math.round(n * 100) / 100;
+
+// Etapas internas de cada prenda (el seguimiento guarda la fecha en que llegó a cada una)
+const ETAPAS = ['pendiente', 'materiales', 'cortado', 'taller', 'control', 'listo'];
+const NOMBRE_ETAPA = {
+  pendiente: 'Sin empezar', materiales: 'Materiales comprados', cortado: 'Cortada', taller: 'En taller', control: 'Control y terminación', listo: 'Lista',
+};
+
+// Pasa una prenda a una etapa: anota la fecha y borra las de las etapas posteriores (si se vuelve atrás)
+function moverEtapa(prenda, etapa, fecha) {
+  const i = ETAPAS.indexOf(etapa);
+  const seguimiento = Object.fromEntries(Object.entries(prenda.seguimiento || {}).filter(([k]) => ETAPAS.indexOf(k) <= i && k !== etapa));
+  if (etapa !== 'pendiente') seguimiento[etapa] = fecha;
+  return { etapa, seguimiento };
+}
+
+const sumar = (obj) => Object.values(obj || {}).reduce((a, n) => a + (Number(n) || 0), 0);
 const r3 = (n) => Math.round(n * 1000) / 1000;
 
 // Cantidad por talle de una prenda a partir de las selecciones de los alumnos
@@ -87,6 +103,18 @@ function listaDeCompras(calculos, materiales) {
 
 const plano = (m) => (m ? m.get({ plain: true }) : m);
 
+function serializarOrden(o) {
+  const enviadas = sumar(o.cantidades);
+  return {
+    id: o.id, numero: `T-${String(o.id).padStart(4, '0')}`, prendaId: o.prendaId, tallerId: o.tallerId,
+    taller: o.taller ? { id: o.taller.id, nombre: o.taller.nombre, telefono: o.taller.telefono } : null,
+    cantidades: o.cantidades, recibidas: o.recibidas, falladas: o.falladas,
+    enviadas, recibidasTotal: sumar(o.recibidas), falladasTotal: sumar(o.falladas),
+    precioUnitario: o.precioUnitario, total: r2(enviadas * o.precioUnitario),
+    estado: o.estado, enviadaEl: o.enviadaEl, compromisoEl: o.compromisoEl, recibidaEl: o.recibidaEl, notas: o.notas,
+  };
+}
+
 async function cargarMateriales() {
   const lista = await ProdMaterial.findAll();
   return new Map(lista.map((m) => [m.id, plano(m)]));
@@ -110,7 +138,7 @@ async function alumnosDe(promo, { confirmados = false } = {}) {
 async function produccionDePromo(promoId, { confirmados = false, materiales } = {}) {
   const promo = await EgrPromo.findByPk(promoId, {
     include: [
-      { model: EgrPrenda, as: 'prendas', include: [{ model: ProdModelo, as: 'modelo' }] },
+      { model: EgrPrenda, as: 'prendas', include: [{ model: ProdModelo, as: 'modelo' }, { model: ProdOrden, as: 'ordenes', include: [{ model: ProdTaller, as: 'taller' }] }] },
       { model: EgrDiseno, as: 'disenos' },
     ],
     order: [[{ model: EgrPrenda, as: 'prendas' }, 'orden', 'ASC'], [{ model: EgrPrenda, as: 'prendas' }, 'id', 'ASC']],
@@ -124,7 +152,13 @@ async function produccionDePromo(promoId, { confirmados = false, materiales } = 
     const bordados = p.conBordado
       ? alumnos.flatMap((a) => a.selecciones.filter((s) => s.prendaId === p.id).map((s) => ({ alumno: a.nombre, talle: s.talle, bordado: s.bordado || '', cantidad: s.cantidad })))
       : [];
-    return { ...calculo, promo: etiqueta, descripcion: p.descripcion, conBordado: p.conBordado, fichaNotas: p.fichaNotas, modeloFicha: plano(p.modelo), bordados };
+    const ordenes = (p.ordenes || []).sort((x, y) => x.id - y.id).map(serializarOrden);
+    // Lo que falta mandar a taller por talle (curva menos lo ya incluido en órdenes)
+    const pendienteTaller = Object.fromEntries(calculo.curva.map(({ talle, cantidad }) => [talle, Math.max(0, cantidad - ordenes.reduce((a, o) => a + (Number(o.cantidades[talle]) || 0), 0))]));
+    return {
+      ...calculo, promo: etiqueta, descripcion: p.descripcion, conBordado: p.conBordado, fichaNotas: p.fichaNotas, modeloFicha: plano(p.modelo), bordados,
+      etapa: p.etapa, seguimiento: p.seguimiento, ordenes, pendienteTaller,
+    };
   });
   return {
     promo: { id: promo.id, codigo: promo.codigo, colegio: promo.colegio, curso: promo.curso, anio: promo.anio, fechaEntrega: promo.fechaEntrega, estadoProduccion: promo.estadoProduccion, notas: promo.notas },
@@ -141,4 +175,6 @@ async function produccionDePromo(promoId, { confirmados = false, materiales } = 
   };
 }
 
-module.exports = { curvaDe, calcularPrenda, listaDeCompras, cargarMateriales, produccionDePromo };
+module.exports = {
+  curvaDe, calcularPrenda, listaDeCompras, cargarMateriales, produccionDePromo, serializarOrden, moverEtapa, sumar, ETAPAS, NOMBRE_ETAPA,
+};

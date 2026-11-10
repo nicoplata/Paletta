@@ -19,6 +19,20 @@
 .ficha-pasos { white-space: pre-wrap; }
 @media (max-width: 700px) { .ficha-grid { grid-template-columns: 1fr; } .ficha { padding: 14px; } }
 
+/* Seguimiento interno */
+.seg-fila { display: grid; grid-template-columns: minmax(160px, 220px) minmax(0, 1fr); gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid #eee; }
+.seg-prenda { display: grid; gap: 2px; }
+.seg-prenda small { color: #7f8c8d; }
+.seg-prenda .seg-atraso { color: #c0392b; font-weight: 700; }
+.seg-etapas { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; list-style: none; margin: 0; padding: 0; }
+.seg-etapas li { display: flex; }
+.seg-etapas button { display: grid; gap: 1px; width: 100%; padding: 6px 4px; border-radius: 8px; border: 1.5px solid #ddd; background: #fff; color: #7f8c8d; font-family: inherit; font-weight: 600; font-size: 0.82rem; cursor: pointer; text-align: center; }
+.seg-etapas button span { font-size: 0.72rem; font-weight: 500; }
+.seg-etapas button.hecha { border-color: #27ae60; color: #1e8449; background: #eafaf1; }
+.seg-etapas button.actual { border-color: #2c3e50; background: #2c3e50; color: #fff; cursor: default; }
+.seg-etapas button:hover:not(:disabled) { border-color: #2c3e50; }
+@media (max-width: 760px) { .seg-fila { grid-template-columns: 1fr; } .seg-etapas { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
 @media print {
   @page { size: A4; margin: 12mm; }
   body { background: #fff !important; }

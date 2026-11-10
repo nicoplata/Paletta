@@ -86,6 +86,19 @@ const PanelFamilia = ({ token, onSalir }) => {
     }
   }, [token]);
 
+  // Contrato firmado de la promo (lo carga Paletta): mismo mecanismo que los comprobantes
+  const verContrato = useCallback(async () => {
+    const ventana = window.open('', '_blank');
+    try {
+      const { data } = await api.get('/mi-promo/contrato', { ...conToken(token), responseType: 'blob' });
+      const url = URL.createObjectURL(data);
+      if (ventana) ventana.location.href = url;
+      else window.location.assign(url);
+    } catch {
+      ventana?.close();
+    }
+  }, [token]);
+
   const salir = (
     <button type="button" className="btn btn-secundario btn-sm" onClick={onSalir}>Salir</button>
   );
@@ -153,6 +166,16 @@ const PanelFamilia = ({ token, onSalir }) => {
           {paso === 'plan' && <PasoPlan alumno={alumno} promo={promo} guardar={guardar} irA={setPaso} />}
           {paso === 'cuponera' && <PasoCuponera vista={vista} irA={setPaso} subirComprobante={subirComprobante} verComprobante={verComprobante} />}
         </section>
+
+        {promo.contrato && (
+          <section className="pf-card pf-contrato" aria-labelledby="pf-contrato">
+            <div>
+              <h2 id="pf-contrato" className="pf-h2">Contrato de la promo</h2>
+              <p className="pf-tenue">Firmado por la comisión · cargado el {fecha(String(promo.contrato.subidoEl).slice(0, 10))}</p>
+            </div>
+            <button type="button" className="btn btn-secundario btn-sm" onClick={verContrato}>Ver contrato firmado</button>
+          </section>
+        )}
 
         <p className="pf-tenue pf-centro">
           ¿Dudas? <a href={linkWhatsApp(`¡Hola Paletta! Soy de la familia de ${alumno.nombre} (${alumno.codigo}). Tengo una consulta:`)} target="_blank" rel="noopener noreferrer">Escribinos por WhatsApp</a>.

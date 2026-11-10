@@ -149,6 +149,17 @@ const TableroComision = () => {
   const sesion = token || publico ? null : leerSesionComision();
   const base = publico ? `/codigo/${encodeURIComponent(codigo)}/curso` : token ? `/comision/${token}` : '/comision';
   const opciones = sesion ? conToken(sesion.token) : {};
+  const verContrato = async () => {
+    const ventana = window.open('', '_blank');
+    try {
+      const { data } = await api.get('/comision/contrato', { ...opciones, responseType: 'blob' });
+      const url = URL.createObjectURL(data);
+      if (ventana) ventana.location.href = url;
+      else window.location.assign(url);
+    } catch {
+      ventana?.close();
+    }
+  };
   const salir = useCallback(() => {
     guardarSesionComision(null);
     navigate('/');
@@ -367,6 +378,15 @@ const TableroComision = () => {
               <AprobarDiseno tablero={tablero} aprobar={(nombre) => accion('post', '/diseno', { nombre })} />
             )}
           </section>
+          {promo.contrato && sesion && (
+            <section className="pf-card pf-contrato" aria-labelledby="tb-contrato">
+              <div>
+                <h2 id="tb-contrato" className="pf-h2">Contrato de la promo</h2>
+                <p className="pf-tenue">Cargado el {fecha(String(promo.contrato.subidoEl).slice(0, 10))}</p>
+              </div>
+              <button type="button" className="btn btn-secundario btn-sm" onClick={verContrato}>Ver contrato firmado</button>
+            </section>
+          )}
         </div>
 
         <p className="pf-tenue pf-centro">

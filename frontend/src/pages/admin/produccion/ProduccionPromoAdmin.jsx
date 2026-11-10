@@ -1,12 +1,13 @@
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { FaArrowLeft, FaPrint, FaShoppingCart } from 'react-icons/fa';
 import useRecurso from '../../../hooks/useRecurso';
-import { Button, CheckLabel, Container, Empty, ErrorBox, Header, Hint, Title } from '../adminUI';
+import { Button, CheckLabel, Container, Empty, ErrorBox, Header, Hint, Tag, Title } from '../adminUI';
 import { Cifras, Seccion, Tabla, TablaScroll, fecha, pesos } from '../egresados/comun';
-import { cant, imprimir, nombreMaterial } from './comunProduccion';
+import { ETAPAS, cant, imprimir, nombreMaterial } from './comunProduccion';
+import OrdenesPrenda from './OrdenesPrenda';
 import './fichas.css';
 
-const FICHAS = { resumen: 'Calculadora', producto: 'Fichas de producto', corte: 'Fichas de corte' };
+const FICHAS = { resumen: 'Calculadora', producto: 'Fichas de producto', corte: 'Fichas de corte', talleres: 'Órdenes de taller' };
 
 const Cabecera = ({ tipo, promo, prenda, extra }) => (
   <div className="ficha-cabecera">
@@ -113,7 +114,8 @@ const ProduccionPromoAdmin = () => {
   const [params, setParams] = useSearchParams();
   const vista = FICHAS[params.get('ficha')] ? params.get('ficha') : 'resumen';
   const confirmados = params.get('confirmados') === 'true';
-  const { data, cargando, error } = useRecurso(`/admin/produccion/promos/${id}?confirmados=${confirmados}`);
+  const { data, cargando, error, recargar } = useRecurso(`/admin/produccion/promos/${id}?confirmados=${confirmados}`);
+  const { data: talleres } = useRecurso('/admin/produccion/talleres', { porDefecto: [] });
   const cambiar = (cambios) => {
     const p = new URLSearchParams(params);
     Object.entries(cambios).forEach(([k, v]) => (v ? p.set(k, v) : p.delete(k)));
@@ -141,7 +143,7 @@ const ProduccionPromoAdmin = () => {
 
       <div className="no-print" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 }}>
         <CheckLabel><input type="checkbox" checked={confirmados} onChange={(e) => cambiar({ confirmados: e.target.checked ? 'true' : '' })} /> Contar solo alumnos con la cuota 1 paga</CheckLabel>
-        {vista !== 'resumen' && <Button $primario onClick={imprimir}><FaPrint /> Imprimir</Button>}
+        {(vista === 'producto' || vista === 'corte') && <Button $primario onClick={imprimir}><FaPrint /> Imprimir</Button>}
         <Button as={Link} to={`/admin/dashboard/produccion?tab=compras&promos=${promo.id}${confirmados ? '&confirmados=true' : ''}`} style={{ textDecoration: 'none' }}><FaShoppingCart /> Lista de compras</Button>
       </div>
 
@@ -156,7 +158,7 @@ const ProduccionPromoAdmin = () => {
           {prendas.length === 0 && <Empty>La promo no tiene prendas activas.</Empty>}
           {prendas.map((p) => (
             <Seccion key={p.prendaId}>
-              <h2 style={{ marginBottom: 4 }}>{p.nombre} <small style={{ fontWeight: 400, color: '#7f8c8d' }}>· {p.modelo?.nombre || 'sin ficha técnica'}</small></h2>
+              <h2 style={{ marginBottom: 4 }}>{p.nombre} <small style={{ fontWeight: 400, color: '#7f8c8d' }}>· {p.modelo?.nombre || 'sin ficha técnica'}</small> <Tag $color="#2c3e50">{ETAPAS.find((e) => e.clave === p.etapa)?.nombre}</Tag></h2>
               <Avisos avisos={p.avisos} />
               {p.avisos.length > 0 && <Hint>Se completa en la ficha técnica (<Link to="/admin/dashboard/produccion">Producción</Link>) o editando la prenda en la promo.</Hint>}
               <TablaScroll>
@@ -189,7 +191,11 @@ const ProduccionPromoAdmin = () => {
         </>
       )}
 
-      {vista !== 'resumen' && (conUnidades.length === 0
+      {vista === 'talleres' && (prendas.length === 0
+        ? <Empty>La promo no tiene prendas activas.</Empty>
+        : prendas.map((p) => <OrdenesPrenda key={p.prendaId} prenda={p} talleres={talleres} onCambio={recargar} />))}
+
+      {(vista === 'producto' || vista === 'corte') && (conUnidades.length === 0
         ? <Empty>Todavía ningún alumno eligió prendas{confirmados ? ' con la cuota 1 paga' : ''}: no hay nada para producir.</Empty>
         : conUnidades.map((p) => (vista === 'producto'
           ? <FichaProducto key={p.prendaId} datos={data} p={p} />

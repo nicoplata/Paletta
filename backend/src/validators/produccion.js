@@ -38,9 +38,40 @@ const modelo = {
   activo: Joi.boolean(),
 };
 
+const fecha = Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).message('fecha inválida (AAAA-MM-DD)');
+const porTalle = Joi.object().pattern(talle, Joi.number().integer().min(0).max(100000));
+
+const taller = {
+  nombre: texto(2, 120),
+  contacto: opcional(120),
+  telefono: opcional(30),
+  direccion: opcional(200),
+  notas: opcional(1000),
+  activo: Joi.boolean(),
+};
+
+const orden = {
+  prendaId: Joi.number().integer().positive(),
+  tallerId: Joi.number().integer().positive(),
+  cantidades: porTalle,
+  recibidas: porTalle,
+  falladas: porTalle,
+  precioUnitario: numero(100000000),
+  estado: Joi.string().valid('preparando', 'enviada', 'recibida'),
+  enviadaEl: fecha.allow(null, ''),
+  compromisoEl: fecha.allow(null, ''),
+  recibidaEl: fecha.allow(null, ''),
+  notas: opcional(2000),
+};
+
 const requeridos = (obj, campos) => Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, campos.includes(k) ? v.required() : v]));
 
 module.exports = {
+  tallerNuevo: Joi.object(requeridos(taller, ['nombre'])),
+  tallerEdicion: Joi.object(taller).min(1),
+  ordenNueva: Joi.object(requeridos(orden, ['prendaId', 'tallerId', 'cantidades'])),
+  ordenEdicion: Joi.object(orden).fork(['prendaId'], (x) => x.forbidden()).min(1),
+  etapa: Joi.object({ etapa: Joi.string().valid('pendiente', 'materiales', 'cortado', 'taller', 'control', 'listo').required(), fecha: fecha }),
   idParam: Joi.object({ id: Joi.number().integer().positive().required() }),
   materialNuevo: Joi.object(requeridos(material, ['nombre', 'tipo', 'unidad'])),
   materialEdicion: Joi.object(material).min(1),
