@@ -5,6 +5,7 @@ import api, { mensajeError } from '../../../lib/api';
 import useRecurso from '../../../hooks/useRecurso';
 import { useToast } from '../../../context/ToastContext';
 import { Button, Container, Empty, ErrorBox, FormGroup, Header, Hint, IconButton, Input, Label, Row, Select, Title } from '../adminUI';
+import InstagramAdmin from './InstagramAdmin';
 import './fotos.css';
 
 const SITIO = 'https://egresados.paletta.com.ar';
@@ -141,11 +142,13 @@ const FotosEgresadosAdmin = () => {
       <Header>
         <div>
           <Link to="/admin/dashboard/egresados" style={{ display: 'inline-flex', gap: 6, alignItems: 'center', marginBottom: 6 }}><FaArrowLeft /> Egresados</Link>
-          <Title>Fotos del sitio</Title>
+          <Title>Fotos e Instagram</Title>
         </div>
         <Button as="a" href={`${SITIO}/#promos`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>Ver la galería</Button>
       </Header>
       <Hint style={{ marginBottom: 14 }}>Las fotos aparecen en la galería del inicio de egresados.paletta.com.ar (y los diseños también en Modelos). Se achican y se convierten a WebP solas, sin los datos de la cámara ni la ubicación. Pedí permiso antes de publicar fotos donde se vean chicos.</Hint>
+
+      <InstagramAdmin />
 
       <section className={`fotos-subida${arrastrando ? ' arrastrando' : ''}`}
         onDragOver={(e) => { e.preventDefault(); setArrastrando(true); }}

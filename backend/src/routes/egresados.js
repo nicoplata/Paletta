@@ -4,6 +4,7 @@ const { Op } = require('sequelize');
 const fs = require('fs');
 const { sequelize, EgrPromo, EgrAlumno, EgrCuota, EgrComprobante, EgrFoto } = require('../models');
 const { serializarFoto } = require('../services/galeriaEgresados');
+const instagram = require('../services/instagram');
 const validar = require('../middleware/validator');
 const v = require('../validators/egresados');
 const { ingresoEgresadosLimiter, comprobantesLimiter, codigoPromoLimiter } = require('../middleware/rateLimiter');
@@ -89,6 +90,12 @@ router.get('/galeria', async (req, res) => {
   const fotos = await EgrFoto.findAll({ where: { visible: true }, order: [['orden', 'ASC'], ['id', 'DESC']] });
   res.set('Cache-Control', 'public, max-age=300');
   res.json({ fotos: fotos.map((f) => serializarFoto(f)) });
+});
+
+// 🔓 Últimas publicaciones de Instagram (imágenes guardadas en el servidor)
+router.get('/instagram', async (req, res) => {
+  res.set('Cache-Control', 'public, max-age=600');
+  res.json(await instagram.feedPublico());
 });
 
 // 🔓 Entrada única (egresados.paletta.com.ar/mi-promo): el código de contrato lleva a la promo

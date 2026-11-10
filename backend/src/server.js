@@ -27,6 +27,9 @@ async function iniciar() {
   // Recordatorios por mail a las familias de egresados (cierre de carga y cuotas)
   require('./services/recordatoriosEgresados').programarRecordatorios();
 
+  // Feed de Instagram de @paletta.egresados (si hay token cargado)
+  require('./services/instagram').programarInstagram();
+
   const server = app.listen(ENV.PORT, () => {
     console.log(`Paletta API escuchando en el puerto ${ENV.PORT} (${ENV.NODE_ENV})`);
   });

@@ -84,6 +84,9 @@ const ENV = {
   MP_ACCESS_TOKEN: process.env.MP_ACCESS_TOKEN,
   MP_WEBHOOK_SECRET: process.env.MP_WEBHOOK_SECRET,
   MP_API_URL: process.env.MP_API_URL || 'https://api.mercadopago.com',
+  // Instagram (feed de @paletta.egresados): el token se carga desde el panel; esta variable es opcional
+  IG_ACCESS_TOKEN: process.env.IG_ACCESS_TOKEN,
+  IG_API_URL: (process.env.IG_API_URL || 'https://graph.instagram.com').replace(/\/$/, ''),
 
   // Transferencia bancaria. Sin TRANSFERENCIA_ALIAS ni TRANSFERENCIA_CBU el método no se ofrece.
   TRANSFERENCIA_ALIAS: process.env.TRANSFERENCIA_ALIAS,

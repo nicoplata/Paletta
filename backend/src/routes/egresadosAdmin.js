@@ -4,6 +4,7 @@ const { Op } = require('sequelize');
 const { sequelize, EgrPromo, EgrPrenda, EgrAlumno, EgrSeleccion, EgrCuota, EgrComprobante, EgrDiseno, EgrPresupuesto, ProdModelo, ProdMaterial, EgrFoto } = require('../models');
 const multer = require('multer');
 const galeria = require('../services/galeriaEgresados');
+const instagram = require('../services/instagram');
 const { soloAdmin } = require('../middleware/auth');
 const validar = require('../middleware/validator');
 const v = require('../validators/egresados');
@@ -520,6 +521,21 @@ router.delete('/fotos/:id', conId, async (req, res) => {
   const foto = await buscarOFallar(EgrFoto, req.params.id, 'Foto no encontrada');
   await foto.destroy();
   galeria.borrarArchivos(foto.archivo);
+  res.status(204).end();
+});
+
+// ---------- Instagram ----------
+router.get('/instagram', async (req, res) => res.json(await instagram.estadoPanel()));
+router.put('/instagram', validar(v.tokenInstagram), async (req, res) => {
+  await instagram.conectar(req.body.token);
+  res.json(await instagram.estadoPanel());
+});
+router.post('/instagram/sincronizar', async (req, res) => {
+  await instagram.sincronizar();
+  res.json(await instagram.estadoPanel());
+});
+router.delete('/instagram', async (req, res) => {
+  await instagram.desconectar();
   res.status(204).end();
 });
 
