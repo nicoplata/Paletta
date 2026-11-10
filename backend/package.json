@@ -8,6 +8,7 @@
     "dev": "node --watch src/server.js",
     "db:migrate": "node scripts/migrate.js",
     "seed": "node scripts/seed.js",
+    "galeria:importar": "node scripts/importar-galeria.js",
     "test": "node --test --test-concurrency=1 \"tests/**/*.test.js\"",
     "lint": "eslint .",
     "mail:prueba": "node scripts/probar-mail.js"
@@ -28,6 +29,7 @@
     "pg": "^8.23.1",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.7",
+    "sharp": "^0.34.5",
     "umzug": "^3.8.3"
   },
   "devDependencies": {

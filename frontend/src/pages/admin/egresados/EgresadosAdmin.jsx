@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaPlus, FaCashRegister, FaEnvelope, FaReceipt, FaPalette } from 'react-icons/fa';
+import { FaPlus, FaCashRegister, FaEnvelope, FaReceipt, FaPalette, FaImages } from 'react-icons/fa';
 import api, { mensajeError } from '../../../lib/api';
 import useRecurso from '../../../hooks/useRecurso';
 import { useToast } from '../../../context/ToastContext';
@@ -166,6 +166,7 @@ const EgresadosAdmin = () => {
       <Header>
         <Title>Egresados</Title>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button as={Link} to="/admin/dashboard/egresados/fotos"><FaImages /> Fotos del sitio</Button>
           <Button as={Link} to="/admin/dashboard/egresados/presupuestos" $primario={pedidosNuevos.length > 0}>
             <FaPalette /> Presupuestos{pedidosNuevos.length ? ` (${pedidosNuevos.length} nuevos)` : ''}
           </Button>
