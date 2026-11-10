@@ -2,7 +2,8 @@
 const express = require('express');
 const { Op } = require('sequelize');
 const fs = require('fs');
-const { sequelize, EgrPromo, EgrAlumno, EgrCuota, EgrComprobante } = require('../models');
+const { sequelize, EgrPromo, EgrAlumno, EgrCuota, EgrComprobante, EgrFoto } = require('../models');
+const { serializarFoto } = require('../services/galeriaEgresados');
 const validar = require('../middleware/validator');
 const v = require('../validators/egresados');
 const { ingresoEgresadosLimiter, comprobantesLimiter, codigoPromoLimiter } = require('../middleware/rateLimiter');
@@ -81,6 +82,13 @@ router.post('/promos/:slug/alumnos', ingresoEgresadosLimiter, validar(v.slugPara
     res.status(201);
     await registrarIngreso(alumno, res, transaction);
   });
+});
+
+// 🔓 Galería de buzos (la administra el panel; el sitio la muestra sin redeployar)
+router.get('/galeria', async (req, res) => {
+  const fotos = await EgrFoto.findAll({ where: { visible: true }, order: [['orden', 'ASC'], ['id', 'DESC']] });
+  res.set('Cache-Control', 'public, max-age=300');
+  res.json({ fotos: fotos.map((f) => serializarFoto(f)) });
 });
 
 // 🔓 Entrada única (egresados.paletta.com.ar/mi-promo): el código de contrato lleva a la promo

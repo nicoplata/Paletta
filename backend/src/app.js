@@ -36,6 +36,9 @@ app.use(express.json({ limit: '100kb' }));
 // 📁 Archivos públicos
 const estaticos = { maxAge: ENV.isProd ? '7d' : 0, index: false };
 app.use('/uploads', express.static(ENV.UPLOADS_DIR, estaticos));
+// Galería de egresados (WebP optimizados, nombre único por foto: se pueden cachear mucho tiempo)
+const { DIR_GALERIA, URL_GALERIA } = require('./services/galeriaEgresados');
+app.use(URL_GALERIA, express.static(DIR_GALERIA, { maxAge: ENV.isProd ? '365d' : 0, immutable: ENV.isProd, index: false }));
 app.use('/imagenes', express.static(path.join(__dirname, '..', 'public', 'imagenes'), estaticos));
 
 // ❤️ Healthcheck (para monitoreo / balanceador)

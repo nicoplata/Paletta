@@ -1,7 +1,9 @@
 // Panel: gestión de promos de egresados, prendas, alumnos y cobranza.
 const express = require('express');
 const { Op } = require('sequelize');
-const { sequelize, EgrPromo, EgrPrenda, EgrAlumno, EgrSeleccion, EgrCuota, EgrComprobante, EgrDiseno, EgrPresupuesto, ProdModelo, ProdMaterial } = require('../models');
+const { sequelize, EgrPromo, EgrPrenda, EgrAlumno, EgrSeleccion, EgrCuota, EgrComprobante, EgrDiseno, EgrPresupuesto, ProdModelo, ProdMaterial, EgrFoto } = require('../models');
+const multer = require('multer');
+const galeria = require('../services/galeriaEgresados');
 const { soloAdmin } = require('../middleware/auth');
 const validar = require('../middleware/validator');
 const v = require('../validators/egresados');
@@ -453,6 +455,72 @@ router.get('/promos/:id/exportar/:tipo', conId, async (req, res) => {
     ], alumnos);
   }
   throw new AppError('Planilla desconocida (prendas, talles o cobranza)', 404);
+});
+
+// ---------- galería de buzos (sitio de egresados) ----------
+const MAX_FOTOS = 12;
+const recibirFotos = (req, res, next) => multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024, files: MAX_FOTOS },
+  fileFilter: (r, file, cb) => (/^image\/(jpeg|png|webp|avif|heic|heif)$/.test(file.mimetype)
+    ? cb(null, true) : cb(new AppError(`“${file.originalname}” no es una foto (JPG, PNG, WEBP o AVIF).`, 400))),
+}).array('fotos', MAX_FOTOS)(req, res, (err) => {
+  if (!err) return next();
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') return next(new AppError('Cada foto puede pesar hasta 15 MB.', 400));
+    if (err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_UNEXPECTED_FILE') return next(new AppError(`Subí hasta ${MAX_FOTOS} fotos por vez.`, 400));
+  }
+  return next(err instanceof AppError ? err : new AppError('No se pudieron recibir las fotos', 400));
+});
+
+router.get('/fotos', async (req, res) => {
+  const fotos = await EgrFoto.findAll({ order: [['orden', 'ASC'], ['id', 'DESC']] });
+  res.json(fotos.map((f) => galeria.serializarFoto(f, { admin: true })));
+});
+
+// Subida en tanda: cada foto se optimiza y queda al principio de la galería con los datos comunes de la tanda
+router.post('/fotos', recibirFotos, validar(v.fotosNuevas), async (req, res) => {
+  if (!req.files?.length) throw new AppError('Elegí al menos una foto.', 400);
+  const procesadas = [];
+  const errores = [];
+  for (const f of req.files) {
+    try {
+      procesadas.push({ ...await galeria.procesarFoto(f.buffer), nombre: f.originalname });
+    } catch (err) {
+      errores.push(`${f.originalname}: ${err.message}`);
+    }
+  }
+  const primero = (await EgrFoto.min('orden')) ?? 0;
+  const creadas = [];
+  for (const [i, p] of procesadas.entries()) {
+    creadas.push(await EgrFoto.create({
+      archivo: p.archivo, ancho: p.ancho, alto: p.alto,
+      tipo: req.body.tipo, anio: req.body.anio, colegio: req.body.colegio, visible: req.body.visible,
+      alt: req.body.alt || [req.body.tipo === 'diseno' ? 'Diseño de buzo de egresados' : 'Buzo de egresados', req.body.colegio, req.body.anio].filter(Boolean).join(' · '),
+      orden: primero - procesadas.length + i,
+    }));
+  }
+  res.status(creadas.length ? 201 : 400).json({ fotos: creadas.map((f) => galeria.serializarFoto(f, { admin: true })), errores });
+});
+
+router.put('/fotos/orden', validar(v.ordenFotos), async (req, res) => {
+  await sequelize.transaction(async (transaction) => {
+    for (const [i, id] of req.body.ids.entries()) await EgrFoto.update({ orden: i }, { where: { id }, transaction });
+  });
+  res.status(204).end();
+});
+
+router.put('/fotos/:id', conId, validar(v.fotoEdicion), async (req, res) => {
+  const foto = await buscarOFallar(EgrFoto, req.params.id, 'Foto no encontrada');
+  await foto.update(req.body);
+  res.json(galeria.serializarFoto(foto, { admin: true }));
+});
+
+router.delete('/fotos/:id', conId, async (req, res) => {
+  const foto = await buscarOFallar(EgrFoto, req.params.id, 'Foto no encontrada');
+  await foto.destroy();
+  galeria.borrarArchivos(foto.archivo);
+  res.status(204).end();
 });
 
 // ---------- contrato ----------

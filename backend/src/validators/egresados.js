@@ -85,6 +85,22 @@ module.exports = {
   // Panel
   promoNueva: Joi.object(requeridos(promo, ['colegio', 'curso', 'anio', 'primerVencimiento'])),
   promoEdicion: Joi.object(promo).min(1),
+  fotosNuevas: Joi.object({
+    tipo: Joi.string().valid('promo', 'diseno').default('promo'),
+    anio: Joi.string().trim().pattern(/^\d{4}$/).message('el año tiene 4 números').allow('', null).empty('').default(null),
+    colegio: opcional(150),
+    alt: opcional(200),
+    visible: Joi.boolean().default(true),
+  }),
+  fotoEdicion: Joi.object({
+    tipo: Joi.string().valid('promo', 'diseno'),
+    anio: Joi.string().trim().pattern(/^\d{4}$/).message('el año tiene 4 números').allow('', null).empty('').default(null),
+    colegio: opcional(150),
+    alt: Joi.string().trim().max(200).allow(''),
+    diseno: Joi.string().trim().max(200).pattern(/^[a-z]+=[A-Za-z0-9._-]+(&[a-z]+=[A-Za-z0-9._-]+)*$/).message('el diseño tiene que ser del tipo tipo=canguro&estilo=liso&pal=a.b.c').allow('', null).empty('').default(null),
+    visible: Joi.boolean(),
+  }).min(1),
+  ordenFotos: Joi.object({ ids: Joi.array().items(id).min(1).max(1000).unique().required() }),
   clausulas: Joi.object({ clausulas: Joi.string().trim().min(20).max(20000).required() }),
   prendaNueva: Joi.object(requeridos(prenda, ['nombre', 'precio', 'talles'])),
   prendaEdicion: Joi.object(prenda).min(1),
