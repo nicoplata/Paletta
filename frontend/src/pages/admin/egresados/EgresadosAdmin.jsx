@@ -166,7 +166,7 @@ const EgresadosAdmin = () => {
       <Header>
         <Title>Egresados</Title>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <Button as={Link} to="/admin/dashboard/egresados/fotos"><FaImages /> Fotos del sitio</Button>
+          <Button as={Link} to="/admin/dashboard/egresados/fotos"><FaImages /> Fotos e Instagram</Button>
           <Button as={Link} to="/admin/dashboard/egresados/presupuestos" $primario={pedidosNuevos.length > 0}>
             <FaPalette /> Presupuestos{pedidosNuevos.length ? ` (${pedidosNuevos.length} nuevos)` : ''}
           </Button>
