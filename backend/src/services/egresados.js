@@ -235,6 +235,9 @@ function resumenAlumno(alumno, hoy = hoyAR()) {
   };
 }
 
+// Solo dice si hay contrato firmado y cuándo se cargó (el archivo se pide aparte, con sesión)
+const contratoPublico = (promo) => (promo.contratoArchivo ? { subidoEl: promo.contratoSubidoEl, tipo: promo.contratoTipo } : null);
+
 const serializarPromoPublica = (promo, prendas = []) => ({
   colegio: promo.colegio,
   curso: promo.curso,
@@ -257,7 +260,7 @@ async function vistaFamilia(alumnoId) {
   const prendas = await EgrPrenda.findAll({ where: { promoId: alumno.promoId } });
   return {
     alumno: resumenAlumno(alumno),
-    promo: serializarPromoPublica(alumno.promo, prendas),
+    promo: { ...serializarPromoPublica(alumno.promo, prendas), contrato: contratoPublico(alumno.promo) },
     cuenta: await cuentaEgresados(),
   };
 }
@@ -338,6 +341,7 @@ module.exports = {
   cargarAlumno,
   resumenAlumno,
   serializarPromoPublica,
+  contratoPublico,
   vistaFamilia,
   guardarSelecciones,
   elegirPlan,

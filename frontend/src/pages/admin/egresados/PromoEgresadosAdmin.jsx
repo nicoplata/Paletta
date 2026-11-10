@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { FaArrowLeft, FaCut, FaEdit, FaPlus, FaTrash } from 'react-icons/fa';
+import { FaArrowLeft, FaCut, FaEdit, FaFileSignature, FaPlus, FaTrash } from 'react-icons/fa';
 import api, { mensajeError } from '../../../lib/api';
 import useRecurso from '../../../hooks/useRecurso';
 import { useToast } from '../../../context/ToastContext';
@@ -338,6 +338,18 @@ const PromoEgresadosAdmin = () => {
         <h2>Producción</h2>
         <Hint style={{ marginBottom: 10 }}>Calculadora de tela e insumos, costo por prenda, fichas de producto y de corte para imprimir y lista de compras. Cada prenda necesita su ficha técnica y sus materiales (se eligen al editarla).</Hint>
         <Button as={Link} to={`/admin/dashboard/egresados/${promo.id}/produccion`} $primario style={{ textDecoration: 'none' }}><FaCut /> Abrir producción</Button>
+      </Seccion>
+
+      <Seccion>
+        <h2>Contrato</h2>
+        <Hint style={{ marginBottom: 10 }}>
+          {promo.contratoSubidoEl
+            ? `Firmado y cargado el ${new Date(promo.contratoSubidoEl).toLocaleDateString('es-AR')}: lo ven las familias en Mi promo y la comisión en Mi curso.`
+            : 'Se arma con las prendas, precios, planes y fechas de la promo. Imprimilo, que lo firme la comisión y subí el escaneo.'}
+        </Hint>
+        <Button as={Link} to={`/admin/dashboard/egresados/${promo.id}/contrato`} $primario={!promo.contratoSubidoEl} style={{ textDecoration: 'none' }}>
+          <FaFileSignature /> {promo.contratoSubidoEl ? 'Ver contrato' : 'Generar y subir contrato'}
+        </Button>
       </Seccion>
 
       <Seccion>

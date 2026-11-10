@@ -12,7 +12,9 @@ const { linkComision, tableroComision } = require('../services/tableroEgresados'
 const { ejecutarRecordatorios } = require('../services/recordatoriosEgresados');
 const { mailConfigurado } = require('../services/mail');
 const crypto = require('crypto');
-const { enviarComprobante } = require('../middleware/comprobante');
+const fs = require('fs');
+const { enviarComprobante, recibirContrato, enviarContrato, rutaContrato } = require('../middleware/comprobante');
+const contrato = require('../services/contratoEgresados');
 const { generarCsv } = require('../utils/csv');
 const avisos = require('../services/mailsEgresados');
 const { serializarDiseno } = require('../services/disenosEgresados');
@@ -451,6 +453,49 @@ router.get('/promos/:id/exportar/:tipo', conId, async (req, res) => {
     ], alumnos);
   }
   throw new AppError('Planilla desconocida (prendas, talles o cobranza)', 404);
+});
+
+// ---------- contrato ----------
+// Datos para armar el contrato imprimible
+router.get('/promos/:id/contrato/datos', conId, async (req, res) => {
+  const promo = await buscarOFallar(EgrPromo, req.params.id, 'Promo no encontrada', {
+    include: [{ model: EgrPrenda, as: 'prendas' }, { model: EgrDiseno, as: 'disenos' }],
+  });
+  res.json({
+    promo: { ...conLinks(promo), prendas: promo.prendas.filter((p) => p.activo).sort((a, b) => a.orden - b.orden || a.id - b.id) },
+    disenos: promo.disenos.map(serializarDiseno),
+    clausulas: await contrato.clausulas(),
+    cuenta: await egr.cuentaEgresados(),
+  });
+});
+
+router.get('/contrato/clausulas', async (req, res) => res.json({ clausulas: await contrato.clausulas(), base: contrato.CLAUSULAS_BASE }));
+router.put('/contrato/clausulas', validar(v.clausulas), async (req, res) => res.json({ clausulas: await contrato.guardarClausulas(req.body.clausulas) }));
+
+// Contrato firmado (escaneo o foto): reemplaza al anterior
+router.post('/promos/:id/contrato', conId, recibirContrato, async (req, res) => {
+  const promo = await EgrPromo.findByPk(req.params.id);
+  if (!promo) {
+    fs.rmSync(req.file.path, { force: true });
+    throw new AppError('Promo no encontrada', 404);
+  }
+  const anterior = promo.contratoArchivo;
+  await promo.update({ contratoArchivo: req.file.filename, contratoTipo: req.file.mimetype, contratoSubidoEl: new Date() });
+  if (anterior) fs.rmSync(rutaContrato(anterior), { force: true });
+  res.status(201).json({ contratoSubidoEl: promo.contratoSubidoEl, contratoTipo: promo.contratoTipo });
+});
+
+router.get('/promos/:id/contrato', conId, async (req, res) => {
+  const promo = await buscarOFallar(EgrPromo, req.params.id, 'Promo no encontrada');
+  if (!promo.contratoArchivo) throw new AppError('La promo no tiene contrato firmado cargado', 404);
+  enviarContrato(res, promo);
+});
+
+router.delete('/promos/:id/contrato', conId, async (req, res) => {
+  const promo = await buscarOFallar(EgrPromo, req.params.id, 'Promo no encontrada');
+  if (promo.contratoArchivo) fs.rmSync(rutaContrato(promo.contratoArchivo), { force: true });
+  await promo.update({ contratoArchivo: null, contratoTipo: null, contratoSubidoEl: null });
+  res.status(204).end();
 });
 
 // ---------- diseños y pedidos de presupuesto (diseñador de egresados) ----------

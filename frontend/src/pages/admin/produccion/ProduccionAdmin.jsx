@@ -3,13 +3,15 @@ import { Button, Container, Header, Title } from '../adminUI';
 import Modelos from './Modelos';
 import Materiales from './Materiales';
 import Compras from './Compras';
+import Talleres from './Talleres';
+import Seguimiento from './Seguimiento';
 
-const PESTANAS = { modelos: 'Fichas técnicas', materiales: 'Materiales', compras: 'Lista de compras' };
+const PESTANAS = { seguimiento: 'Seguimiento', modelos: 'Fichas técnicas', materiales: 'Materiales', talleres: 'Talleres', compras: 'Lista de compras' };
 
 // Producción de egresados: fichas técnicas, catálogo de materiales y compras
 const ProduccionAdmin = () => {
   const [params, setParams] = useSearchParams();
-  const tab = PESTANAS[params.get('tab')] ? params.get('tab') : 'modelos';
+  const tab = PESTANAS[params.get('tab')] ? params.get('tab') : 'seguimiento';
 
   return (
     <Container>
@@ -21,7 +23,9 @@ const ProduccionAdmin = () => {
           ))}
         </div>
       </Header>
+      {tab === 'seguimiento' && <Seguimiento />}
       {tab === 'modelos' && <Modelos />}
+      {tab === 'talleres' && <Talleres />}
       {tab === 'materiales' && <Materiales />}
       {tab === 'compras' && <Compras />}
     </Container>

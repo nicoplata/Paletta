@@ -7,7 +7,7 @@ const validar = require('../middleware/validator');
 const v = require('../validators/egresados');
 const { ingresoEgresadosLimiter, comprobantesLimiter, codigoPromoLimiter } = require('../middleware/rateLimiter');
 const { firmarTokenComision, verificarComision } = require('../middleware/authComision');
-const { recibirComprobante, enviarComprobante } = require('../middleware/comprobante');
+const { recibirComprobante, enviarComprobante, enviarContrato } = require('../middleware/comprobante');
 const { firmarTokenFamilia, verificarFamilia } = require('../middleware/authFamilia');
 const { AppError } = require('../utils/errorHandler');
 const egr = require('../services/egresados');
@@ -133,6 +133,14 @@ async function aprobarDiseno(promo, nombre) {
 router.get('/comision', verificarComision, async (req, res) => res.json(await tableroComision(req.promo)));
 router.put('/comision/integrantes', verificarComision, validar(v.integrantes), async (req, res) => res.json(await guardarIntegrantes(req.promo, req.body.integrantes)));
 router.post('/comision/diseno', verificarComision, validar(v.aprobarDiseno), async (req, res) => res.json(await aprobarDiseno(req.promo, req.body.nombre)));
+
+// 🔐 Contrato firmado de la promo: lo ven las familias (con su sesión) y la comisión (con su clave)
+function contratoDe(promo, res) {
+  if (!promo || !promo.contratoArchivo) throw new AppError('Todavía no está cargado el contrato firmado.', 404);
+  enviarContrato(res, promo);
+}
+router.get('/mi-promo/contrato', verificarFamilia, async (req, res) => contratoDe(await EgrPromo.findByPk(req.alumno.promoId), res));
+router.get('/comision/contrato', verificarComision, async (req, res) => contratoDe(req.promo, res));
 
 router.get('/comision/:token', validar(v.tokenParam, 'params'), async (req, res) => {
   res.json(await tableroComision(await promoPorToken(req.params.token)));

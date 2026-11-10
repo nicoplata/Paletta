@@ -85,6 +85,7 @@ module.exports = {
   // Panel
   promoNueva: Joi.object(requeridos(promo, ['colegio', 'curso', 'anio', 'primerVencimiento'])),
   promoEdicion: Joi.object(promo).min(1),
+  clausulas: Joi.object({ clausulas: Joi.string().trim().min(20).max(20000).required() }),
   prendaNueva: Joi.object(requeridos(prenda, ['nombre', 'precio', 'talles'])),
   prendaEdicion: Joi.object(prenda).min(1),
   alumnosNuevos: Joi.object({ nombres: Joi.array().items(texto(3, 120)).min(1).max(200).required() }),

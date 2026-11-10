@@ -47,6 +47,10 @@ module.exports = (sequelize) => {
     fechaEntrega: { type: DataTypes.DATEONLY },
     notas: { type: DataTypes.TEXT },
     activo: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+    // Contrato firmado (archivo privado en PRIVADO_DIR/contratos; lo ven el panel, las familias y la comisión)
+    contratoArchivo: { type: DataTypes.STRING },
+    contratoTipo: { type: DataTypes.STRING(40) },
+    contratoSubidoEl: { type: DataTypes.DATE },
   }, { tableName: 'EgrPromos' });
 
   EgrPromo.ESTADOS_PRODUCCION = ESTADOS_PRODUCCION;

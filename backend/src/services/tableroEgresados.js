@@ -3,7 +3,7 @@
 const { EgrAlumno, EgrSeleccion, EgrCuota, EgrDiseno } = require('../models');
 const { serializarDiseno } = require('./disenosEgresados');
 const ENV = require('../config/env');
-const { hoyAR, progreso, estadoCuota, datosCompletos } = require('./egresados');
+const { hoyAR, progreso, estadoCuota, datosCompletos, contratoPublico } = require('./egresados');
 
 const EN_PRODUCCION = ['en_produccion', 'listo', 'entregado'];
 
@@ -136,6 +136,8 @@ async function tableroComision(promo, { hoy = hoyAR(), publico = false } = {}) {
       estadoProduccion: promo.estadoProduccion,
       disenoAprobadoEl: promo.disenoAprobadoEl,
       disenoAprobadoPor: promo.disenoAprobadoPor,
+      // El contrato firmado solo lo ve la comisión con su clave (no la vista pública con el código)
+      contrato: publico ? null : contratoPublico(promo),
     },
     linkFamilias: linkFamilias(promo),
     publico,
