@@ -5,6 +5,11 @@
   margin-bottom: var(--esp-4);
 }
 
+.migas a {
+  display: inline-block;
+  padding: 10px 0;
+}
+
 .detalle {
   display: grid;
   grid-template-columns: minmax(0, 340px) minmax(0, 1fr);

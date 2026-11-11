@@ -403,7 +403,8 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-primario-vivo);
+  /* sobre el footer oscuro el rojo se aclara para que se lea */
+  color: #ec6a5f;
 }
 
 .footer h2.footer-hermano {
@@ -431,6 +432,9 @@
 }
 
 .footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
   text-decoration: none;
   font-weight: 600;
 }

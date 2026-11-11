@@ -13,4 +13,8 @@ module.exports = (sequelize) => sequelize.define('EgrFoto', {
   diseno: { type: DataTypes.STRING(200) },
   orden: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
   visible: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+  // Original sin tocar (carpeta privada) y su tamaño real: sirven para reprocesar y avisar si es de baja resolución
+  original: { type: DataTypes.STRING(120) },
+  anchoOriginal: { type: DataTypes.INTEGER },
+  altoOriginal: { type: DataTypes.INTEGER },
 }, { tableName: 'EgrFotos' });

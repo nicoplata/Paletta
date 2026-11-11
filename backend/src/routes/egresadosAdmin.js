@@ -495,7 +495,7 @@ router.post('/fotos', recibirFotos, validar(v.fotosNuevas), async (req, res) => 
   const creadas = [];
   for (const [i, p] of procesadas.entries()) {
     creadas.push(await EgrFoto.create({
-      archivo: p.archivo, ancho: p.ancho, alto: p.alto,
+      archivo: p.archivo, ancho: p.ancho, alto: p.alto, original: p.original, anchoOriginal: p.anchoOriginal, altoOriginal: p.altoOriginal,
       tipo: req.body.tipo, anio: req.body.anio, colegio: req.body.colegio, visible: req.body.visible,
       alt: req.body.alt || [req.body.tipo === 'diseno' ? 'Diseño de buzo de egresados' : 'Buzo de egresados', req.body.colegio, req.body.anio].filter(Boolean).join(' · '),
       orden: primero - procesadas.length + i,
@@ -521,6 +521,7 @@ router.delete('/fotos/:id', conId, async (req, res) => {
   const foto = await buscarOFallar(EgrFoto, req.params.id, 'Foto no encontrada');
   await foto.destroy();
   galeria.borrarArchivos(foto.archivo);
+  if (foto.original) fs.rmSync(galeria.rutaOriginal(foto.original), { force: true });
   res.status(204).end();
 });
 

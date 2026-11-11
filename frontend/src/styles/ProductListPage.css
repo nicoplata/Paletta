@@ -1,6 +1,7 @@
 .volver {
   display: inline-block;
-  margin-bottom: var(--esp-4);
+  padding: 10px 0;
+  margin-bottom: var(--esp-2);
   font-weight: 600;
   font-size: var(--texto-sm);
   color: var(--color-texto-tenue);
