@@ -50,6 +50,22 @@ describe('Egresados: galería de fotos', () => {
     assert.equal(mini.width, 640);
   });
 
+  it('las fotos chicas se amplían con calidad, se marcan como baja resolución y se guarda el original', async () => {
+    const res = await request(app).post('/api/admin/egresados/fotos').set(headers.admin)
+      .attach('fotos', await foto(400, 500), { filename: 'chica.jpg', contentType: 'image/jpeg' });
+    assert.equal(res.status, 201, JSON.stringify(res.body));
+    const [f] = res.body.fotos;
+    assert.equal(f.bajaResolucion, true);
+    assert.deepEqual([f.anchoOriginal, f.altoOriginal], [400, 500]);
+    assert.ok(f.ancho > 700 && f.alto > 900, `ampliada a ${f.ancho}×${f.alto}`);
+    assert.equal(f.maxAncho, 800, 'el sitio no la muestra a más del doble de su tamaño real');
+    const fila = await db.EgrFoto.findByPk(f.id);
+    assert.ok(require('fs').existsSync(require('../src/services/galeriaEgresados').rutaOriginal(fila.original)));
+    assert.equal(subidas[0].bajaResolucion, false);
+    await request(app).delete(`/api/admin/egresados/fotos/${f.id}`).set(headers.admin);
+    assert.equal(require('fs').existsSync(require('../src/services/galeriaEgresados').rutaOriginal(fila.original)), false, 'al borrar la foto se borra el original');
+  });
+
   it('edita, ordena, oculta y el sitio solo ve las visibles', async () => {
     const [a, b] = subidas;
     let res = await request(app).put(`/api/admin/egresados/fotos/${a.id}`).set(headers.admin)

@@ -9,6 +9,7 @@
     "db:migrate": "node scripts/migrate.js",
     "seed": "node scripts/seed.js",
     "galeria:importar": "node scripts/importar-galeria.js",
+    "galeria:reprocesar": "node scripts/reprocesar-galeria.js",
     "test": "node --test --test-concurrency=1 \"tests/**/*.test.js\"",
     "lint": "eslint .",
     "mail:prueba": "node scripts/probar-mail.js"

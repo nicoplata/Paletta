@@ -47,7 +47,7 @@ const FotoCard = ({ f, primero, ultimo, onGuardar, onMover, onBorrar }) => {
   };
   return (
     <li className={`foto-card${f.visible ? '' : ' oculta'}`}>
-      <a href={f.foto} target="_blank" rel="noopener noreferrer" className="foto-img"><img src={f.mini} alt={f.alt} loading="lazy" />{!f.visible && <span className="foto-oculta">Oculta</span>}</a>
+      <a href={f.foto} target="_blank" rel="noopener noreferrer" className="foto-img"><img src={f.mini} alt={f.alt} loading="lazy" />{!f.visible && <span className="foto-oculta">Oculta</span>}{f.bajaResolucion && <span className="foto-baja" title={`La foto original mide ${f.anchoOriginal}×${f.altoOriginal} px: se va a ver pixelada en pantallas grandes. Subí el original (idealmente de más de 1200 px).`}>Baja resolución</span>}</a>
       <div className="foto-campos">
         <Input aria-label="Descripción de la foto" value={d.alt} onChange={(e) => setD({ ...d, alt: e.target.value })} onBlur={() => guardar('alt')} placeholder="Qué se ve en la foto" maxLength={200} />
         <div className="foto-fila">
@@ -136,6 +136,7 @@ const FotosEgresadosAdmin = () => {
   };
 
   const visibles = fotos.filter((f) => f.visible).length;
+  const bajas = fotos.filter((f) => f.bajaResolucion).length;
 
   return (
     <Container>
@@ -185,6 +186,11 @@ const FotosEgresadosAdmin = () => {
 
       {error && <ErrorBox>{error}</ErrorBox>}
       <h2 style={{ margin: '20px 0 10px' }}>Galería <small style={{ fontWeight: 400, color: '#7f8c8d' }}>· {visibles} visibles de {fotos.length}</small></h2>
+      {bajas > 0 && (
+        <Hint style={{ margin: '0 0 12px', padding: '10px 12px', borderRadius: 8, background: '#fff5e6', color: '#7a4a00' }}>
+          {bajas} foto{bajas === 1 ? '' : 's'} {bajas === 1 ? 'tiene' : 'tienen'} baja resolución (menos de 1000 px de lado). Se procesan para que se vean lo mejor posible, pero para que se vean nítidas en pantallas grandes conviene reemplazarlas por la foto original (idealmente de más de 1200 px).
+        </Hint>
+      )}
       {cargando && !fotos.length ? <Empty>Cargando...</Empty> : fotos.length === 0 ? <Empty>Todavía no hay fotos: el sitio muestra las que tiene fijas en el código hasta que subas la primera.</Empty> : (
         <ul className="fotos-grilla">
           {fotos.map((f, i) => (

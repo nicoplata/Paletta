@@ -1,16 +1,13 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import FiltroProductos from './FiltroProductos';
 import TarjetaProducto from './TarjetaProducto';
 import LoadingSpinner from './common/LoadingSpinner';
-import { filtrarProductos, useProductosPublicos } from '../hooks/useCatalogo';
+import { useProductosPublicos } from '../hooks/useCatalogo';
 import '../styles/ProductListHome.css';
 
 const ProductListHome = () => {
   const { data: productos, loading, errorMensaje } = useProductosPublicos();
-  const [filtros, setFiltros] = useState({ colegio: '', categoria: '' });
-
-  const destacados = filtrarProductos(productos, filtros).slice(0, 8);
+  // En el inicio van solo los destacados, sin filtros (los filtros están en /productos)
+  const destacados = (productos || []).slice(0, 8);
 
   return (
     <section className="homeWrapper" aria-labelledby="titulo-destacados">
@@ -21,8 +18,7 @@ const ProductListHome = () => {
         </div>
         <Link to="/productos" className="btn btn-secundario">Ver todos →</Link>
       </div>
-      <div className="productosLayout">
-        <FiltroProductos onChange={setFiltros} context="home" />
+      <div className="productosLayout home">
         <div className="productContainer home" id="productos">
           {loading ? (
             <LoadingSpinner />
@@ -31,7 +27,7 @@ const ProductListHome = () => {
           ) : destacados.length === 0 ? (
             <p>No hay productos disponibles.</p>
           ) : (
-            destacados.map((producto) => <TarjetaProducto key={producto.id} producto={producto} mostrarColegio={false} />)
+            destacados.map((producto) => <TarjetaProducto key={producto.id} producto={producto} />)
           )}
         </div>
       </div>

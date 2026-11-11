@@ -29,7 +29,7 @@ body { background: var(--color-fondo); }
   font: 700 0.7rem var(--fuente);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-primario-vivo);
+  color: #bf2e23;
 }
 
 .pf-main {
