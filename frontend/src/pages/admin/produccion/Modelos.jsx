@@ -3,6 +3,7 @@ import { FaCopy, FaEdit, FaPlus, FaTrash } from 'react-icons/fa';
 import api, { mensajeError } from '../../../lib/api';
 import useRecurso from '../../../hooks/useRecurso';
 import { useToast } from '../../../context/ToastContext';
+import { useEsAdmin } from '../../../context/AuthContext';
 import { Button, ButtonGroup, CheckLabel, Empty, ErrorBox, Form, FormGroup, Hint, IconButton, Input, Label, Row, TextArea } from '../adminUI';
 import { Tabla, TablaScroll, pesos } from '../egresados/comun';
 import { cant } from './comunProduccion';
@@ -19,6 +20,7 @@ const separarTalles = (txt) => [...new Set(String(txt).split(',').map((t) => t.t
 // Ficha técnica: metros de cada pieza por talle, insumos por prenda, desperdicio y costo del taller
 const Modelos = () => {
   const { showToast } = useToast();
+  const esAdmin = useEsAdmin();
   const { data: lista, cargando, error, recargar } = useRecurso('/admin/produccion/modelos', { porDefecto: [] });
   const [form, setForm] = useState(null);
   const [errorForm, setErrorForm] = useState('');
@@ -150,7 +152,7 @@ const Modelos = () => {
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <IconButton onClick={() => abrir(m)} aria-label={`Editar ${m.nombre}`}><FaEdit /></IconButton>
                     <IconButton onClick={() => abrir(m, true)} aria-label={`Duplicar ${m.nombre}`} title="Duplicar"><FaCopy /></IconButton>
-                    <IconButton $peligro onClick={() => eliminar(m)} aria-label={`Eliminar ${m.nombre}`}><FaTrash /></IconButton>
+                    {esAdmin && <IconButton $peligro onClick={() => eliminar(m)} aria-label={`Eliminar ${m.nombre}`}><FaTrash /></IconButton>}
                   </td>
                 </tr>
               ))}

@@ -2,14 +2,15 @@
 const express = require('express');
 const { ProdMaterial, ProdModelo, ProdTaller, ProdOrden, EgrPrenda, EgrPromo, sequelize } = require('../models');
 const egr = require('../services/egresados');
-const { soloAdmin } = require('../middleware/auth');
+const { soloPanel, soloAdministrador } = require('../middleware/auth');
+const { auditar } = require('../services/actividad');
 const validar = require('../middleware/validator');
 const v = require('../validators/produccion');
 const { AppError } = require('../utils/errorHandler');
 const prod = require('../services/produccion');
 
 const router = express.Router();
-router.use(soloAdmin);
+router.use(soloPanel);
 const conId = validar(v.idParam, 'params');
 
 async function buscar(Modelo, id, mensaje) {
@@ -29,7 +30,7 @@ router.put('/materiales/:id', conId, validar(v.materialEdicion), async (req, res
   const m = await buscar(ProdMaterial, req.params.id, 'Material no encontrado');
   res.json(await m.update(req.body));
 });
-router.delete('/materiales/:id', conId, async (req, res) => {
+router.delete('/materiales/:id', conId, soloAdministrador, auditar('material_borrado', (req) => `Borró el material #${req.params.id}`, { sensible: true }), async (req, res) => {
   const m = await buscar(ProdMaterial, req.params.id, 'Material no encontrado');
   await m.destroy();
   res.status(204).end();
@@ -58,7 +59,7 @@ router.put('/modelos/:id', conId, validar(v.modeloEdicion), async (req, res) => 
   const m = await buscar(ProdModelo, req.params.id, 'Ficha técnica no encontrada');
   res.json(await m.update(limpiarModelo(req.body, m.talles)));
 });
-router.delete('/modelos/:id', conId, async (req, res) => {
+router.delete('/modelos/:id', conId, soloAdministrador, auditar('ficha_borrada', (req) => `Borró la ficha técnica #${req.params.id}`, { sensible: true }), async (req, res) => {
   const m = await buscar(ProdModelo, req.params.id, 'Ficha técnica no encontrada');
   const enUso = await EgrPrenda.count({ where: { modeloId: m.id } });
   if (enUso) throw new AppError(`La usan ${enUso} prenda${enUso === 1 ? '' : 's'} de promos: desactivala en lugar de borrarla.`, 409);
@@ -99,7 +100,7 @@ router.put('/talleres/:id', conId, validar(v.tallerEdicion), async (req, res) =>
   const t = await buscar(ProdTaller, req.params.id, 'Taller no encontrado');
   res.json(await t.update(req.body));
 });
-router.delete('/talleres/:id', conId, async (req, res) => {
+router.delete('/talleres/:id', conId, soloAdministrador, auditar('taller_borrado', (req) => `Borró el taller #${req.params.id}`, { sensible: true }), async (req, res) => {
   const t = await buscar(ProdTaller, req.params.id, 'Taller no encontrado');
   const ordenes = await ProdOrden.count({ where: { tallerId: t.id } });
   if (ordenes) throw new AppError(`El taller tiene ${ordenes} orden${ordenes === 1 ? '' : 'es'}: desactivalo en lugar de borrarlo.`, 409);
@@ -183,8 +184,12 @@ router.put('/ordenes/:id', conId, validar(v.ordenEdicion), async (req, res) => {
   res.json(ordenConContexto(await ProdOrden.findByPk(orden.id, { include: includeOrden })));
 });
 
-router.delete('/ordenes/:id', conId, async (req, res) => {
+router.delete('/ordenes/:id', conId, auditar('orden_borrada', (req) => `Borró la orden de taller #${req.params.id}`), async (req, res) => {
   const orden = await buscar(ProdOrden, req.params.id, 'Orden no encontrada');
+  // El equipo puede borrar órdenes en preparación; las ya enviadas o recibidas solo el administrador
+  if (orden.estado !== 'preparando' && req.usuario.rol !== 'administrador') {
+    throw new AppError('La orden ya se envió al taller: solo el administrador puede borrarla.', 403);
+  }
   await orden.destroy();
   res.status(204).end();
 });

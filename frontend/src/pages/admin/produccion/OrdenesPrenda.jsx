@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FaPlus, FaPrint, FaTrash } from 'react-icons/fa';
 import api, { mensajeError } from '../../../lib/api';
 import { useToast } from '../../../context/ToastContext';
+import { useEsAdmin } from '../../../context/AuthContext';
 import { Button, ButtonGroup, ErrorBox, Form, FormGroup, Hint, IconButton, Input, Label, Row, Select, Tag } from '../adminUI';
 import { Seccion, Tabla, TablaScroll, fecha, pesos } from '../egresados/comun';
 import { ESTADO_ORDEN, hoyISO } from './comunProduccion';
@@ -28,6 +29,7 @@ const PorTalle = ({ talles, valores, onChange, prefijo }) => (
 // Órdenes de taller de una prenda: crear, enviar, recibir (con fallas) e imprimir la ficha
 const OrdenesPrenda = ({ prenda, talleres, onCambio }) => {
   const { showToast } = useToast();
+  const esAdmin = useEsAdmin();
   const [nueva, setNueva] = useState(null);
   const [recibiendo, setRecibiendo] = useState(null);
   const [error, setError] = useState('');
@@ -94,7 +96,7 @@ const OrdenesPrenda = ({ prenda, talleres, onCambio }) => {
                     {o.estado === 'preparando' && <Button type="button" onClick={() => accion(() => api.put(`/admin/produccion/ordenes/${o.id}`, { estado: 'enviada' }), 'Orden marcada como enviada')} style={{ padding: '0.35rem 0.7rem' }}>Enviar</Button>}
                     {o.estado === 'enviada' && <Button type="button" onClick={() => setRecibiendo({ id: o.id, numero: o.numero, recibidas: { ...o.cantidades }, falladas: {} })} style={{ padding: '0.35rem 0.7rem' }}>Recibir</Button>}
                     <IconButton as={Link} to={`/admin/dashboard/produccion/ordenes/${o.id}`} aria-label={`Ficha de taller ${o.numero}`} title="Ficha de taller"><FaPrint /></IconButton>
-                    <IconButton $peligro onClick={() => window.confirm(`¿Eliminar la orden ${o.numero}?`) && accion(() => api.delete(`/admin/produccion/ordenes/${o.id}`), 'Orden eliminada')} aria-label={`Eliminar ${o.numero}`}><FaTrash /></IconButton>
+                    {(esAdmin || o.estado === 'preparando') && <IconButton $peligro onClick={() => window.confirm(`¿Eliminar la orden ${o.numero}?`) && accion(() => api.delete(`/admin/produccion/ordenes/${o.id}`), 'Orden eliminada')} aria-label={`Eliminar ${o.numero}`}><FaTrash /></IconButton>}
                   </td>
                 </tr>
               ))}

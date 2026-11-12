@@ -30,6 +30,9 @@ async function iniciar() {
   // Feed de Instagram de @paletta.egresados (si hay token cargado)
   require('./services/instagram').programarInstagram();
 
+  // Avisos de órdenes atrasadas y resumen diario por mail al equipo del panel
+  require('./services/resumenDiario').programarResumen();
+
   const server = app.listen(ENV.PORT, () => {
     console.log(`Paletta API escuchando en el puerto ${ENV.PORT} (${ENV.NODE_ENV})`);
   });

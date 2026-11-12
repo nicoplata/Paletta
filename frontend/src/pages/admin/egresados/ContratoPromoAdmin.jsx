@@ -4,6 +4,7 @@ import { FaArrowLeft, FaEdit, FaEye, FaFileUpload, FaPrint, FaTrash } from 'reac
 import api, { mensajeError } from '../../../lib/api';
 import useRecurso from '../../../hooks/useRecurso';
 import { useToast } from '../../../context/ToastContext';
+import { useEsAdmin } from '../../../context/AuthContext';
 import { Button, ButtonGroup, Container, Empty, ErrorBox, Header, Hint, TextArea, Title } from '../adminUI';
 import { Seccion, fecha, nombrePlan, pesos } from './comun';
 import '../produccion/fichas.css';
@@ -14,6 +15,7 @@ const linea = '______________________________';
 const ContratoPromoAdmin = () => {
   const { id } = useParams();
   const { showToast } = useToast();
+  const esAdmin = useEsAdmin();
   const { data, cargando, error, recargar } = useRecurso(`/admin/egresados/promos/${id}/contrato/datos`);
   const [editando, setEditando] = useState(null);
   const [subiendo, setSubiendo] = useState(false);
@@ -95,7 +97,7 @@ const ContratoPromoAdmin = () => {
             <ButtonGroup style={{ justifyContent: 'flex-start' }}>
               <Button type="button" onClick={ver}><FaEye /> Ver</Button>
               <Button as="label" style={{ cursor: 'pointer' }}><FaFileUpload /> Reemplazar<input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" onChange={subir} hidden /></Button>
-              <Button type="button" onClick={quitar}><FaTrash /> Quitar</Button>
+              {esAdmin && <Button type="button" onClick={quitar}><FaTrash /> Quitar</Button>}
             </ButtonGroup>
           </>
         ) : (
@@ -166,7 +168,7 @@ const ContratoPromoAdmin = () => {
 
         <h3 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           Cláusulas
-          <Button type="button" className="no-print" onClick={() => setEditando(clausulas)} style={{ padding: '0.3rem 0.7rem', fontSize: '0.8rem', letterSpacing: 0, textTransform: 'none' }}><FaEdit /> Editar cláusulas</Button>
+          {esAdmin && <Button type="button" className="no-print" onClick={() => setEditando(clausulas)} style={{ padding: '0.3rem 0.7rem', fontSize: '0.8rem', letterSpacing: 0, textTransform: 'none' }}><FaEdit /> Editar cláusulas</Button>}
         </h3>
         <div className="ficha-pasos">{clausulas}</div>
 

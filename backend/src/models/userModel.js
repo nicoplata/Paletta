@@ -1,7 +1,8 @@
 const { DataTypes } = require('sequelize');
 const bcrypt = require('bcrypt');
 
-const ROLES = ['administrador', 'usuario'];
+// administrador: todo · encargado: trabajo diario del panel, sin configuración ni borrados importantes · usuario: sin panel
+const ROLES = ['administrador', 'encargado', 'usuario'];
 
 module.exports = (sequelize) => {
   const User = sequelize.define('User', {
@@ -26,6 +27,8 @@ module.exports = (sequelize) => {
       type: DataTypes.ENUM(...ROLES),
       defaultValue: 'usuario',
     },
+    // Hasta cuándo vio las notificaciones del panel (para el contador de no leídas)
+    notifLeidasHasta: { type: DataTypes.DATE },
   }, {
     tableName: 'Users',
     // Nunca devolver el hash por defecto

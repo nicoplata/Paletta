@@ -4,6 +4,7 @@ import { FaArrowLeft, FaPlus, FaTrash } from 'react-icons/fa';
 import api, { mensajeError } from '../../../lib/api';
 import useRecurso from '../../../hooks/useRecurso';
 import { useToast } from '../../../context/ToastContext';
+import { useEsAdmin } from '../../../context/AuthContext';
 import {
   Button, ButtonGroup, Container, Empty, ErrorBox, Form, FormGroup, Header, Hint, IconButton, Input, Label, Row, Select, Title,
 } from '../adminUI';
@@ -25,6 +26,7 @@ const AlumnoEgresadosAdmin = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const esAdmin = useEsAdmin();
   const { data, setData, cargando, error } = useRecurso(`/admin/egresados/alumnos/${id}`);
   const [form, setForm] = useState(null);
   const [items, setItems] = useState(null);
@@ -95,7 +97,7 @@ const AlumnoEgresadosAdmin = () => {
           <Title>{data.nombre}</Title>
           <Hint>{data.codigo} · último ingreso: {data.ultimoIngreso ? new Date(data.ultimoIngreso).toLocaleString('es-AR') : 'nunca'}</Hint>
         </div>
-        <Button onClick={eliminar}><FaTrash /> Eliminar</Button>
+        {esAdmin && <Button onClick={eliminar}><FaTrash /> Eliminar</Button>}
       </Header>
 
       <Cifras>

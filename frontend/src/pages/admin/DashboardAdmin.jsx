@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaBars, FaTimes, FaBox, FaTags, FaSchool, FaUsers, FaSignOutAlt, FaEnvelope, FaExternalLinkAlt, FaShoppingBag, FaTicketAlt, FaTruck, FaGraduationCap, FaCut } from 'react-icons/fa';
+import { FaBars, FaTimes, FaBox, FaTags, FaSchool, FaUsers, FaSignOutAlt, FaEnvelope, FaExternalLinkAlt, FaShoppingBag, FaTicketAlt, FaTruck, FaGraduationCap, FaCut, FaHistory } from 'react-icons/fa';
+import Campanita from '../../components/admin/Campanita';
+import ConfirmacionModal from '../../components/admin/ConfirmacionModal';
 import { useAuth } from '../../context/AuthContext';
 import { AdminGlobalStyles } from '../../styles/AdminStyles';
 
@@ -176,6 +178,16 @@ const ContentArea = styled.div`
   }
 `;
 
+const BarraSuperior = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin: -0.75rem 0 0.75rem;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+`;
+
 const Columna = styled.div`
   flex: 1;
   min-width: 0;
@@ -205,7 +217,8 @@ const DashboardAdmin = () => {
   const [esMovil, setEsMovil] = useState(() => window.matchMedia(MOVIL).matches);
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { logout } = useAuth();
+  const { logout, usuario } = useAuth();
+  const esAdmin = usuario?.rol === 'administrador';
 
   useEffect(() => {
     const mq = window.matchMedia(MOVIL);
@@ -237,6 +250,7 @@ const DashboardAdmin = () => {
   return (
     <>
       <AdminGlobalStyles />
+      <ConfirmacionModal />
       <DashboardContainer>
         <Fondo $abierto={abierto} onClick={() => setAbierto(false)} aria-hidden="true" />
         <Sidebar id="admin-menu" aria-label="Menú del panel" $isCollapsed={colapsado} $abierto={abierto}>
@@ -264,14 +278,18 @@ const DashboardAdmin = () => {
               <FaCut />
               <span>Producción</span>
             </StyledNavLink>
-            <StyledNavLink to="/admin/dashboard/cupones" $isCollapsed={colapsado}>
-              <FaTicketAlt />
-              <span>Cupones</span>
-            </StyledNavLink>
-            <StyledNavLink to="/admin/dashboard/envios" $isCollapsed={colapsado}>
-              <FaTruck />
-              <span>Envíos</span>
-            </StyledNavLink>
+            {esAdmin && (
+              <StyledNavLink to="/admin/dashboard/cupones" $isCollapsed={colapsado}>
+                <FaTicketAlt />
+                <span>Cupones</span>
+              </StyledNavLink>
+            )}
+            {esAdmin && (
+              <StyledNavLink to="/admin/dashboard/envios" $isCollapsed={colapsado}>
+                <FaTruck />
+                <span>Envíos</span>
+              </StyledNavLink>
+            )}
             <StyledNavLink to="/admin/dashboard/productos" $isCollapsed={colapsado}>
               <FaBox />
               <span>Productos</span>
@@ -284,14 +302,22 @@ const DashboardAdmin = () => {
               <FaSchool />
               <span>Colegios</span>
             </StyledNavLink>
-            <StyledNavLink to="/admin/dashboard/usuarios" $isCollapsed={colapsado}>
-              <FaUsers />
-              <span>Usuarios</span>
-            </StyledNavLink>
+            {esAdmin && (
+              <StyledNavLink to="/admin/dashboard/usuarios" $isCollapsed={colapsado}>
+                <FaUsers />
+                <span>Usuarios</span>
+              </StyledNavLink>
+            )}
             <StyledNavLink to="/admin/dashboard/mensajes" $isCollapsed={colapsado}>
               <FaEnvelope />
               <span>Mensajes</span>
             </StyledNavLink>
+            {esAdmin && (
+              <StyledNavLink to="/admin/dashboard/actividad" $isCollapsed={colapsado}>
+                <FaHistory />
+                <span>Actividad</span>
+              </StyledNavLink>
+            )}
             <StyledNavLink as="a" href="/" target="_blank" rel="noopener noreferrer" $isCollapsed={colapsado}>
               <FaExternalLinkAlt />
               <span>Ver sitio</span>
@@ -307,9 +333,16 @@ const DashboardAdmin = () => {
         <Columna>
           <BarraMovil>
             <ToggleButton type="button" onClick={() => setAbierto(true)} aria-label="Abrir menú" aria-expanded={abierto} aria-controls="admin-menu"><FaBars /></ToggleButton>
-            Panel Admin
+            <span style={{ flex: 1 }}>Panel Admin</span>
+            {esMovil && <Campanita />}
           </BarraMovil>
           <Content $isCollapsed={colapsado}>
+            {!esMovil && (
+              <BarraSuperior>
+                <span>{usuario?.nombre}{usuario?.rol === 'encargado' ? ' · Encargado/a' : ''}</span>
+                <Campanita />
+              </BarraSuperior>
+            )}
             <ContentArea>
               <Outlet />
             </ContentArea>

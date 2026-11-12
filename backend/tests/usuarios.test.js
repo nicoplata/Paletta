@@ -11,7 +11,7 @@ describe('Usuarios', () => {
     assert.equal((await request(app).get('/api/usuarios').set(headers.operador)).status, 403);
     const res = await request(app).get('/api/usuarios').set(headers.admin);
     assert.equal(res.status, 200);
-    assert.equal(res.body.length, 2);
+    assert.equal(res.body.length, 3);
     assert.ok(res.body.every((u) => u.password === undefined));
   });
 

@@ -13,7 +13,8 @@ const LoginAdmin = () => {
   const navigate = useNavigate();
   const { login, logout, usuario } = useAuth();
 
-  if (usuario?.rol === 'administrador') {
+  const PUEDEN = ['administrador', 'encargado'];
+  if (PUEDEN.includes(usuario?.rol)) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
@@ -23,7 +24,7 @@ const LoginAdmin = () => {
     setLoading(true);
     try {
       const usuarioLogueado = await login(email, password);
-      if (usuarioLogueado.rol !== 'administrador') {
+      if (!PUEDEN.includes(usuarioLogueado.rol)) {
         logout();
         setError('Tu usuario no tiene acceso al panel de administración');
         return;

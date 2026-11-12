@@ -6,6 +6,7 @@ const { sequelize, Pedido, PedidoItem, Variante, Producto, Colegio } = require('
 const { AppError } = require('../utils/errorHandler');
 const mercadoPago = require('./mercadoPago');
 const notificaciones = require('./notificacionesPedido');
+const { notificar } = require('./notificaciones');
 const cupones = require('./cupones');
 const envio = require('./envio');
 
@@ -181,6 +182,12 @@ async function crearPedido(datos) {
 
   const completo = await Pedido.findByPk(pedido.id, { include: includeItems });
   notificaciones.pedidoCreado(completo, datosTransferencia());
+  notificar({
+    tipo: 'pedido', clave: `pedido-${completo.id}`,
+    titulo: `Nuevo pedido de la tienda P-${String(completo.id).padStart(6, '0')}`,
+    texto: `${completo.nombre} · ${completo.metodoPago === 'mercadopago' ? 'Mercado Pago' : 'Transferencia'} · $ ${Number(completo.total).toLocaleString('es-AR')}`,
+    link: `/admin/dashboard/pedidos/${completo.id}`,
+  });
   return completo;
 }
 
@@ -225,7 +232,15 @@ async function marcarPagado(pedidoId, { mpPaymentId = null, mpEstado = null, ori
     notificar = true;
     return p;
   });
-  if (notificar) notificaciones.pedidoPagado(pedido);
+  if (notificar) {
+    notificaciones.pedidoPagado(pedido);
+    require('./notificaciones').notificar({
+      tipo: 'pago', clave: `pedido-pagado-${pedido.id}`,
+      titulo: `Pedido P-${String(pedido.id).padStart(6, '0')} pagado (${origen})`,
+      texto: `${pedido.nombre}: listo para preparar.`,
+      link: `/admin/dashboard/pedidos/${pedido.id}`,
+    });
+  }
   return pedido;
 }
 

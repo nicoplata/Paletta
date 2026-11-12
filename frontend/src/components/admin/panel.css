@@ -1,0 +1,37 @@
+/* Piezas comunes del panel: confirmación, campanita */
+.panel-dialogo { width: min(440px, calc(100% - 24px)); padding: 0; border: 0; border-radius: 14px; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .5); color: #2c3e50; }
+.panel-dialogo::backdrop { background: rgba(14, 14, 18, .55); }
+.panel-dialogo form { display: grid; gap: 10px; padding: 22px; }
+.panel-dialogo h2 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 1.2rem; }
+.panel-dialogo p { margin: 0; }
+.panel-dialogo label { font-weight: 600; font-size: .9rem; }
+.panel-dialogo input { padding: .7rem .8rem; border: 1px solid #ccc; border-radius: 8px; font: inherit; }
+.panel-tenue { color: #7f8c8d; font-size: .88rem; }
+.panel-error { color: #c0392b; font-weight: 600; }
+.panel-acciones { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+.panel-btn { padding: .6rem 1.1rem; border: 0; border-radius: 8px; background: #eee; color: #2c3e50; font: inherit; cursor: pointer; }
+.panel-btn.primario { background: var(--color-primario); color: #fff; }
+.panel-btn:disabled { opacity: .6; cursor: default; }
+
+/* Campanita */
+.campana { position: relative; }
+.campana-boton { position: relative; display: inline-grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--color-superficie, #fff); box-shadow: 0 2px 8px rgba(0, 0, 0, .1); color: #2c3e50; font-size: 1.15rem; cursor: pointer; }
+.campana-boton:hover { color: var(--color-primario); }
+.campana-num { position: absolute; top: -2px; right: -2px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: var(--color-primario); color: #fff; font-size: .72rem; font-weight: 700; line-height: 20px; text-align: center; }
+.campana-panel { position: absolute; right: 0; top: 52px; z-index: 950; width: min(380px, calc(100vw - 24px)); max-height: min(560px, calc(100vh - 90px)); overflow-y: auto; border-radius: 14px; background: #fff; box-shadow: 0 24px 60px -16px rgba(0, 0, 0, .35); color: #2c3e50; }
+.campana-cab { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 14px; background: #fff; border-bottom: 1px solid #eee; }
+.campana-cab h2 { margin: 0; font-size: 1rem; }
+.campana-cab button { border: 0; background: none; color: #2980b9; font: inherit; font-size: .85rem; cursor: pointer; }
+.campana-pend { display: grid; gap: 4px; padding: 10px 14px; background: #fff8ef; border-bottom: 1px solid #f3e2c7; }
+.campana-pend a { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; color: #7a4a00; font-weight: 600; text-decoration: none; }
+.campana-pend b { min-width: 26px; padding: 0 6px; border-radius: 999px; background: #f39c12; color: #fff; text-align: center; }
+.campana-lista { list-style: none; margin: 0; padding: 0; }
+.campana-lista a { display: grid; gap: 2px; padding: 10px 14px; border-bottom: 1px solid #f2f2f2; color: inherit; text-decoration: none; }
+.campana-lista a:hover { background: #f7f9fa; }
+.campana-lista .nueva a { background: #f0f7ff; }
+.campana-lista strong { font-size: .92rem; }
+.campana-lista span { font-size: .84rem; color: #555; }
+.campana-lista small { font-size: .75rem; color: #95a5a6; }
+.campana-vacio { padding: 18px 14px; color: #7f8c8d; text-align: center; }
+.campana-pie { padding: 10px 14px; text-align: center; }
+.campana-pie button { border: 0; background: none; color: #2980b9; font: inherit; font-size: .85rem; cursor: pointer; }

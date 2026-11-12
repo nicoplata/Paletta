@@ -1,5 +1,6 @@
 const { User } = require('../models');
-const { firmarToken } = require('../middleware/auth');
+const { firmarToken, firmarConfirmacion, MINUTOS_CONFIRMACION } = require('../middleware/auth');
+const { registrar } = require('../services/actividad');
 const { AppError } = require('../utils/errorHandler');
 
 const bcrypt = require('bcrypt');
@@ -26,4 +27,14 @@ exports.login = async (req, res) => {
 
 exports.me = async (req, res) => {
   res.json({ usuario: req.usuario });
+};
+
+// Reingreso de la contraseña antes de una acción sensible: devuelve un permiso corto (10 minutos)
+exports.confirmar = async (req, res) => {
+  const usuario = await User.scope('conPassword').findByPk(req.usuario.id);
+  if (!usuario || !await usuario.compararPassword(req.body.password)) {
+    await registrar(req, { accion: 'confirmacion_fallida', descripcion: 'Contraseña incorrecta al confirmar una acción sensible', sensible: true });
+    throw new AppError('La contraseña no es correcta', 401);
+  }
+  res.json({ token: firmarConfirmacion(usuario), minutos: MINUTOS_CONFIRMACION });
 };

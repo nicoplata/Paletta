@@ -13,6 +13,12 @@ exports.recibirMensaje = async (req, res) => {
   if (sitio) return res.status(201).json({ mensaje: 'Mensaje recibido' });
 
   const mensaje = await MensajeContacto.create(datos);
+  require('../services/notificaciones').notificar({
+    tipo: 'mensaje', clave: `mensaje-${mensaje.id}`,
+    titulo: `Mensaje de contacto de ${datos.nombre}`,
+    texto: String(datos.mensaje || '').slice(0, 140),
+    link: '/admin/dashboard/mensajes',
+  });
 
   if (mailConfigurado() && ENV.CONTACT_TO) {
     enviarMail({

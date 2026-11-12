@@ -1,6 +1,6 @@
 const express = require('express');
 const c = require('../controllers/imagenesController');
-const { soloAdmin } = require('../middleware/auth');
+const { soloPanel } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const validar = require('../middleware/validator');
 const schemas = require('../validators/schemas');
@@ -17,7 +17,7 @@ const validarImagen = (req, res, next) =>
   });
 
 router.get('/', c.getImagenes);
-router.post('/', soloAdmin, upload.single('imagen'), validarImagen, c.subirImagen);
-router.delete('/:id', soloAdmin, validar(schemas.idParam, 'params'), c.eliminarImagen);
+router.post('/', soloPanel, upload.single('imagen'), validarImagen, c.subirImagen);
+router.delete('/:id', soloPanel, validar(schemas.idParam, 'params'), c.eliminarImagen);
 
 module.exports = router;

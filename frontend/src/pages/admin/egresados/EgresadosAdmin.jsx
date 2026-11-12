@@ -4,6 +4,7 @@ import { FaPlus, FaCashRegister, FaEnvelope, FaReceipt, FaPalette, FaImages } fr
 import api, { mensajeError } from '../../../lib/api';
 import useRecurso from '../../../hooks/useRecurso';
 import { useToast } from '../../../context/ToastContext';
+import { useEsAdmin } from '../../../context/AuthContext';
 import {
   Button, ButtonGroup, CheckLabel, Container, Empty, ErrorBox, Form, FormGroup, Header, Hint, Input, Label, Row, Select, Title,
 } from '../adminUI';
@@ -127,6 +128,7 @@ const CuentaTransferencia = () => {
 };
 
 const EgresadosAdmin = () => {
+  const esAdmin = useEsAdmin();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [enviandoAvisos, setEnviandoAvisos] = useState(false);
@@ -214,10 +216,12 @@ const EgresadosAdmin = () => {
         )}
       </Seccion>
 
-      <Seccion>
-        <h2>Cuenta para transferencias de egresados</h2>
-        <CuentaTransferencia />
-      </Seccion>
+      {esAdmin && (
+        <Seccion>
+          <h2>Cuenta para transferencias de egresados</h2>
+          <CuentaTransferencia />
+        </Seccion>
+      )}
     </Container>
   );
 };
