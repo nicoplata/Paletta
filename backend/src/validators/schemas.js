@@ -51,6 +51,7 @@ const schemas = {
     password: Joi.string().min(10).max(200).required()
       .messages({ 'string.min': 'La contraseña debe tener al menos 10 caracteres' }),
     rol: Joi.string().valid('administrador', 'encargado', 'usuario').default('usuario'),
+    recibeResumen: Joi.boolean().default(false),
   }),
 
   usuarioActualizar: Joi.object({
@@ -59,6 +60,7 @@ const schemas = {
     password: Joi.string().min(10).max(200).allow('')
       .messages({ 'string.min': 'La contraseña debe tener al menos 10 caracteres' }),
     rol: Joi.string().valid('administrador', 'encargado', 'usuario'),
+    recibeResumen: Joi.boolean(),
   }).min(1),
 
   imagen: Joi.object({

@@ -4,14 +4,14 @@ import { FaArrowLeft, FaSave } from 'react-icons/fa';
 import api, { mensajeError } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import {
-  Button, ButtonGroup, Container, ErrorBox, Form, FormGroup, Header, Hint, Input, Label, Row, Select, Title,
+  Button, ButtonGroup, CheckLabel, Container, ErrorBox, Form, FormGroup, Header, Hint, Input, Label, Row, Select, Title,
 } from './adminUI';
 
 const EditarUsuario = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [usuario, setUsuario] = useState({ nombre: '', email: '', password: '', rol: 'encargado' });
+  const [usuario, setUsuario] = useState({ nombre: '', email: '', password: '', rol: 'encargado', recibeResumen: false });
   const [cargando, setCargando] = useState(Boolean(id));
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
@@ -19,7 +19,7 @@ const EditarUsuario = () => {
   useEffect(() => {
     if (!id) return;
     api.get(`/usuarios/${id}`)
-      .then(({ data }) => setUsuario({ nombre: data.nombre, email: data.email, password: '', rol: data.rol }))
+      .then(({ data }) => setUsuario({ nombre: data.nombre, email: data.email, password: '', rol: data.rol, recibeResumen: Boolean(data.recibeResumen) }))
       .catch((err) => setError(mensajeError(err, 'No se pudo cargar el usuario')))
       .finally(() => setCargando(false));
   }, [id]);
@@ -95,6 +95,14 @@ const EditarUsuario = () => {
             </Hint>
           </FormGroup>
         </Row>
+        <FormGroup>
+          <CheckLabel>
+            <input type="checkbox" checked={usuario.recibeResumen && usuario.rol !== 'usuario'} disabled={usuario.rol === 'usuario'}
+              onChange={(e) => setUsuario((prev) => ({ ...prev, recibeResumen: e.target.checked }))} />
+            Recibe el resumen diario por mail
+          </CheckLabel>
+          <Hint>Un mail por día (entre las 8 y las 20 h) con lo pendiente: presupuestos sin contestar, comprobantes, pedidos para preparar, mensajes y órdenes de taller atrasadas.</Hint>
+        </FormGroup>
         <ButtonGroup>
           <Button type="button" onClick={() => navigate('/admin/dashboard/usuarios')}>
             <FaArrowLeft /> Volver

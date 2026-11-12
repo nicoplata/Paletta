@@ -53,16 +53,21 @@ async function enviarResumen({ hoy = hoyAR(), forzar = false } = {}) {
   const lista = (await pendientes(hoy)).filter((p) => p.cantidad > 0);
   await Configuracion.upsert({ clave: CLAVE, valor: { fecha: hoy } });
   if (!lista.length) return { enviado: false, motivo: 'nada pendiente' };
-  const destinatarios = (await User.findAll({ where: { rol: ROLES_PANEL } })).map((u) => u.email);
+  const destinatarios = await destinatariosResumen();
   if (!destinatarios.length) return { enviado: false, motivo: 'sin destinatarios' };
   const filas = lista.map((p) => `<li style="margin:6px 0"><a href="${ENV.SITE_URL}${p.link}" style="color:#8f141b;font-weight:700;text-decoration:none">${p.cantidad} ${p.texto}</a></li>`).join('');
   await enviarMail({
     to: destinatarios.join(', '),
     subject: `Paletta: lo pendiente de hoy (${lista.reduce((a, p) => a + p.cantidad, 0)})`,
     text: `Lo pendiente de hoy:\n${lista.map((p) => `- ${p.cantidad} ${p.texto}`).join('\n')}\n\nEntrá al panel: ${ADMIN}`,
-    html: `<div style="font-family:Arial,sans-serif;color:#111;max-width:520px"><h2 style="margin:0 0 10px">Lo pendiente de hoy</h2><ul style="padding-left:18px">${filas}</ul><p><a href="${ADMIN}" style="display:inline-block;padding:10px 16px;border-radius:999px;background:#8f141b;color:#fff;text-decoration:none;font-weight:700">Abrir el panel</a></p><p style="color:#777;font-size:12px">Te llega porque tenés acceso al panel de Paletta.</p></div>`,
+    html: `<div style="font-family:Arial,sans-serif;color:#111;max-width:520px"><h2 style="margin:0 0 10px">Lo pendiente de hoy</h2><ul style="padding-left:18px">${filas}</ul><p><a href="${ADMIN}" style="display:inline-block;padding:10px 16px;border-radius:999px;background:#8f141b;color:#fff;text-decoration:none;font-weight:700">Abrir el panel</a></p><p style="color:#777;font-size:12px">Te llega porque estás en la lista del resumen diario del panel de Paletta.</p></div>`,
   });
   return { enviado: true, destinatarios: destinatarios.length, pendientes: lista.length };
+}
+
+// Usuarios del panel marcados para recibir el resumen (un usuario sin acceso al panel nunca lo recibe)
+async function destinatariosResumen() {
+  return (await User.findAll({ where: { rol: ROLES_PANEL, recibeResumen: true }, order: [['id', 'ASC']] })).map((u) => u.email);
 }
 
 function programarResumen() {
@@ -75,4 +80,4 @@ function programarResumen() {
   setInterval(correr, 60 * 60 * 1000).unref();
 }
 
-module.exports = { pendientes, avisarAtrasadas, enviarResumen, programarResumen };
+module.exports = { pendientes, avisarAtrasadas, enviarResumen, programarResumen, destinatariosResumen };
