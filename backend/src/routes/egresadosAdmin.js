@@ -5,7 +5,8 @@ const { sequelize, EgrPromo, EgrPrenda, EgrAlumno, EgrSeleccion, EgrCuota, EgrCo
 const multer = require('multer');
 const galeria = require('../services/galeriaEgresados');
 const instagram = require('../services/instagram');
-const { soloAdmin } = require('../middleware/auth');
+const { soloPanel, soloAdministrador, requiereConfirmacion } = require('../middleware/auth');
+const { auditar } = require('../services/actividad');
 const validar = require('../middleware/validator');
 const v = require('../validators/egresados');
 const { AppError } = require('../utils/errorHandler');
@@ -30,7 +31,9 @@ async function codigoLibre(codigo, idActual) {
 }
 
 const router = express.Router();
-router.use(soloAdmin);
+router.use(soloPanel);
+// Solo el administrador, y reingresando la contraseña (acciones sensibles)
+const sensible = [soloAdministrador, requiereConfirmacion];
 const conId = validar(v.idParam, 'params');
 
 const linkPromo = (promo) => `${ENV.EGRESADOS_URL}/mi-promo/${promo.slug}`;
@@ -87,7 +90,7 @@ router.get('/promos', async (req, res) => {
   res.json(salida);
 });
 
-router.post('/promos', validar(v.promoNueva), async (req, res) => {
+router.post('/promos', validar(v.promoNueva), auditar('promo_creada', (req) => `Creó la promo ${req.body.colegio} ${req.body.curso} ${req.body.anio}`), async (req, res) => {
   vacioANull(req.body, ['fechaCierre', 'fechaEntrega']);
   if (req.body.codigo) await codigoLibre(req.body.codigo);
   const { presupuestoId, ...datosPromo } = req.body;
@@ -115,7 +118,7 @@ router.get('/promos/:id', conId, async (req, res) => {
   res.json({ ...conLinks(promo), disenos: disenos.map(serializarDiseno), prendas, alumnos, resumen: resumenPromo(alumnos), tablero: { porcentaje: tablero.porcentaje, etapas: tablero.etapas, mensaje: tablero.mensaje } });
 });
 
-router.put('/promos/:id', conId, validar(v.promoEdicion), async (req, res) => {
+router.put('/promos/:id', conId, validar(v.promoEdicion), auditar('promo_editada', (req) => `Editó la promo #${req.params.id}${req.body.estadoProduccion ? ` (etapa: ${req.body.estadoProduccion})` : ''}`), async (req, res) => {
   const promo = await buscarOFallar(EgrPromo, req.params.id, 'Promo no encontrada');
   vacioANull(req.body, ['fechaCierre', 'fechaEntrega']);
   const cambiaCalendario = req.body.primerVencimiento && req.body.primerVencimiento !== promo.primerVencimiento;
@@ -140,28 +143,33 @@ router.put('/promos/:id', conId, validar(v.promoEdicion), async (req, res) => {
 });
 
 // Genera una clave nueva para la comisión (las sesiones abiertas con la anterior se cierran)
-router.post('/promos/:id/comision/clave', conId, async (req, res) => {
+router.post('/promos/:id/comision/clave', conId, ...sensible, auditar('clave_comision', (req) => `Generó una clave nueva de la comisión de la promo #${req.params.id}`, { sensible: true }), async (req, res) => {
   const promo = await buscarOFallar(EgrPromo, req.params.id, 'Promo no encontrada');
   await promo.update({ comisionClave: egr.generarClaveComision() });
   res.json(conLinks(promo));
 });
 
 // Genera un link nuevo para la comisión (el anterior deja de funcionar)
-router.post('/promos/:id/comision/regenerar', conId, async (req, res) => {
+router.post('/promos/:id/comision/regenerar', conId, ...sensible, auditar('link_comision', (req) => `Generó un link nuevo de la comisión de la promo #${req.params.id}`, { sensible: true }), async (req, res) => {
   const promo = await buscarOFallar(EgrPromo, req.params.id, 'Promo no encontrada');
   await promo.update({ comisionToken: nuevoTokenComision() });
   res.json(conLinks(promo));
 });
 
-router.delete('/promos/:id', conId, async (req, res) => {
+router.delete('/promos/:id', conId, ...sensible, async (req, res) => {
   const promo = await buscarOFallar(EgrPromo, req.params.id, 'Promo no encontrada');
   const pagos = await EgrCuota.count({ where: { estado: 'pagada' }, include: [{ model: EgrAlumno, as: 'alumno', where: { promoId: promo.id } }] });
   if (pagos) throw new AppError('La promo tiene pagos registrados: desactivala en lugar de borrarla.', 409);
+  // Hay que escribir el código de la promo para borrarla (evita borrar la equivocada)
+  if (EgrPromo.normalizarCodigo(req.query.confirmarCodigo || '') !== promo.codigoBusqueda) {
+    throw new AppError(`Para borrar la promo escribí su código (${promo.codigo}).`, 400);
+  }
   await sequelize.transaction(async (transaction) => {
     const ids = (await EgrAlumno.findAll({ where: { promoId: promo.id }, attributes: ['id'], transaction })).map((a) => a.id);
     if (ids.length) await EgrSeleccion.destroy({ where: { alumnoId: ids }, transaction });
     await promo.destroy({ transaction });
   });
+  await require('../services/actividad').registrar(req, { accion: 'promo_borrada', descripcion: `Borró la promo ${promo.codigo} (${promo.colegio} ${promo.curso} ${promo.anio})`, sensible: true });
   res.json({ mensaje: 'Promo eliminada' });
 });
 
@@ -188,7 +196,7 @@ router.put('/prendas/:id', conId, validar(v.prendaEdicion), async (req, res) => 
   res.json(prenda);
 });
 
-router.delete('/prendas/:id', conId, async (req, res) => {
+router.delete('/prendas/:id', conId, ...sensible, auditar('prenda_borrada', (req) => `Borró la prenda #${req.params.id}`, { sensible: true }), async (req, res) => {
   const prenda = await buscarOFallar(EgrPrenda, req.params.id, 'Prenda no encontrada');
   const usos = await EgrSeleccion.count({ where: { prendaId: prenda.id } });
   if (usos) throw new AppError(`${usos} alumno(s) ya eligieron esta prenda: desactivala en lugar de borrarla.`, 409);
@@ -250,7 +258,7 @@ router.put('/alumnos/:id/prendas', conId, validar(v.prendas), async (req, res) =
   res.json(await detalleAlumno(req.params.id));
 });
 
-router.delete('/alumnos/:id', conId, async (req, res) => {
+router.delete('/alumnos/:id', conId, ...sensible, auditar('alumno_borrado', (req) => `Borró el alumno #${req.params.id}`, { sensible: true }), async (req, res) => {
   const alumno = await buscarOFallar(EgrAlumno, req.params.id, 'Alumno no encontrado');
   const pagos = await EgrCuota.count({ where: { alumnoId: alumno.id, estado: 'pagada' } });
   if (pagos) throw new AppError('El alumno tiene pagos registrados: no se puede borrar.', 409);
@@ -275,13 +283,13 @@ async function registrarPago(cuotaId, { medio, fecha, cobrarRecargo, nota }, tra
   return cuota;
 }
 
-router.post('/cuotas/:id/pago', conId, validar(v.pago), async (req, res) => {
+router.post('/cuotas/:id/pago', conId, validar(v.pago), auditar('pago_registrado', (req) => `Registró el pago de la cuota #${req.params.id}${req.body.medio ? ` (${req.body.medio})` : ''}`), async (req, res) => {
   const cuota = await sequelize.transaction((transaction) => registrarPago(req.params.id, req.body, transaction));
   avisos.enSegundoPlano(avisos.avisarPagoConfirmado(cuota.id), 'el aviso de pago');
   res.json(await detalleAlumno(cuota.alumnoId));
 });
 
-router.delete('/cuotas/:id/pago', conId, async (req, res) => {
+router.delete('/cuotas/:id/pago', conId, ...sensible, auditar('pago_anulado', (req) => `Anuló el pago de la cuota #${req.params.id}`, { sensible: true }), async (req, res) => {
   const cuota = await buscarOFallar(EgrCuota, req.params.id, 'Cuota no encontrada');
   if (cuota.estado !== 'pagada') throw new AppError('Esa cuota no figura como pagada', 409);
   await cuota.update({ estado: 'pendiente', pagadaEl: null, medio: null, recargo: 0, nota: null });
@@ -361,7 +369,7 @@ router.get('/comprobantes/:id/archivo', conId, async (req, res) => {
   enviarComprobante(res, await buscarOFallar(EgrComprobante, req.params.id, 'Comprobante no encontrado'));
 });
 
-router.post('/comprobantes/:id/aprobar', conId, validar(v.aprobarComprobante), async (req, res) => {
+router.post('/comprobantes/:id/aprobar', conId, validar(v.aprobarComprobante), auditar('comprobante_aprobado', (req) => `Aprobó el comprobante #${req.params.id}`), async (req, res) => {
   const cuota = await sequelize.transaction(async (transaction) => {
     const comp = await buscarOFallar(EgrComprobante, req.params.id, 'Comprobante no encontrado', { transaction, lock: transaction.LOCK.UPDATE });
     if (comp.estado !== 'pendiente') throw new AppError('Ese comprobante ya fue revisado', 409);
@@ -372,7 +380,7 @@ router.post('/comprobantes/:id/aprobar', conId, validar(v.aprobarComprobante), a
   res.json(await detalleAlumno(cuota.alumnoId));
 });
 
-router.post('/comprobantes/:id/rechazar', conId, validar(v.rechazarComprobante), async (req, res) => {
+router.post('/comprobantes/:id/rechazar', conId, validar(v.rechazarComprobante), auditar('comprobante_rechazado', (req) => `Rechazó el comprobante #${req.params.id}${req.body.motivo ? `: ${req.body.motivo}` : ''}`), async (req, res) => {
   const comp = await sequelize.transaction(async (transaction) => {
     const c = await buscarOFallar(EgrComprobante, req.params.id, 'Comprobante no encontrado', { transaction, lock: transaction.LOCK.UPDATE });
     if (c.estado !== 'pendiente') throw new AppError('Ese comprobante ya fue revisado', 409);
@@ -527,7 +535,7 @@ router.delete('/fotos/:id', conId, async (req, res) => {
 
 // ---------- Instagram ----------
 router.get('/instagram', async (req, res) => res.json(await instagram.estadoPanel()));
-router.put('/instagram', validar(v.tokenInstagram), async (req, res) => {
+router.put('/instagram', soloAdministrador, validar(v.tokenInstagram), auditar('instagram_conectado', () => 'Conectó Instagram', { sensible: true }), async (req, res) => {
   await instagram.conectar(req.body.token);
   res.json(await instagram.estadoPanel());
 });
@@ -535,7 +543,7 @@ router.post('/instagram/sincronizar', async (req, res) => {
   await instagram.sincronizar();
   res.json(await instagram.estadoPanel());
 });
-router.delete('/instagram', async (req, res) => {
+router.delete('/instagram', ...sensible, auditar('instagram_desconectado', () => 'Desconectó Instagram', { sensible: true }), async (req, res) => {
   await instagram.desconectar();
   res.status(204).end();
 });
@@ -555,10 +563,10 @@ router.get('/promos/:id/contrato/datos', conId, async (req, res) => {
 });
 
 router.get('/contrato/clausulas', async (req, res) => res.json({ clausulas: await contrato.clausulas(), base: contrato.CLAUSULAS_BASE }));
-router.put('/contrato/clausulas', validar(v.clausulas), async (req, res) => res.json({ clausulas: await contrato.guardarClausulas(req.body.clausulas) }));
+router.put('/contrato/clausulas', ...sensible, validar(v.clausulas), auditar('clausulas', () => 'Editó las cláusulas del contrato', { sensible: true }), async (req, res) => res.json({ clausulas: await contrato.guardarClausulas(req.body.clausulas) }));
 
 // Contrato firmado (escaneo o foto): reemplaza al anterior
-router.post('/promos/:id/contrato', conId, recibirContrato, async (req, res) => {
+router.post('/promos/:id/contrato', conId, recibirContrato, auditar('contrato_subido', (req) => `Subió el contrato firmado de la promo #${req.params.id}`), async (req, res) => {
   const promo = await EgrPromo.findByPk(req.params.id);
   if (!promo) {
     fs.rmSync(req.file.path, { force: true });
@@ -576,7 +584,7 @@ router.get('/promos/:id/contrato', conId, async (req, res) => {
   enviarContrato(res, promo);
 });
 
-router.delete('/promos/:id/contrato', conId, async (req, res) => {
+router.delete('/promos/:id/contrato', conId, ...sensible, auditar('contrato_quitado', (req) => `Quitó el contrato firmado de la promo #${req.params.id}`, { sensible: true }), async (req, res) => {
   const promo = await buscarOFallar(EgrPromo, req.params.id, 'Promo no encontrada');
   if (promo.contratoArchivo) fs.rmSync(rutaContrato(promo.contratoArchivo), { force: true });
   await promo.update({ contratoArchivo: null, contratoTipo: null, contratoSubidoEl: null });
@@ -595,7 +603,7 @@ router.get('/presupuestos', validar(v.listarPresupuestos, 'query'), async (req, 
   res.json(lista.map((p) => ({ ...p.toJSON(), diseno: p.diseno ? serializarDiseno(p.diseno) : null })));
 });
 
-router.patch('/presupuestos/:id', conId, validar(v.presupuestoAdmin), async (req, res) => {
+router.patch('/presupuestos/:id', conId, validar(v.presupuestoAdmin), auditar('presupuesto', (req) => `Actualizó el pedido de presupuesto #${req.params.id}${req.body.estado ? ` (${req.body.estado})` : ''}`), async (req, res) => {
   const p = await buscarOFallar(EgrPresupuesto, req.params.id, 'Pedido de presupuesto no encontrado');
   await p.update(req.body);
   res.json(p);
@@ -626,6 +634,6 @@ router.post('/recordatorios', async (req, res) => {
 
 // ---------- cuenta para transferencias ----------
 router.get('/cuenta', async (req, res) => res.json(await egr.cuentaEgresados()));
-router.put('/cuenta', validar(v.cuenta), async (req, res) => res.json(await egr.guardarCuentaEgresados(req.body)));
+router.put('/cuenta', ...sensible, validar(v.cuenta), auditar('cuenta_bancaria', () => 'Cambió los datos de la cuenta para transferencias', { sensible: true }), async (req, res) => res.json(await egr.guardarCuentaEgresados(req.body)));
 
 module.exports = router;

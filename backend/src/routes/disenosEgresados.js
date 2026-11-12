@@ -9,6 +9,7 @@ const { AppError } = require('../utils/errorHandler');
 const ENV = require('../config/env');
 const d = require('../services/disenosEgresados');
 
+const { notificar } = require('../services/notificaciones');
 const router = express.Router();
 
 const subirImagen = multer({ storage: multer.memoryStorage(), limits: { fileSize: 4 * 1024 * 1024, files: 1, fields: 5, fieldSize: 80 * 1024 } }).single('imagen');
@@ -78,6 +79,12 @@ router.post('/presupuestos', presupuestosLimiter, validar(esquemaPresupuesto), a
     await diseno.update({ promoId: promo.id });
   }
   const presupuesto = await EgrPresupuesto.create({ ...datos, disenoId: diseno.id, promoId: promo ? promo.id : null });
+  notificar({
+    tipo: 'presupuesto', clave: `presupuesto-${presupuesto.id}`,
+    titulo: `Nuevo pedido de presupuesto: ${datos.colegio}`,
+    texto: [datos.nombre, datos.curso, datos.cantidad ? `${datos.cantidad} egresados` : null, promo ? `promo ${promo.codigo}` : null].filter(Boolean).join(' · '),
+    link: '/admin/dashboard/egresados/presupuestos',
+  });
   d.avisarPresupuesto(presupuesto, diseno, promo).catch((err) => { if (!ENV.isTest) console.error('Aviso de presupuesto:', err.message); });
   res.status(201).json({
     ok: true,

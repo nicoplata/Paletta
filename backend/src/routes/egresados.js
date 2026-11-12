@@ -4,6 +4,7 @@ const { Op } = require('sequelize');
 const fs = require('fs');
 const { sequelize, EgrPromo, EgrAlumno, EgrCuota, EgrComprobante, EgrFoto } = require('../models');
 const { serializarFoto } = require('../services/galeriaEgresados');
+const { notificar } = require('../services/notificaciones');
 const instagram = require('../services/instagram');
 const validar = require('../middleware/validator');
 const v = require('../validators/egresados');
@@ -82,6 +83,12 @@ router.post('/promos/:slug/alumnos', ingresoEgresadosLimiter, validar(v.slugPara
     }, { transaction });
     res.status(201);
     await registrarIngreso(alumno, res, transaction);
+    transaction.afterCommit(() => notificar({
+      tipo: 'alumno', clave: `alumno-${alumno.id}`,
+      titulo: `${alumno.nombre} se sumó a ${promo.colegio} ${promo.curso}`,
+      texto: 'Se agregó desde el link de la promo: revisá que sea del curso.',
+      link: `/admin/dashboard/egresados/${promo.id}`,
+    }));
   });
 });
 
@@ -142,6 +149,12 @@ async function aprobarDiseno(promo, nombre) {
     throw new AppError(`Para aprobar el diseño tiene que estar completa toda la promo (falta: ${faltan.join(', ')}).`, 409);
   }
   await promo.update({ disenoAprobadoEl: new Date(), disenoAprobadoPor: nombre });
+  notificar({
+    tipo: 'diseno', clave: `diseno-aprobado-${promo.id}`,
+    titulo: `La comisión aprobó el diseño de ${promo.colegio} ${promo.curso}`,
+    texto: `Aprobado por ${nombre}: ya se puede pasar a producción.`,
+    link: `/admin/dashboard/egresados/${promo.id}`,
+  });
   return tableroComision(promo);
 }
 
@@ -214,6 +227,12 @@ router.post('/mi-promo/cuotas/:id/comprobante', verificarFamilia, comprobantesLi
     fs.rmSync(req.file.path, { force: true });
     throw err;
   }
+  notificar({
+    tipo: 'comprobante', clave: `comprobante-${req.params.id}-${req.file.filename}`,
+    titulo: `Comprobante para revisar: ${req.alumno.nombre}`,
+    texto: `${req.alumno.promo.colegio} ${req.alumno.promo.curso} · cuota #${req.params.id}`,
+    link: '/admin/dashboard/egresados/comprobantes',
+  });
   res.status(201).json(await egr.vistaFamilia(req.alumno.id));
 });
 

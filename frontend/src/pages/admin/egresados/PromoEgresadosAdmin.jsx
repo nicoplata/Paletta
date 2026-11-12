@@ -4,6 +4,7 @@ import { FaArrowLeft, FaCut, FaEdit, FaFileSignature, FaPlus, FaTrash } from 're
 import api, { mensajeError } from '../../../lib/api';
 import useRecurso from '../../../hooks/useRecurso';
 import { useToast } from '../../../context/ToastContext';
+import { useEsAdmin } from '../../../context/AuthContext';
 import {
   Button, ButtonGroup, CheckLabel, Container, Empty, ErrorBox, Form, FormGroup, Header, Hint, IconButton, Input, Label, Row, Select, Tag, TextArea, Title,
 } from '../adminUI';
@@ -67,6 +68,7 @@ const PromoEgresadosAdmin = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const esAdmin = useEsAdmin();
   const { data: promo, cargando, error, recargar } = useRecurso(`/admin/egresados/promos/${id}`);
   const { data: modelos } = useRecurso('/admin/produccion/modelos', { porDefecto: [] });
   const { data: materiales } = useRecurso('/admin/produccion/materiales', { porDefecto: [] });
@@ -175,9 +177,15 @@ const PromoEgresadosAdmin = () => {
   };
 
   const eliminarPromo = async () => {
-    if (!window.confirm(`¿Eliminar la promo ${promo.colegio} ${promo.curso} ${promo.anio}? Se borran sus alumnos y prendas.`)) return;
+    const escrito = window.prompt(`Vas a eliminar la promo ${promo.colegio} ${promo.curso} ${promo.anio} con sus alumnos y prendas. No se puede deshacer.\n\nPara confirmar, escribí el código de la promo (${promo.codigo}):`);
+    if (escrito === null) return;
+    const norm = (x) => String(x).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (norm(escrito) !== norm(promo.codigo)) {
+      showToast('El código no coincide: la promo no se eliminó.', 'error', 6000);
+      return;
+    }
     try {
-      await api.delete(`/admin/egresados/promos/${id}`);
+      await api.delete(`/admin/egresados/promos/${id}?confirmarCodigo=${encodeURIComponent(escrito.trim())}`);
       navigate('/admin/dashboard/egresados');
     } catch (err) {
       showToast(mensajeError(err), 'error', 6000);
@@ -245,7 +253,7 @@ const PromoEgresadosAdmin = () => {
             {Object.entries(ESTADOS_PRODUCCION).map(([k, t]) => <option key={k} value={k}>{t}</option>)}
           </Select>
           <Button onClick={() => cambiarCampo({ activo: !promo.activo }, promo.activo ? 'Promo desactivada' : 'Promo activada')}>{promo.activo ? 'Desactivar' : 'Activar'}</Button>
-          <Button $peligro onClick={eliminarPromo}><FaTrash /> Eliminar</Button>
+          {esAdmin && <Button $peligro onClick={eliminarPromo}><FaTrash /> Eliminar</Button>}
         </div>
       </Header>
 
@@ -260,7 +268,7 @@ const PromoEgresadosAdmin = () => {
           <div>
             <Hint>Clave de la comisión</Hint>
             <p style={{ margin: '4px 0', fontSize: '1.8rem', fontWeight: 800, letterSpacing: '0.2em' }}>{promo.comisionClave}</p>
-            <Button type="button" onClick={regenerarClave} style={{ padding: '0.35rem 0.8rem' }}>Generar clave nueva</Button>
+            {esAdmin && <Button type="button" onClick={regenerarClave} style={{ padding: '0.35rem 0.8rem' }}>Generar clave nueva</Button>}
           </div>
         </div>
         <Hint style={{ marginTop: 12 }}>
@@ -299,7 +307,7 @@ const PromoEgresadosAdmin = () => {
           {promo.disenoAprobadoEl
             ? <Button onClick={() => window.confirm('¿Quitar la aprobación del diseño?') && cambiarCampo({ disenoAprobado: false }, 'Aprobación quitada')}>Quitar aprobación del diseño</Button>
             : <Button onClick={() => window.confirm('¿Marcar el diseño como aprobado (sin esperar a la comisión)?') && cambiarCampo({ disenoAprobado: true }, 'Diseño marcado como aprobado')}>Marcar diseño aprobado</Button>}
-          <Button onClick={regenerarComision}>Generar link directo nuevo</Button>
+          {esAdmin && <Button onClick={regenerarComision}>Generar link directo nuevo</Button>}
         </ButtonGroup>
       </Seccion>
 
@@ -412,7 +420,7 @@ const PromoEgresadosAdmin = () => {
                         <td className="num">{pesos(p.precio)}</td>
                         <td className="num">
                           <IconButton onClick={() => setPrenda({ ...p, precio: String(p.precio), orden: String(p.orden), talles: p.talles.join(', '), descripcion: p.descripcion || '', modeloId: p.modeloId || '', materiales: p.materiales || {}, fichaNotas: p.fichaNotas || '' })} aria-label={`Editar ${p.nombre}`}><FaEdit /></IconButton>
-                          <IconButton $peligro onClick={() => eliminarPrenda(p)} aria-label={`Eliminar ${p.nombre}`}><FaTrash /></IconButton>
+                          {esAdmin && <IconButton $peligro onClick={() => eliminarPrenda(p)} aria-label={`Eliminar ${p.nombre}`}><FaTrash /></IconButton>}
                         </td>
                       </tr>
                     ))}

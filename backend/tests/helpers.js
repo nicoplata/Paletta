@@ -18,6 +18,7 @@ const { migrator } = require('../src/db/migrator');
 
 const ADMIN = { nombre: 'Admin', email: 'admin@test.com', password: 'ClaveAdmin123', rol: 'administrador' };
 const OPERADOR = { nombre: 'Operador', email: 'op@test.com', password: 'ClaveOperador123', rol: 'usuario' };
+const ENCARGADO = { nombre: 'Encargada', email: 'encargada@test.com', password: 'ClaveEncargada123', rol: 'encargado' };
 
 async function resetearBase() {
   await db.sequelize.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
@@ -35,12 +36,25 @@ async function tokenDe({ email, password }) {
 }
 
 // Prepara base limpia + admin + operador y devuelve los headers de cada uno.
+async function confirmacionDe(token, password) {
+  const res = await request(app).post('/api/auth/confirmar').set({ Authorization: `Bearer ${token}` }).send({ password });
+  if (res.status !== 200) throw new Error(`Confirmación falló: ${res.status} ${JSON.stringify(res.body)}`);
+  return res.body.token;
+}
+
+// Prepara base limpia + admin + encargada + operador y devuelve los headers de cada uno.
+// "admin" ya viene con la contraseña confirmada (acciones sensibles); "adminSinConfirmar" no.
 async function prepararEscenario() {
   await resetearBase();
   await crearUsuario(ADMIN);
   await crearUsuario(OPERADOR);
+  await crearUsuario(ENCARGADO);
+  const tokenAdmin = await tokenDe(ADMIN);
+  const tokenEncargado = await tokenDe(ENCARGADO);
   return {
-    admin: { Authorization: `Bearer ${await tokenDe(ADMIN)}` },
+    admin: { Authorization: `Bearer ${tokenAdmin}`, 'X-Confirmacion': await confirmacionDe(tokenAdmin, ADMIN.password) },
+    adminSinConfirmar: { Authorization: `Bearer ${tokenAdmin}` },
+    encargado: { Authorization: `Bearer ${tokenEncargado}`, 'X-Confirmacion': await confirmacionDe(tokenEncargado, ENCARGADO.password) },
     operador: { Authorization: `Bearer ${await tokenDe(OPERADOR)}` },
   };
 }
@@ -64,6 +78,7 @@ const PNG = Buffer.from(
 );
 
 module.exports = {
+  ENCARGADO,
   app, request, db, ADMIN, OPERADOR, PNG,
   resetearBase, crearUsuario, tokenDe, prepararEscenario, crearCatalogoBase, cerrar,
 };

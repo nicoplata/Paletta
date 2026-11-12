@@ -43,12 +43,14 @@ const schemas = {
     grupoInstitucional: textoOpcional(150),
   }),
 
+  confirmar: Joi.object({ password: Joi.string().min(1).max(200).required() }),
+
   usuarioCrear: Joi.object({
     nombre: Joi.string().trim().min(2).max(100).required(),
     email: Joi.string().trim().email().required(),
     password: Joi.string().min(10).max(200).required()
       .messages({ 'string.min': 'La contraseña debe tener al menos 10 caracteres' }),
-    rol: Joi.string().valid('administrador', 'usuario').default('usuario'),
+    rol: Joi.string().valid('administrador', 'encargado', 'usuario').default('usuario'),
   }),
 
   usuarioActualizar: Joi.object({
@@ -56,7 +58,7 @@ const schemas = {
     email: Joi.string().trim().email(),
     password: Joi.string().min(10).max(200).allow('')
       .messages({ 'string.min': 'La contraseña debe tener al menos 10 caracteres' }),
-    rol: Joi.string().valid('administrador', 'usuario'),
+    rol: Joi.string().valid('administrador', 'encargado', 'usuario'),
   }).min(1),
 
   imagen: Joi.object({

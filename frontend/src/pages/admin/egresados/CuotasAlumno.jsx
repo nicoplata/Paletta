@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api, { mensajeError } from '../../../lib/api';
 import { useToast } from '../../../context/ToastContext';
+import { useEsAdmin } from '../../../context/AuthContext';
 import { Button, CheckLabel, Select, Tag } from '../adminUI';
 import { COLOR_CUOTA, Tabla, TablaScroll, fecha, pesos } from './comun';
 
 // Tabla de cuotas de un alumno con registro y anulación de pagos.
 const CuotasAlumno = ({ alumno, onCambio, resaltar }) => {
   const { showToast } = useToast();
+  const esAdmin = useEsAdmin();
   const [pagando, setPagando] = useState(null); // { id, medio, cobrarRecargo }
   const [ocupado, setOcupado] = useState(false);
 
@@ -57,7 +59,7 @@ const CuotasAlumno = ({ alumno, onCambio, resaltar }) => {
               <td className="num">{c.recargo ? pesos(c.recargo) : '-'}</td>
               <td className="num">
                 {c.estado === 'pagada' ? (
-                  <Button type="button" onClick={() => anular(c)} style={{ padding: '0.35rem 0.7rem', fontSize: '0.85rem' }}>Anular</Button>
+                  esAdmin && <Button type="button" onClick={() => anular(c)} style={{ padding: '0.35rem 0.7rem', fontSize: '0.85rem' }}>Anular</Button>
                 ) : pagando?.id === c.id ? (
                   <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                     <Select aria-label="Medio de pago" value={pagando.medio} onChange={(e) => setPagando({ ...pagando, medio: e.target.value })} style={{ width: 'auto', padding: '0.35rem' }}>

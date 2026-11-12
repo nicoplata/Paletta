@@ -4,6 +4,7 @@ import { FaEdit, FaPlus, FaPrint, FaTrash, FaWhatsapp } from 'react-icons/fa';
 import api, { mensajeError } from '../../../lib/api';
 import useRecurso from '../../../hooks/useRecurso';
 import { useToast } from '../../../context/ToastContext';
+import { useEsAdmin } from '../../../context/AuthContext';
 import { Button, ButtonGroup, CheckLabel, Empty, ErrorBox, Form, FormGroup, Hint, IconButton, Input, Label, Row, Tag } from '../adminUI';
 import { Tabla, TablaScroll, fecha, pesos } from '../egresados/comun';
 import { ESTADO_ORDEN, hoyISO, linkWhatsApp } from './comunProduccion';
@@ -13,6 +14,7 @@ const VACIO = { nombre: '', contacto: '', telefono: '', direccion: '', notas: ''
 // Talleres externos de confección y las órdenes que tienen abiertas
 const Talleres = () => {
   const { showToast } = useToast();
+  const esAdmin = useEsAdmin();
   const { data: talleres, cargando, error, recargar } = useRecurso('/admin/produccion/talleres', { porDefecto: [] });
   const { data: ordenes } = useRecurso('/admin/produccion/ordenes', { porDefecto: [] });
   const [form, setForm] = useState(null);
@@ -84,7 +86,7 @@ const Talleres = () => {
                     <td className="num">{enTaller}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>
                       <IconButton onClick={() => { setErrorForm(''); setForm({ ...VACIO, ...t, contacto: t.contacto || '', telefono: t.telefono || '', direccion: t.direccion || '', notas: t.notas || '' }); }} aria-label={`Editar ${t.nombre}`}><FaEdit /></IconButton>
-                      <IconButton $peligro onClick={() => eliminar(t)} aria-label={`Eliminar ${t.nombre}`}><FaTrash /></IconButton>
+                      {esAdmin && <IconButton $peligro onClick={() => eliminar(t)} aria-label={`Eliminar ${t.nombre}`}><FaTrash /></IconButton>}
                     </td>
                   </tr>
                 );

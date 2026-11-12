@@ -46,6 +46,7 @@ const ProduccionAdmin = lazy(() => import('./pages/admin/produccion/ProduccionAd
 const ProduccionPromoAdmin = lazy(() => import('./pages/admin/produccion/ProduccionPromoAdmin'));
 const FichaTaller = lazy(() => import('./pages/admin/produccion/FichaTaller'));
 const ContratoPromoAdmin = lazy(() => import('./pages/admin/egresados/ContratoPromoAdmin'));
+const ActividadAdmin = lazy(() => import('./pages/admin/ActividadAdmin'));
 const FotosEgresadosAdmin = lazy(() => import('./pages/admin/egresados/FotosEgresadosAdmin'));
 
 const App = () => (
@@ -76,12 +77,12 @@ const App = () => (
             <Route
               path="/admin/dashboard"
               element={
-                <RutaProtegida rolRequerido="administrador">
+                <RutaProtegida>
                   <DashboardAdmin />
                 </RutaProtegida>
               }
             >
-              <Route index element={<Navigate to="productos" replace />} />
+              <Route index element={<Navigate to="egresados" replace />} />
               <Route path="productos" element={<ProductosAdmin />} />
               <Route path="productos/nuevo" element={<EditarProducto />} />
               <Route path="productos/:id/editar" element={<EditarProducto />} />
@@ -91,19 +92,20 @@ const App = () => (
               <Route path="colegios" element={<ColegiosAdmin />} />
               <Route path="colegios/nuevo" element={<EditarColegio />} />
               <Route path="colegios/:id/editar" element={<EditarColegio />} />
-              <Route path="usuarios" element={<UsuariosAdmin />} />
-              <Route path="usuarios/nuevo" element={<EditarUsuario />} />
-              <Route path="usuarios/:id/editar" element={<EditarUsuario />} />
+              <Route path="usuarios" element={<RutaProtegida roles={["administrador"]} redirigir="/admin/dashboard"><UsuariosAdmin /></RutaProtegida>} />
+              <Route path="usuarios/nuevo" element={<RutaProtegida roles={["administrador"]} redirigir="/admin/dashboard"><EditarUsuario /></RutaProtegida>} />
+              <Route path="usuarios/:id/editar" element={<RutaProtegida roles={["administrador"]} redirigir="/admin/dashboard"><EditarUsuario /></RutaProtegida>} />
               <Route path="mensajes" element={<MensajesAdmin />} />
               <Route path="pedidos" element={<PedidosAdmin />} />
               <Route path="pedidos/:id" element={<PedidoDetalleAdmin />} />
-              <Route path="cupones" element={<CuponesAdmin />} />
-              <Route path="envios" element={<ZonasEnvioAdmin />} />
+              <Route path="cupones" element={<RutaProtegida roles={["administrador"]} redirigir="/admin/dashboard"><CuponesAdmin /></RutaProtegida>} />
+              <Route path="envios" element={<RutaProtegida roles={["administrador"]} redirigir="/admin/dashboard"><ZonasEnvioAdmin /></RutaProtegida>} />
               <Route path="egresados" element={<EgresadosAdmin />} />
               <Route path="egresados/cobrar" element={<CobranzaEgresadosAdmin />} />
               <Route path="egresados/comprobantes" element={<ComprobantesEgresadosAdmin />} />
               <Route path="egresados/presupuestos" element={<PresupuestosEgresadosAdmin />} />
               <Route path="egresados/fotos" element={<FotosEgresadosAdmin />} />
+              <Route path="actividad" element={<RutaProtegida roles={["administrador"]} redirigir="/admin/dashboard"><ActividadAdmin /></RutaProtegida>} />
               <Route path="egresados/alumnos/:id" element={<AlumnoEgresadosAdmin />} />
               <Route path="egresados/:id" element={<PromoEgresadosAdmin />} />
               <Route path="egresados/:id/produccion" element={<ProduccionPromoAdmin />} />

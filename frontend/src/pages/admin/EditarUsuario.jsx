@@ -11,7 +11,7 @@ const EditarUsuario = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [usuario, setUsuario] = useState({ nombre: '', email: '', password: '', rol: 'usuario' });
+  const [usuario, setUsuario] = useState({ nombre: '', email: '', password: '', rol: 'encargado' });
   const [cargando, setCargando] = useState(Boolean(id));
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
@@ -84,10 +84,15 @@ const EditarUsuario = () => {
           <FormGroup>
             <Label htmlFor="rol">Rol</Label>
             <Select id="rol" name="rol" value={usuario.rol} onChange={handleChange}>
-              <option value="usuario">Usuario</option>
-              <option value="administrador">Administrador</option>
+              <option value="encargado">Encargado/a (trabajo diario)</option>
+              <option value="administrador">Administrador (acceso total)</option>
+              <option value="usuario">Usuario (sin acceso al panel)</option>
             </Select>
-            <Hint>Solo los administradores pueden entrar al panel.</Hint>
+            <Hint>
+              {usuario.rol === 'encargado' && 'Gestiona presupuestos, promos, alumnos, comprobantes y pagos, producción, pedidos, mensajes, fotos y productos. No ve usuarios, cupones, envíos, datos bancarios, cláusulas ni Instagram, y no borra nada importante.'}
+              {usuario.rol === 'administrador' && 'Acceso total, incluida la configuración, los usuarios y el registro de actividad.'}
+              {usuario.rol === 'usuario' && 'No puede entrar al panel.'}
+            </Hint>
           </FormGroup>
         </Row>
         <ButtonGroup>

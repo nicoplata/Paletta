@@ -3,6 +3,7 @@ import { FaInstagram, FaSyncAlt } from 'react-icons/fa';
 import api, { mensajeError } from '../../../lib/api';
 import useRecurso from '../../../hooks/useRecurso';
 import { useToast } from '../../../context/ToastContext';
+import { useEsAdmin } from '../../../context/AuthContext';
 import { Button, ButtonGroup, ErrorBox, Hint, Input, Label } from '../adminUI';
 import { Seccion } from './comun';
 
@@ -11,6 +12,7 @@ const fechaHora = (iso) => (iso ? new Date(iso).toLocaleString('es-AR', { dateSt
 // Conexión del feed de Instagram de @paletta.egresados (se muestra en el inicio del sitio de egresados)
 const InstagramAdmin = () => {
   const { showToast } = useToast();
+  const esAdmin = useEsAdmin();
   const { data: estado, setData, cargando } = useRecurso('/admin/egresados/instagram');
   const [token, setToken] = useState('');
   const [trabajando, setTrabajando] = useState(false);
@@ -58,9 +60,11 @@ const InstagramAdmin = () => {
           {estado.error && <ErrorBox role="alert">Último intento: {estado.error}</ErrorBox>}
           <ButtonGroup style={{ justifyContent: 'flex-start', marginTop: 10 }}>
             <Button type="button" disabled={trabajando} onClick={() => accion(() => api.post('/admin/egresados/instagram/sincronizar'), 'Publicaciones actualizadas')}><FaSyncAlt /> Actualizar ahora</Button>
-            {!estado.desdeVariable && <Button type="button" disabled={trabajando} onClick={desconectar}>Desconectar</Button>}
+            {esAdmin && !estado.desdeVariable && <Button type="button" disabled={trabajando} onClick={desconectar}>Desconectar</Button>}
           </ButtonGroup>
         </>
+      ) : !esAdmin ? (
+        <Hint>Instagram no está conectado. Lo conecta el administrador.</Hint>
       ) : (
         <form onSubmit={conectar}>
           <Hint style={{ marginBottom: 10 }}>Conectá la cuenta para mostrar las últimas publicaciones de @paletta.egresados en el inicio del sitio. Las imágenes se guardan en el servidor: el sitio no carga nada de Instagram.</Hint>

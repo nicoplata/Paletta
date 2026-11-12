@@ -41,3 +41,6 @@ export const useAuth = () => {
   if (!context) throw new Error('useAuth debe usarse dentro de un AuthProvider');
   return context;
 };
+
+// Solo el administrador total ve las acciones sensibles (borrar, anular pagos, claves, cuentas…)
+export const useEsAdmin = () => useAuth().usuario?.rol === 'administrador';

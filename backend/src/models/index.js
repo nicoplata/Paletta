@@ -45,6 +45,8 @@ const db = {
   ProdTaller: require('./prodTallerModel')(sequelize),
   ProdOrden: require('./prodOrdenModel')(sequelize),
   EgrFoto: require('./egrFotoModel')(sequelize),
+  Actividad: require('./actividadModel')(sequelize),
+  Notificacion: require('./notificacionModel')(sequelize),
 };
 
 Object.values(db).forEach((model) => {

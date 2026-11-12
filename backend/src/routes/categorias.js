@@ -1,6 +1,7 @@
 const express = require('express');
 const c = require('../controllers/categoriasController');
-const { soloAdmin } = require('../middleware/auth');
+const { soloAdmin, soloPanel, requiereConfirmacion } = require('../middleware/auth');
+const { auditar } = require('../services/actividad');
 const validar = require('../middleware/validator');
 const schemas = require('../validators/schemas');
 
@@ -12,8 +13,8 @@ router.get('/', c.getCategorias);
 router.get('/:id', conId, c.getCategoriaById);
 
 // 🔐 Administración
-router.post('/', soloAdmin, validar(schemas.categoria), c.createCategoria);
-router.put('/:id', soloAdmin, conId, validar(schemas.categoria), c.updateCategoria);
-router.delete('/:id', soloAdmin, conId, c.deleteCategoria);
+router.post('/', soloPanel, validar(schemas.categoria), c.createCategoria);
+router.put('/:id', soloPanel, conId, validar(schemas.categoria), c.updateCategoria);
+router.delete('/:id', soloAdmin, conId, requiereConfirmacion, auditar('categorias_borrado', (req) => `Borró la categoría #${req.params.id}`, { sensible: true }), c.deleteCategoria);
 
 module.exports = router;

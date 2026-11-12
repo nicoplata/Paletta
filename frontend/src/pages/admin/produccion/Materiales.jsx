@@ -3,6 +3,7 @@ import { FaEdit, FaPlus, FaTrash } from 'react-icons/fa';
 import api, { mensajeError } from '../../../lib/api';
 import useRecurso from '../../../hooks/useRecurso';
 import { useToast } from '../../../context/ToastContext';
+import { useEsAdmin } from '../../../context/AuthContext';
 import { Button, ButtonGroup, CheckLabel, Empty, ErrorBox, Form, FormGroup, Hint, IconButton, Input, Label, Row, Select, Tag } from '../adminUI';
 import { Tabla, TablaScroll, pesos } from '../egresados/comun';
 import { UNIDADES, cant } from './comunProduccion';
@@ -12,6 +13,7 @@ const VACIO = { nombre: '', tipo: 'tela', color: '', unidad: 'm', ancho: '', pro
 // Catálogo de telas e insumos con precio y stock (la lista de compras descuenta el stock)
 const Materiales = () => {
   const { showToast } = useToast();
+  const esAdmin = useEsAdmin();
   const { data: lista, cargando, error, recargar } = useRecurso('/admin/produccion/materiales', { porDefecto: [] });
   const [form, setForm] = useState(null);
   const [errorForm, setErrorForm] = useState('');
@@ -99,7 +101,7 @@ const Materiales = () => {
                   <td className="num">{cant(m.stock)} {m.unidad}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <IconButton onClick={() => { setErrorForm(''); setForm({ ...VACIO, ...m, color: m.color || '', proveedor: m.proveedor || '', notas: m.notas || '', ancho: m.ancho ?? '', precio: String(m.precio), stock: String(m.stock) }); }} aria-label={`Editar ${m.nombre}`}><FaEdit /></IconButton>
-                    <IconButton $peligro onClick={() => eliminar(m)} aria-label={`Eliminar ${m.nombre}`}><FaTrash /></IconButton>
+                    {esAdmin && <IconButton $peligro onClick={() => eliminar(m)} aria-label={`Eliminar ${m.nombre}`}><FaTrash /></IconButton>}
                   </td>
                 </tr>
               ))}
