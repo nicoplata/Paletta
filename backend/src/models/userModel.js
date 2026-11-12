@@ -29,6 +29,8 @@ module.exports = (sequelize) => {
     },
     // Hasta cuándo vio las notificaciones del panel (para el contador de no leídas)
     notifLeidasHasta: { type: DataTypes.DATE },
+    // Recibe el resumen diario de pendientes por mail (lo elige el administrador)
+    recibeResumen: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
   }, {
     tableName: 'Users',
     // Nunca devolver el hash por defecto

@@ -41,6 +41,7 @@ const UsuariosAdmin = () => {
               <CardText>{usuario.email}</CardText>
               <div style={{ marginTop: '0.5rem' }}>
                 <Tag $color={usuario.rol === 'administrador' ? 'var(--color-primario)' : usuario.rol === 'encargado' ? '#2980b9' : '#95a5a6'}>{{ administrador: 'Administrador', encargado: 'Encargado/a', usuario: 'Sin acceso al panel' }[usuario.rol] || usuario.rol}</Tag>
+                {usuario.recibeResumen && usuario.rol !== 'usuario' && <Tag $color="#27ae60" title="Recibe el resumen diario por mail">Resumen diario</Tag>}
               </div>
               <Actions>
                 <IconButton onClick={() => navigate(`/admin/dashboard/usuarios/${usuario.id}/editar`)} aria-label="Editar">

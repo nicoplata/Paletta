@@ -120,4 +120,18 @@ describe('Panel: notificaciones y pendientes', () => {
     const r = await resumen.enviarResumen();
     assert.equal(r.enviado, false, 'sin mail configurado no se envía (y no rompe)');
   });
+
+  it('el resumen diario va solo a los usuarios elegidos', async () => {
+    assert.deepEqual(await resumen.destinatariosResumen(), [], 'por defecto no lo recibe nadie');
+    const admin = await db.User.findOne({ where: { email: ADMIN.email } });
+    const enc = await db.User.findOne({ where: { email: ENCARGADO.email } });
+    const res = await request(app).put(`/api/usuarios/${admin.id}`).set(headers.admin).send({ recibeResumen: true });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.recibeResumen, true);
+    assert.equal((await request(app).put(`/api/usuarios/${enc.id}`).set(headers.encargado).send({ recibeResumen: true })).status, 403, 'el encargado no elige destinatarios');
+    assert.deepEqual(await resumen.destinatariosResumen(), [ADMIN.email]);
+    // Un usuario sin acceso al panel no lo recibe aunque esté marcado
+    await db.User.update({ recibeResumen: true }, { where: { rol: 'usuario' } });
+    assert.deepEqual(await resumen.destinatariosResumen(), [ADMIN.email]);
+  });
 });
